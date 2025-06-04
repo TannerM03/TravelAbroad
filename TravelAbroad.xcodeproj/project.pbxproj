@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E34EE78E2DED0B33002B09DD /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = E34EE78D2DED0B33002B09DD /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		E34EE77E2DDBD5CA002B09DD /* TravelAbroad.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TravelAbroad.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E34EE78E2DED0B33002B09DD /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = TravelAbroad;
 			packageProductDependencies = (
+				E34EE78D2DED0B33002B09DD /* Supabase */,
 			);
 			productName = TravelAbroad;
 			productReference = E34EE77E2DDBD5CA002B09DD /* TravelAbroad.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = E34EE7752DDBD5CA002B09DD;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E34EE78C2DED0B33002B09DD /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E34EE77F2DDBD5CA002B09DD /* Products */;
 			projectDirPath = "";
@@ -324,6 +333,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E34EE78C2DED0B33002B09DD /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase-community/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E34EE78D2DED0B33002B09DD /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E34EE78C2DED0B33002B09DD /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E34EE7762DDBD5CA002B09DD /* Project object */;
 }

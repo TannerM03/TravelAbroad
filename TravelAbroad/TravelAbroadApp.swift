@@ -11,7 +11,11 @@ import SwiftUI
 struct TravelAbroadApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            CitiesView()
         }
     }
 }
+
+
+
+//Google places API should be good for getting images of the places the user wants to add a rec for
