@@ -8,7 +8,7 @@
 import Foundation
 
 // model for a singular item in an itenerary, multiple of these will make up an itenerary
-struct IteneraryItem: Codable, Identifiable {
+struct ItineraryItem: Codable, Identifiable {
     let id: String
     let iteneraryId: String
     let recId: String

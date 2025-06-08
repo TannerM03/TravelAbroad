@@ -8,7 +8,7 @@
 import Foundation
 
 // model for an step by step itenerary for a specific city
-struct Itenerary: Codable, Identifiable {
+struct Itinerary: Codable, Identifiable {
     let id: String
     let userId: String
     let cityId: String
