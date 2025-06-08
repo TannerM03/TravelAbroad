@@ -13,6 +13,7 @@ struct CitiesView: View {
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
     @State private var userSearch: String = ""
     
+    //what will be shown to the user, includes the text the user is searching for and searches for the city name and the country it's in
     var filteredCities: [City] {
         if userSearch.isEmpty {
             return vm.cities
@@ -34,7 +35,11 @@ struct CitiesView: View {
                     LazyVGrid(columns: columns, spacing: 20) {
                         ForEach(filteredCities) { city in
                             let emoji = CountryEmoji.emoji(for: city.country)
-                            CityCardView(cityName: city.name, imageName: "madrid", rating: city.avgRating, flagEmoji: emoji)
+                            NavigationLink {
+                                RecommendationsView(cityId: city.id, cityName: city.name)
+                            } label: {
+                                CityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.avgRating, flagEmoji: emoji)
+                            }
                         }
                     }
                 }

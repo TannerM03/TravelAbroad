@@ -10,16 +10,18 @@ import Foundation
 // model for a recommended location from a user's submission
 struct Recommendation: Codable, Identifiable {
     let id: String
+    let userId: String
     let cityId: String
-    let category: String
+    let category: CategoryType
     let name: String
-    let description: String
-    let imageUrl: String
-    let location: String
-    let rating: Bool
+    let description: String?
+    let imageUrl: String?
+    let location: String?
+    let rating: Int
     
     enum CodingKeys: String, CodingKey {
         case id
+        case userId = "user_id"
         case cityId = "city_id"
         case category
         case name
@@ -28,4 +30,13 @@ struct Recommendation: Codable, Identifiable {
         case location
         case rating
     }
+}
+
+enum CategoryType: String, Codable, CaseIterable {
+    case activity = "activity"
+    case nightlife = "nightlife"
+    case restaurant = "restaurant"
+    case hostel = "hostel"
+    case sight = "sight"
+    case other = "other"
 }

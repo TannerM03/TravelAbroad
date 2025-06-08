@@ -29,7 +29,9 @@ class SupabaseManager {
     // EVERYTHING UNDERNEATH THIS COMMENT HAS NOT BEEN TESTED YET, I HAVE NO CLUE IF THEY WORK (but i feel like they mostly should)
     
     //fetches the overall reviews for each city (this is how i will calculator avg review for each city to be displayed on main page
+    //not sure if i actually need this
     func fetchCityReviews(cityId: UUID) async throws -> [CityReview] {
+        
         let reviews: [CityReview] = try await supabase.from("city_reviews")
             .select()
             .eq("city_id", value: cityId.uuidString)
@@ -40,9 +42,10 @@ class SupabaseManager {
     
     //fetches the recommended place (restaurants, hostels, bars, etc.) for whichever city is specified in with the cityId parameter
     func fetchRecommendations(cityId: UUID) async throws -> [Recommendation] {
-        let recs: [Recommendation] = try await supabase.from("recommendations")
+        let recs: [Recommendation] = try await supabase
+            .from("recommendations")
             .select()
-            .eq("city_id", value: cityId.uuidString)
+            .eq("city_id", value: cityId)
             .execute()
             .value
         return recs

@@ -9,19 +9,40 @@ import SwiftUI
 
 struct CityCardView: View {
     let cityName: String
-    let imageName: String
+    let imageUrl: String?
     let rating: Double?
     let flagEmoji: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ZStack(alignment: .topTrailing) {
-                Image(imageName)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 160, height: 160)
-                    .clipped()
-                    .cornerRadius(12)
+                
+                //logic to get the image or just return madrid, the madrid part isn't working but idrc because i'm gonna figure out the google images thing at some point
+                if let url = imageUrl, let url = URL(string: url) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty:
+                            ProgressView()
+                                .frame(width: 160, height: 160)
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 160, height: 160)
+                                .clipped()
+                                .cornerRadius(12)
+                        case .failure:
+                            Image("madrid")
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 160, height: 160)
+                                .clipped()
+                                .cornerRadius(12)
+                        @unknown default:
+                            EmptyView()
+                        }
+                    }
+                }
                 
                 if let flag = flagEmoji {
                     Text(flag)
@@ -32,6 +53,8 @@ struct CityCardView: View {
                         .padding(8)
                 }
             }
+            
+            //city name and rating
             HStack {
                 Text(cityName)
                 Spacer()
@@ -49,5 +72,5 @@ struct CityCardView: View {
 
 
 #Preview {
-    CityCardView(cityName: "Madrid", imageName: "madrid", rating: 9.2, flagEmoji: "🇪🇸")
+    CityCardView(cityName: "Madrid", imageUrl: "madrid", rating: 9.2, flagEmoji: "🇪🇸")
 }
