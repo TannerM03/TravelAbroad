@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 // model for a recommended location from a user's submission
 struct Recommendation: Codable, Identifiable {
@@ -33,10 +34,23 @@ struct Recommendation: Codable, Identifiable {
 }
 
 enum CategoryType: String, Codable, CaseIterable {
-    case activity = "activity"
+    case activities = "activity"
     case nightlife = "nightlife"
-    case restaurant = "restaurant"
-    case hostel = "hostel"
-    case sight = "sight"
+    case restaurants = "restaurant"
+    case hostels = "hostel"
+    case sights = "sight"
     case other = "other"
+}
+
+extension CategoryType {
+    var pillColor: Color {
+        switch self {
+        case .activities: return Color.green.opacity(0.4)
+        case .nightlife: return Color.purple.opacity(0.4)
+        case .restaurants: return Color.orange.opacity(0.4)
+        case .hostels: return Color.blue.opacity(0.4)
+        case .sights: return Color.pink.opacity(0.4)
+        case .other: return Color.gray.opacity(0.4)
+        }
+    }
 }

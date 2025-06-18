@@ -6,9 +6,21 @@
 //
 
 import SwiftUI
+import GooglePlacesSwift
 
 @main
 struct TravelAbroadApp: App {
+    
+    init() {
+            if let path = Bundle.main.path(forResource: "Secrets", ofType: "plist"),
+               let dict = NSDictionary(contentsOfFile: path),
+               let apiKey = dict["GooglePlacesAPIKey"] as? String {
+                PlacesClient.provideAPIKey(apiKey)
+            } else {
+                print("⚠️ Failed to load Google Places API Key")
+            }
+        }
+    
     var body: some Scene {
         WindowGroup {
             CitiesView()
