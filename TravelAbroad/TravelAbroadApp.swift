@@ -23,7 +23,7 @@ struct TravelAbroadApp: App {
     
     var body: some Scene {
         WindowGroup {
-            CitiesView()
+            TabBarView()
         }
     }
 }
