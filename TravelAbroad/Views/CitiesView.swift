@@ -11,40 +11,17 @@ import SwiftUI
 struct CitiesView: View {
     @StateObject private var vm = CityListViewModel()
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
-    @State private var userSearch: String = ""
-    @State private var filter: CityFilter = .none
-    
-    //what will be shown to the user, includes the text the user is searching for and searches for the city name and the country it's in
-    var filteredCities: [City] {
-        if userSearch.isEmpty {
-            return vm.cities
-        } else {
-            return vm.cities.filter { city in
-                city.name.lowercased().contains(userSearch.lowercased()) || city.country.lowercased().contains(userSearch.lowercased())
-            }
-        }
-    }
-    
-    var sortedCities: [City] {
-        if filter == .none {
-            return filteredCities
-        } else if filter == .best {
-            return filteredCities.sorted { $0.avgRating ?? 0 > $1.avgRating ?? 0}
-        } else {
-            return filteredCities.sorted { $0.avgRating ?? 0 < $1.avgRating ?? 0}
-        }
-    }
     
     var body: some View {
         NavigationStack {
             VStack {
                 
-                SearchBar(searchText: $userSearch)
+                SearchBar(searchText: $vm.userSearch)
                     .padding(.bottom, 10)
                 
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 20) {
-                        ForEach(sortedCities) { city in
+                        ForEach(vm.sortedCities) { city in
                             let emoji = CountryEmoji.emoji(for: city.country)
                             NavigationLink {
                                 RecommendationsView(cityId: city.id, cityName: city.name, imageUrl: city.imageUrl ?? "")
@@ -61,7 +38,7 @@ struct CitiesView: View {
                     Menu {
                         ForEach(CityFilter.allCases) { option in
                             Button(action: {
-                                filter = option
+                                vm.filter = option
                             }) {
                                 Label(option.label, systemImage: option.icon)
                             }
@@ -70,20 +47,20 @@ struct CitiesView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "slider.horizontal.3")
                                 .font(.headline)
-                            Text(filter == .none ? "Filter" : filter.label)
+                            Text(vm.filter == .none ? "Filter" : vm.filter.label)
                                 .font(.subheadline)
                         }
                         .padding(.horizontal, 14)
                         .padding(.vertical, 7)
                         .background(
-                            filter == .none ? Color(.systemGray6) : Color.accentColor.opacity(0.15)
+                            vm.filter == .none ? Color(.systemGray6) : Color.accentColor.opacity(0.15)
                         )
-                        .foregroundStyle(filter == .none ? .primary : Color.accentColor)
+                        .foregroundStyle(vm.filter == .none ? .primary : Color.accentColor)
                         .cornerRadius(20)
                         .shadow(color: .black.opacity(0.06), radius: 3, x: 0, y: 2)
                     }
                     .buttonStyle(.plain)
-                    .animation(.easeInOut(duration: 0.18), value: filter)
+                    .animation(.easeInOut(duration: 0.18), value: vm.filter)
                     .accessibilityLabel("City filter menu")
                 }
             }
@@ -105,6 +82,7 @@ struct CitiesView: View {
     CitiesView()
 }
 
+// MARK: - SearchBar
 struct SearchBar: View {
     @Binding var searchText: String
     var body: some View {
