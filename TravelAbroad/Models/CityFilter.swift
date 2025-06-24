@@ -7,22 +7,20 @@
 
 import Foundation
 
-
 enum CityFilter: String, CaseIterable, Identifiable {
     case best, worst, none
-    
-    var id: String { self.rawValue }
-    
+
+    var id: String { rawValue }
+
     var icon: String {
         switch self {
-        case .best:  return "arrow.up.to.line"
+        case .best: return "arrow.up.to.line"
         case .worst: return "arrow.down.to.line"
-        case .none:  return "line.horizontal.3.decrease.circle"
+        case .none: return "line.horizontal.3.decrease.circle"
         }
     }
-    
-    var label: String
-    {
+
+    var label: String {
         switch self {
         case .best: return "High -> Low"
         case .worst: return "Low -> High"

@@ -5,22 +5,23 @@
 //  Created by Tanner Macpherson on 6/18/25.
 //
 
-import SwiftUI
 import Supabase
+import SwiftUI
 
 struct ProfileView: View {
+    @Binding var isAuthenticated: Bool
     // Need to make vm for getting real user data
-//    @State private var username: String = "tannermac"
+    @StateObject var vm = ProfileViewModel()
     @State private var profileImage: Image? = nil
     @State private var selectedUIImage: UIImage? = nil
 
     @State private var wishlistCities = ["Paris", "Tokyo", "Madrid"]
     @State private var user: User? = nil
-    
+
     var email: String {
         user?.email ?? ""
     }
-    
+
     var username: String {
         user?.userMetadata["username"] as? String ?? ""
     }
@@ -59,6 +60,16 @@ struct ProfileView: View {
                         }
                     }
                 }
+                Section {
+                    Button {
+                        Task {
+                            try await vm.logOut()
+                            isAuthenticated = false
+                        }
+                    } label: {
+                        Text("Log out")
+                    }
+                }
             }
             .navigationTitle(username)
         }.task {
@@ -67,7 +78,6 @@ struct ProfileView: View {
     }
 }
 
-
-#Preview {
-    ProfileView()
-}
+// #Preview {
+//    ProfileView()
+// }

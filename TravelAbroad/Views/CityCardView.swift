@@ -5,8 +5,8 @@
 //  Created by Tanner Macpherson on 6/6/25.
 //
 
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 struct CityCardView: View {
     let cityName: String
@@ -17,7 +17,6 @@ struct CityCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ZStack(alignment: .topTrailing) {
-
                 if let url = imageUrl, let url = URL(string: url) {
                     KFImage(url)
                         .resizable()
@@ -57,7 +56,6 @@ struct CityCardView: View {
         }
     }
 }
-
 
 #Preview {
     CityCardView(cityName: "Madrid", imageUrl: "https://tyttgzrqntyzehfufeqx.supabase.co/storage/v1/object/public/city-images//madrid.jpg", rating: 9.2, flagEmoji: "🇪🇸")

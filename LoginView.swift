@@ -12,14 +12,14 @@ struct LoginView: View {
     @State private var errorMessage: String?
     @State private var isLoading: Bool = false
     @Binding var isAuthenticated: Bool
-    
+
     var body: some View {
         NavigationView {
             VStack(spacing: 24) {
                 Text(isSignUp ? "Create Account" : "Login")
                     .font(.largeTitle)
                     .bold()
-                
+
                 VStack(spacing: 16) {
                     TextField("Email", text: $email)
                         .textInputAutocapitalization(.never)
@@ -32,13 +32,13 @@ struct LoginView: View {
                         .background(RoundedRectangle(cornerRadius: 10).stroke(Color.gray.opacity(0.3)))
                 }
                 .padding(.horizontal)
-                
+
                 if let errorMessage = errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.red)
                         .multilineTextAlignment(.center)
                 }
-                
+
                 Button(action: authAction) {
                     if isLoading {
                         ProgressView()
@@ -53,19 +53,19 @@ struct LoginView: View {
                 }
                 .padding(.horizontal)
                 .disabled(isLoading)
-                
+
                 Button(isSignUp ? "Already have an account? Login" : "Don't have an account? Sign Up") {
                     isSignUp.toggle()
                     errorMessage = nil
                 }
                 .padding(.top)
-                
+
                 Spacer()
             }
             .padding()
         }
     }
-    
+
     func authAction() {
         errorMessage = nil
         isLoading = true

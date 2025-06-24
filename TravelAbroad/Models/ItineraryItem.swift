@@ -1,5 +1,5 @@
 //
-//  IteneraryItem.swift
+//  ItineraryItem.swift
 //  TravelAbroad
 //
 //  Created by Tanner Macpherson on 6/2/25.
@@ -15,7 +15,7 @@ struct ItineraryItem: Codable, Identifiable {
     let day: Int
     let time: String
     let notes: String
-    
+
     enum CodingKeys: String, CodingKey {
         case id
         case iteneraryId = "itenerary_id"

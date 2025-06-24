@@ -7,18 +7,17 @@
 
 import SwiftUI
 
-//This view will be the home page where users can select between cities to see reviews for
+// This view will be the home page where users can select between cities to see reviews for
 struct CitiesView: View {
     @StateObject private var vm = CityListViewModel()
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
-    
+
     var body: some View {
         NavigationStack {
             VStack {
-                
                 SearchBar(searchText: $vm.userSearch)
                     .padding(.bottom, 10)
-                
+
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 20) {
                         ForEach(vm.sortedCities) { city in
@@ -83,6 +82,7 @@ struct CitiesView: View {
 }
 
 // MARK: - SearchBar
+
 struct SearchBar: View {
     @Binding var searchText: String
     var body: some View {
@@ -99,7 +99,7 @@ struct SearchBar: View {
                     Spacer()
                     Button {
                         searchText = ""
-                    }label: {
+                    } label: {
                         Image(systemName: "x.circle")
                             .foregroundStyle(.gray)
                             .padding(.trailing, 8)
@@ -109,4 +109,3 @@ struct SearchBar: View {
             .padding(.horizontal)
     }
 }
-
