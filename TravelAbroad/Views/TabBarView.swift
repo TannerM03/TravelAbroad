@@ -8,13 +8,14 @@
 import SwiftUI
 
 struct TabBarView: View {
+    @Binding var isAuthenticated: Bool
     var body: some View {
         TabView {
             CitiesView()
                 .tabItem {
                     Label("Cities", systemImage: "building.2.crop.circle")
                 }
-            ProfileView()
+            ProfileView(isAuthenticated: $isAuthenticated)
                 .tabItem {
                     Label("Profile", systemImage: "person.crop.circle")
                 }
@@ -22,6 +23,6 @@ struct TabBarView: View {
     }
 }
 
-#Preview {
-    TabBarView()
-}
+// #Preview {
+//    TabBarView(isAuthenticated: true)
+// }

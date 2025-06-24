@@ -12,7 +12,7 @@ struct CityReview: Codable, Identifiable {
     let id: String
     let userId: String
     let rating: Int
-    
+
     enum CodingKeys: String, CodingKey {
         case id
         case userId = "user_id"

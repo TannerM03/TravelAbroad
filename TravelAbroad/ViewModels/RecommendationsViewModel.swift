@@ -11,7 +11,7 @@ import Foundation
 class RecommendationsViewModel: ObservableObject {
     @Published var recommendations: [Recommendation] = []
     @Published var isLoading = false
-    
+
     func getRecs(cityId: UUID) async {
         isLoading = true
         defer { isLoading = false }

@@ -5,12 +5,12 @@
 //  Created by Tanner Macpherson on 6/17/25.
 //
 
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 struct RecommendationsCardView: View {
     let rec: Recommendation
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let urlStr = rec.imageUrl, let url = URL(string: urlStr) {
@@ -21,7 +21,7 @@ struct RecommendationsCardView: View {
                     .clipped()
                     .cornerRadius(15)
             } else {
-                KFImage(URL(string:"https://images.unsplash.com/photo-1414235077428-338989a2e8c0"))
+                KFImage(URL(string: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0"))
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(height: 170)

@@ -13,8 +13,8 @@ class CityListViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var userSearch = ""
     @Published var filter: CityFilter = .none
-    
-    //what will be shown to the user, includes the text the user is searching for and searches for the city name and the country it's in
+
+    // what will be shown to the user, includes the text the user is searching for and searches for the city name and the country it's in
     var filteredCities: [City] {
         if userSearch.isEmpty {
             return cities
@@ -24,17 +24,17 @@ class CityListViewModel: ObservableObject {
             }
         }
     }
-    
+
     var sortedCities: [City] {
         if filter == .none {
             return filteredCities
         } else if filter == .best {
-            return filteredCities.sorted { $0.avgRating ?? 0 > $1.avgRating ?? 0}
+            return filteredCities.sorted { $0.avgRating ?? 0 > $1.avgRating ?? 0 }
         } else {
-            return filteredCities.sorted { $0.avgRating ?? 0 < $1.avgRating ?? 0}
+            return filteredCities.sorted { $0.avgRating ?? 0 < $1.avgRating ?? 0 }
         }
     }
-    
+
     func getCities() async {
         isLoading = true
         defer { isLoading = false }
@@ -44,6 +44,4 @@ class CityListViewModel: ObservableObject {
             print("Error getting cities in vm: \(error)")
         }
     }
-    
-    
 }

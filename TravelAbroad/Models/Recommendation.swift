@@ -19,7 +19,7 @@ struct Recommendation: Codable, Identifiable {
     let imageUrl: String?
     let location: String?
     let rating: Int
-    
+
     enum CodingKeys: String, CodingKey {
         case id
         case userId = "user_id"
@@ -35,11 +35,11 @@ struct Recommendation: Codable, Identifiable {
 
 enum CategoryType: String, Codable, CaseIterable {
     case activities = "activity"
-    case nightlife = "nightlife"
+    case nightlife
     case restaurants = "restaurant"
     case hostels = "hostel"
     case sights = "sight"
-    case other = "other"
+    case other
 }
 
 extension CategoryType {

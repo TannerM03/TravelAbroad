@@ -6,30 +6,30 @@
 //
 
 import Foundation
-import SwiftUI
 import GooglePlacesSwift
+import SwiftUI
 
 @main
 struct TravelAbroadApp: App {
-    
-//    @AppStorage("isAuthenticated") private var isAuthenticated = false
-    @State private var isAuthenticated = false
-    
+    @AppStorage("isAuthenticated") private var isAuthenticated = false
+//    @State private var isAuthenticated = false
+
     init() {
-            if let path = Bundle.main.path(forResource: "Secrets", ofType: "plist"),
-               let dict = NSDictionary(contentsOfFile: path),
-               let apiKey = dict["GooglePlacesAPIKey"] as? String {
-                PlacesClient.provideAPIKey(apiKey)
-            } else {
-                print("⚠️ Failed to load Google Places API Key")
-            }
+        if let path = Bundle.main.path(forResource: "Secrets", ofType: "plist"),
+           let dict = NSDictionary(contentsOfFile: path),
+           let apiKey = dict["GooglePlacesAPIKey"] as? String
+        {
+            PlacesClient.provideAPIKey(apiKey)
+        } else {
+            print("⚠️ Failed to load Google Places API Key")
         }
-    
+    }
+
     var body: some Scene {
         WindowGroup {
             // Shows main app interface if authenticated, otherwise show login screen
             if isAuthenticated {
-                TabBarView()
+                TabBarView(isAuthenticated: $isAuthenticated)
             } else {
                 LoginView(isAuthenticated: $isAuthenticated)
             }
@@ -37,7 +37,4 @@ struct TravelAbroadApp: App {
     }
 }
 
-
-
-//Google places API should be good for getting images of the places the user wants to add a rec for
-
+// Google places API should be good for getting images of the places the user wants to add a rec for
