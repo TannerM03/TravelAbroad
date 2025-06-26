@@ -23,6 +23,6 @@ struct TabBarView: View {
     }
 }
 
-// #Preview {
-//    TabBarView(isAuthenticated: true)
-// }
+#Preview {
+    TabBarView(isAuthenticated: .constant(true))
+}

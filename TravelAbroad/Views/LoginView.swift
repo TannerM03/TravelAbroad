@@ -12,14 +12,12 @@ struct LoginView: View {
 
     var body: some View {
         ZStack {
-            // Subtle vertical gradient background
             LinearGradient(gradient: Gradient(colors: [Color(.systemTeal).opacity(0.18), Color(.systemIndigo).opacity(0.14)]), startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
             
             VStack {
                 Spacer(minLength: 60)
                 
-                // Card container
                 VStack(spacing: 24) {
                     // Title
                     Text(vm.isSignUp ? "Create Account" : "Login")
@@ -27,7 +25,7 @@ struct LoginView: View {
                         .padding(.top, 8)
 
                     VStack(spacing: 18) {
-                        // Email field with icon
+                        // Email field
                         HStack {
                             Image(systemName: "envelope")
                                 .foregroundColor(.accentColor)
@@ -44,13 +42,13 @@ struct LoginView: View {
                             HStack {
                                 Image(systemName: "person")
                                     .foregroundColor(.accentColor)
-                                TextField("Username", text: $vm.username)
+                                TextField("Username (minimum of 4 characters)", text: $vm.username)
                             }
                             .padding(12)
                             .background(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.gray.opacity(0.24), lineWidth: 1))
                         }
 
-                        // Password field with icon
+                        // Password field
                         HStack {
                             Image(systemName: "lock")
                                 .foregroundColor(.accentColor)
@@ -82,7 +80,7 @@ struct LoginView: View {
                                 .font(.headline.bold())
                         }
                     }
-                    .disabled(vm.email == "" || vm.password == "" || vm.isLoading)
+                    .disabled(vm.email == "" || vm.password == "" || vm.isLoading || (vm.username.count < 4 && vm.isSignUp))
                     .padding(.horizontal, 4)
 
                     // Toggle between login/signup
@@ -112,7 +110,6 @@ struct LoginView: View {
     }
 }
 
-//
-// #Preview {
-//    LoginView()
-// }
+#Preview("Login Mode") {
+    LoginView(isAuthenticated: .constant(false))
+}

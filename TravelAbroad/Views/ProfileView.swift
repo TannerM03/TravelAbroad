@@ -15,8 +15,8 @@ struct ProfileView: View {
     @State private var profileImage: Image? = nil
     @State private var selectedUIImage: UIImage? = nil
 
-    @State private var wishlistCities = ["Paris", "Tokyo", "Madrid"]
     @State private var user: User? = nil
+    @State private var showLogoutDialog = false
 
     var email: String {
         user?.email ?? ""
@@ -27,7 +27,7 @@ struct ProfileView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section(header: Text("Profile")) {
                     HStack(alignment: .center) {
@@ -44,40 +44,38 @@ struct ProfileView: View {
                                     .frame(width: 150, height: 150)
                                     .overlay(Image(systemName: "person.fill").font(.largeTitle))
                             }
-//                            Text(user?.userMetadata["username"] as? String ?? "")
                             Text(email)
                         }
                     }
                 }
 
-                Section(header: Text("Dream Trips")) {
-                    if wishlistCities.isEmpty {
-                        Text("No cities added yet.")
-                            .foregroundStyle(.gray)
-                    } else {
-                        ForEach(wishlistCities, id: \.self) { city in
-                            Text(city)
-                        }
-                    }
-                }
+                //Logout button
                 Section {
-                    Button {
-                        Task {
-                            try await vm.logOut()
-                            isAuthenticated = false
+                    Button(action: {
+                        showLogoutDialog = true
+                    }) {
+                        Text("Log Out")
+                            .foregroundColor(.red)
+                    }
+                    .confirmationDialog("Are you sure you want to log out?", isPresented: $showLogoutDialog, titleVisibility: .visible) {
+                        Button("Log Out", role: .destructive) {
+                            Task {
+                                try await vm.logOut()
+                                isAuthenticated = false
+                            }
                         }
-                    } label: {
-                        Text("Log out")
+                        Button("Cancel", role: .cancel) {}
                     }
                 }
             }
             .navigationTitle(username)
-        }.task {
+        }
+        .task {
             user = try? await SupabaseManager.shared.supabase.auth.session.user
         }
     }
 }
 
-// #Preview {
-//    ProfileView()
-// }
+#Preview {
+    ProfileView(isAuthenticated: .constant(true))
+}
