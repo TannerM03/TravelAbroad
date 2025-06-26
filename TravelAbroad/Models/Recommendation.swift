@@ -18,7 +18,7 @@ struct Recommendation: Codable, Identifiable {
     let description: String?
     let imageUrl: String?
     let location: String?
-    let rating: Int
+    let avgRating: Double
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -29,7 +29,7 @@ struct Recommendation: Codable, Identifiable {
         case description
         case imageUrl = "image_url"
         case location
-        case rating
+        case avgRating = "avg_rating"
     }
 }
 

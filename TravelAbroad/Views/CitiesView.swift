@@ -77,8 +77,52 @@ struct CitiesView: View {
     }
 }
 
-#Preview {
-    CitiesView()
+#Preview("Loading State") {
+    PreviewCitiesView(isLoading: true, cities: [])
+}
+
+#Preview("With Cities") {
+    PreviewCitiesView(isLoading: false, cities: MockData.sampleCities)
+}
+
+#Preview("Empty State") {
+    PreviewCitiesView(isLoading: false, cities: [])
+}
+
+// MARK: - Preview Helper View
+private struct PreviewCitiesView: View {
+    let isLoading: Bool
+    let cities: [City]
+    
+    var body: some View {
+        NavigationStack {
+            VStack {
+                SearchBar(searchText: .constant(""))
+                    .padding(.bottom, 10)
+
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
+                        ForEach(cities) { city in
+                            let emoji = CountryEmoji.emoji(for: city.country)
+                            NavigationLink {
+                                Text("Recommendations for \(city.name)")
+                            } label: {
+                                CityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.avgRating, flagEmoji: emoji)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationBarTitle("Where to next?")
+        }
+        .overlay {
+            if isLoading {
+                ProgressView("Loading Cities...")
+            } else if cities.isEmpty {
+                Text("No cities")
+            }
+        }
+    }
 }
 
 // MARK: - SearchBar

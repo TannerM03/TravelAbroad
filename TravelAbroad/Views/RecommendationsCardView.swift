@@ -42,7 +42,8 @@ struct RecommendationsCardView: View {
                 Image(systemName: "star.fill")
                     .foregroundColor(.yellow)
                     .font(.subheadline)
-                Text("Avg Rating: \(String(format: "%.1f", rec.rating))")
+                Text("Avg Rating: \(String(format: "%.1f", rec.avgRating))")
+//                Text("Avg Rating: \(rec.avgRating)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -72,6 +73,6 @@ struct RecommendationsCardView: View {
         description: "A great local spot for amazing food.",
         imageUrl: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0",
         location: "123 Main St",
-        rating: 5
+        avgRating: 5
     ))
 }

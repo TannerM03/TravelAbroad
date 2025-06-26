@@ -41,7 +41,7 @@ class SupabaseManager {
     // fetches the recommended place (restaurants, hostels, bars, etc.) for whichever city is specified in with the cityId parameter
     func fetchRecommendations(cityId: UUID) async throws -> [Recommendation] {
         let recs: [Recommendation] = try await supabase
-            .from("recommendations")
+            .from("recommendations_with_avg_rating")
             .select()
             .eq("city_id", value: cityId)
             .execute()
