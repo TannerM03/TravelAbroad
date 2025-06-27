@@ -90,4 +90,20 @@ class SupabaseManager {
             .eq("id", value: userId)
             .execute()
     }
+    
+    // fetch username from profiles table by user id
+    func fetchUsername(userId: UUID) async throws -> String {
+        struct Profile: Codable {
+            let username: String?
+        }
+        
+        let profile: Profile = try await supabase.from("profiles")
+            .select("username")
+            .eq("id", value: userId)
+            .single()
+            .execute()
+            .value
+        
+        return profile.username ?? ""
+    }
 }

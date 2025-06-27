@@ -14,23 +14,14 @@ struct ProfileView: View {
     @StateObject var vm = ProfileViewModel()
     @State private var profileImage: Image? = nil
     @State private var selectedUIImage: UIImage? = nil
-
-    @State private var user: User? = nil
     @State private var showLogoutDialog = false
-
-    var email: String {
-        user?.email ?? ""
-    }
-
-    var username: String {
-        user?.userMetadata["username"] as? String ?? ""
-    }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section(header: Text("Profile")) {
                     HStack(alignment: .center) {
+                        Spacer()
                         VStack(alignment: .center, spacing: 8) {
                             if let image = profileImage {
                                 image
@@ -44,8 +35,10 @@ struct ProfileView: View {
                                     .frame(width: 150, height: 150)
                                     .overlay(Image(systemName: "person.fill").font(.largeTitle))
                             }
-                            Text(email)
+                            Text(vm.email)
+                                .padding()
                         }
+                        Spacer()
                     }
                 }
 
@@ -68,10 +61,10 @@ struct ProfileView: View {
                     }
                 }
             }
-            .navigationTitle(username)
+            .navigationTitle(vm.username)
         }
         .task {
-            user = try? await SupabaseManager.shared.supabase.auth.session.user
+            await vm.fetchUser()
         }
     }
 }
