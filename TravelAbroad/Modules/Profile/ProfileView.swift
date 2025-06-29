@@ -7,6 +7,7 @@
 
 import Supabase
 import SwiftUI
+import PhotosUI
 
 struct ProfileView: View {
     @Binding var isAuthenticated: Bool
@@ -23,18 +24,17 @@ struct ProfileView: View {
                     HStack(alignment: .center) {
                         Spacer()
                         VStack(alignment: .center, spacing: 8) {
-                            if let image = profileImage {
-                                image
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 150, height: 150)
-                                    .clipShape(Circle())
-                            } else {
-                                Circle()
-                                    .fill(Color.gray.opacity(0.5))
-                                    .frame(width: 150, height: 150)
-                                    .overlay(Image(systemName: "person.fill").font(.largeTitle))
-                            }
+                            CircularProfileImage(imageState: vm.imageState)
+                                .overlay(alignment: .bottomTrailing) {
+                                    PhotosPicker(selection: $vm.imageSelection,
+                                                 matching: .images,
+                                                 photoLibrary: .shared()) {
+                                        Image(systemName: "pencil.circle.fill")
+                                            .symbolRenderingMode(.multicolor)
+                                            .font(.system(size: 30))
+                                            .foregroundStyle(Color.accentColor)
+                                    }.buttonStyle(.borderless)
+                                }
                             Text(vm.email)
                                 .padding()
                         }
