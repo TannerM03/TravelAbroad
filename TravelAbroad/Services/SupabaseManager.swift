@@ -7,6 +7,7 @@
 
 import Foundation
 import Supabase
+import UIKit
 
 class SupabaseManager {
     static let shared = SupabaseManager()
@@ -24,8 +25,46 @@ class SupabaseManager {
             .value
         return cities
     }
+    
+    // fetches the recommended place (restaurants, hostels, bars, etc.) for whichever city is specified in with the cityId parameter. Also has avg rating
+    func fetchRecommendations(cityId: UUID) async throws -> [Recommendation] {
+        let recs: [Recommendation] = try await supabase
+            .from("recommendations_with_avg_rating")
+            .select()
+            .eq("city_id", value: cityId)
+            .execute()
+            .value
+        return recs
+    }
 
     // EVERYTHING UNDERNEATH THIS COMMENT HAS NOT BEEN TESTED YET, I HAVE NO CLUE IF THEY WORK (but i feel like they mostly should)
+    
+    func uploadToSupabase(image: UIImage) async {
+        guard let imageData = image.jpegData(compressionQuality: 0.8), let user = try? await SupabaseManager.shared.supabase.auth.session.user else {
+            print("Failed to convert UIImage to jpeg data")
+            return
+        }
+        
+        let fileName = UUID().uuidString + ".jpg"
+        
+        Task {
+            do {
+                let bucket = SupabaseManager.shared.supabase.storage.from("profile-images")
+                try await bucket.upload(fileName, data: imageData, options: FileOptions(contentType: "image/jpeg"))
+                
+                let imageUrl = try bucket.getPublicURL(path: fileName).absoluteString
+                
+                try await supabase.from("profiles")
+                    .update(["image_url": imageUrl])
+                    .eq("id", value: user.id)
+                    .execute()
+                
+                print("Uploaded image successfully")
+            } catch {
+                print("error uploading image: \(error.localizedDescription)")
+            }
+        }
+    }
 
     // fetches the overall reviews for each city (this is how i will calculator avg review for each city to be displayed on main page
     // not sure if i actually need this
@@ -36,17 +75,6 @@ class SupabaseManager {
             .execute()
             .value
         return reviews
-    }
-
-    // fetches the recommended place (restaurants, hostels, bars, etc.) for whichever city is specified in with the cityId parameter
-    func fetchRecommendations(cityId: UUID) async throws -> [Recommendation] {
-        let recs: [Recommendation] = try await supabase
-            .from("recommendations_with_avg_rating")
-            .select()
-            .eq("city_id", value: cityId)
-            .execute()
-            .value
-        return recs
     }
 
     // fetches all of the reviews of a specific recommended place (this is how i will calculate the avg rating for a restaurant, etc.)
@@ -96,7 +124,7 @@ class SupabaseManager {
         struct Profile: Codable {
             let username: String?
         }
-        
+                
         let profile: Profile = try await supabase.from("profiles")
             .select("username")
             .eq("id", value: userId)
@@ -106,4 +134,27 @@ class SupabaseManager {
         
         return profile.username ?? ""
     }
+    
+    // fetch username from profiles table by user id
+    func fetchProfilePic(userId: UUID) async throws -> String {
+        struct Profile: Codable {
+            let imageURL: String?
+
+            enum CodingKeys: String, CodingKey {
+                case imageURL = "image_url"
+            }
+        }
+
+        let response: PostgrestResponse<Profile> = try await supabase
+            .from("profiles")
+            .select("image_url")
+            .eq("id", value: userId)
+            .single()
+            .execute()
+
+        let profile = try JSONDecoder().decode(Profile.self, from: response.data)
+        return profile.imageURL ?? ""
+    }
+
+
 }
