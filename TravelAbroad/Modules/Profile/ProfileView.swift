@@ -21,50 +21,57 @@ struct ProfileView: View {
         NavigationStack {
             Form {
                 Section(header: Text("Profile")) {
-                    HStack(alignment: .center) {
-                        Spacer()
-                        VStack(alignment: .center, spacing: 8) {
-                            CircularProfileImage(imageState: vm.imageState)
-                                .overlay(alignment: .bottomTrailing) {
-                                    PhotosPicker(selection: $vm.imageSelection,
-                                                 matching: .images,
-                                                 photoLibrary: .shared()) {
-                                        Image(systemName: "pencil.circle.fill")
-                                            .symbolRenderingMode(.multicolor)
-                                            .font(.system(size: 30))
-                                            .foregroundStyle(Color.accentColor)
-                                    }.buttonStyle(.borderless)
-                                }
-                            Text(vm.email)
-                                .padding()
-                        }
-                        Spacer()
-                    }
+                    profileImageSection
                 }
 
-                //Logout button
                 Section {
-                    Button(action: {
-                        showLogoutDialog = true
-                    }) {
-                        Text("Log Out")
-                            .foregroundColor(.red)
-                    }
-                    .confirmationDialog("Are you sure you want to log out?", isPresented: $showLogoutDialog, titleVisibility: .visible) {
-                        Button("Log Out", role: .destructive) {
-                            Task {
-                                try await vm.logOut()
-                                isAuthenticated = false
-                            }
-                        }
-                        Button("Cancel", role: .cancel) {}
-                    }
+                    logoutSection
                 }
             }
             .navigationTitle(vm.username)
         }
         .task {
             await vm.fetchUser()
+        }
+    }
+    
+    private var profileImageSection: some View {
+        HStack(alignment: .center) {
+            Spacer()
+            VStack(alignment: .center, spacing: 8) {
+                CircularProfileImage(imageState: vm.imageState)
+                    .overlay(alignment: .bottomTrailing) {
+                        PhotosPicker(selection: $vm.imageSelection,
+                                     matching: .images,
+                                     photoLibrary: .shared()) {
+                            Image(systemName: "pencil.circle.fill")
+                                .symbolRenderingMode(.multicolor)
+                                .font(.system(size: 30))
+                                .foregroundStyle(Color.accentColor)
+                        }.buttonStyle(.borderless)
+                    }
+                Text(vm.email)
+                    .padding()
+            }
+            Spacer()
+        }
+    }
+    
+    private var logoutSection: some View {
+        Button(action: {
+            showLogoutDialog = true
+        }) {
+            Text("Log Out")
+                .foregroundColor(.red)
+        }
+        .confirmationDialog("Are you sure you want to log out?", isPresented: $showLogoutDialog, titleVisibility: .visible) {
+            Button("Log Out", role: .destructive) {
+                Task {
+                    try await vm.logOut()
+                    isAuthenticated = false
+                }
+            }
+            Button("Cancel", role: .cancel) {}
         }
     }
 }

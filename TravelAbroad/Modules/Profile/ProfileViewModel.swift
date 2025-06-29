@@ -75,7 +75,7 @@ class ProfileViewModel: ObservableObject {
                 case .success(let profileImage?):
                     self.imageState = .success(profileImage.image)
                     Task {
-                        await SupabaseManager.shared.uploadToSupabase(image: profileImage.uiImage)
+                        await SupabaseManager.shared.uploadProfileImageToSupabase(image: profileImage.uiImage)
                     }
                 case .success(nil):
                     self.imageState = .empty
