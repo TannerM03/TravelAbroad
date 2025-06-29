@@ -18,7 +18,9 @@ class CityListViewModel: ObservableObject {
         do {
             cities = try await SupabaseManager.shared.fetchCities()
         } catch {
-            print(error)
+            print("Error getting cities in vm: \(error)")
         }
     }
+    
+    
 }
