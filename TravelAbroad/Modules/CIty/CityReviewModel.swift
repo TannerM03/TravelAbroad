@@ -8,13 +8,13 @@
 import Foundation
 
 // model for an individual rating of a city overall
-struct CityReview: Codable, Identifiable {
-    let id: String
+struct CityReviewModel: Encodable {
+    let cityId: String
     let userId: String
     let rating: Int
 
     enum CodingKeys: String, CodingKey {
-        case id
+        case cityId = "city_id"
         case userId = "user_id"
         case rating = "overall_rating"
     }

@@ -36,10 +36,9 @@ class SupabaseManager {
             .value
         return recs
     }
-
-    // EVERYTHING UNDERNEATH THIS COMMENT HAS NOT BEEN TESTED YET, I HAVE NO CLUE IF THEY WORK (but i feel like they mostly should)
     
-    func uploadToSupabase(image: UIImage) async {
+    //adds profile image to profile-images bucket and profiles table
+    func uploadProfileImageToSupabase(image: UIImage) async {
         guard let imageData = image.jpegData(compressionQuality: 0.8), let user = try? await SupabaseManager.shared.supabase.auth.session.user else {
             print("Failed to convert UIImage to jpeg data")
             return
@@ -64,47 +63,6 @@ class SupabaseManager {
                 print("error uploading image: \(error.localizedDescription)")
             }
         }
-    }
-
-    // fetches the overall reviews for each city (this is how i will calculator avg review for each city to be displayed on main page
-    // not sure if i actually need this
-    func fetchCityReviews(cityId: UUID) async throws -> [CityReview] {
-        let reviews: [CityReview] = try await supabase.from("city_reviews")
-            .select()
-            .eq("city_id", value: cityId.uuidString)
-            .execute()
-            .value
-        return reviews
-    }
-
-    // fetches all of the reviews of a specific recommended place (this is how i will calculate the avg rating for a restaurant, etc.)
-    func fetchRecReviews(recId: UUID) async throws -> [RecReview] {
-        let reviews: [RecReview] = try await supabase.from("rec_reviews")
-            .select()
-            .eq("rec_id", value: recId.uuidString)
-            .execute()
-            .value
-        return reviews
-    }
-
-    // fetches the itineraries for a given city
-    func fetchItineraries(cityId: UUID) async throws -> [Itinerary] {
-        let itineraries: [Itinerary] = try await supabase.from("itineraries")
-            .select()
-            .eq("city_id", value: cityId.uuidString)
-            .execute()
-            .value
-        return itineraries
-    }
-
-    // fetches each item for a given itinerary, need to figure out in the vm how to order these to be able to show a pretty itinerary
-    func fetchItineraryItem(itineraryId: UUID) async throws -> [ItineraryItem] {
-        let items: [ItineraryItem] = try await supabase.from("itinerary_items")
-            .select()
-            .eq("itinerary_id", value: itineraryId.uuidString)
-            .execute()
-            .value
-        return items
     }
     
     // insert username into profiles table after user signup
@@ -154,6 +112,70 @@ class SupabaseManager {
 
         let profile = try JSONDecoder().decode(Profile.self, from: response.data)
         return profile.imageURL ?? ""
+    }
+
+    // EVERYTHING UNDERNEATH THIS COMMENT HAS NOT BEEN TESTED YET, I HAVE NO CLUE IF THEY WORK (but i feel like they mostly should)
+    
+
+    // fetches the overall reviews for each city (this is how i will calculator avg review for each city to be displayed on main page
+    // not sure if i actually need this
+//    func fetchCityReviews(cityId: UUID) async throws -> [CityReviewModel] {
+//        let reviews: [CityReviewModel] = try await supabase.from("city_reviews")
+//            .select()
+//            .eq("city_id", value: cityId.uuidString)
+//            .execute()
+//            .value
+//        return reviews
+//    }
+
+    // fetches all of the reviews of a specific recommended place (this is how i will calculate the avg rating for a restaurant, etc.)
+    func fetchRecReviews(recId: UUID) async throws -> [RecReview] {
+        let reviews: [RecReview] = try await supabase.from("rec_reviews")
+            .select()
+            .eq("rec_id", value: recId.uuidString)
+            .execute()
+            .value
+        return reviews
+    }
+
+    // fetches the itineraries for a given city
+    func fetchItineraries(cityId: UUID) async throws -> [Itinerary] {
+        let itineraries: [Itinerary] = try await supabase.from("itineraries")
+            .select()
+            .eq("city_id", value: cityId.uuidString)
+            .execute()
+            .value
+        return itineraries
+    }
+
+    // fetches each item for a given itinerary, need to figure out in the vm how to order these to be able to show a pretty itinerary
+    func fetchItineraryItem(itineraryId: UUID) async throws -> [ItineraryItem] {
+        let items: [ItineraryItem] = try await supabase.from("itinerary_items")
+            .select()
+            .eq("itinerary_id", value: itineraryId.uuidString)
+            .execute()
+            .value
+        return items
+    }
+    
+    //adds or updates a review for a city
+    func addCityReview(userId: UUID, cityId: UUID, rating: Int) async throws {
+        guard let currentUserId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
+        }
+
+        let review: CityReviewModel = CityReviewModel(cityId: cityId.uuidString, userId: userId.uuidString, rating: rating)
+        
+        let response = try await supabase
+            .from("city_reviews")
+            .upsert(review,
+                    onConflict: "user_id,city_id")
+            .execute()
+        
+        print(response)
+        print("status: \(response.status)")
+        print("response data: \(String(describing: response.data))")
+        
     }
 
 
