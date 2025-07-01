@@ -17,20 +17,25 @@ struct CircularProfileImage: View {
                 Circle()
                     .fill(Color.gray.opacity(0.4))
                     .overlay(Image(systemName: "person.fill").foregroundColor(.white))
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.white, lineWidth: 6))
             case .loading:
                 ProgressView()
             case .success(let image):
                 image
                     .resizable()
                     .scaledToFill()
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.white, lineWidth: 6))
             case .failure:
                 Circle()
                     .fill(Color.red.opacity(0.4))
                     .overlay(Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.white))
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.white, lineWidth: 6))
             }
         }
         .frame(width: 150, height: 150)
-        .clipShape(Circle())
         .shadow(radius: 4)
     }
 }

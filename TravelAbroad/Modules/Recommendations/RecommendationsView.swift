@@ -13,17 +13,7 @@ struct RecommendationsView: View {
     let cityId: String
     let cityName: String
     let imageUrl: String
-    @State private var selectedCategory: CategoryType? = .activities
     @State private var showRatingOverlay = false
-    @State private var selectedRating = 5.0
-
-    var filteredRecommendations: [Recommendation] {
-        if let selected = selectedCategory {
-            return vm.recommendations.filter { $0.category == selected }
-        } else {
-            return vm.recommendations
-        }
-    }
 
     var body: some View {
         NavigationStack {
@@ -37,12 +27,39 @@ struct RecommendationsView: View {
             .navigationTitle(cityName)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem {
-                    Button {
-                        showRatingOverlay = true
-                    } label: {
-                        Image(systemName: "plus.circle")
-                        Text("Add rating")
+                ToolbarItem(placement: .topBarTrailing) {
+                    if let rating = vm.cityRating, rating > 0.0 {
+                        Button(action: { showRatingOverlay = true }) {
+                            HStack(spacing: 4) {
+                                Text(String(format: "%.1f", rating))
+                                    .font(.subheadline)
+                                    .bold()
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(Color.accentColor.opacity(0.15))
+                            .foregroundColor(.accentColor)
+                            .cornerRadius(20)
+                            .shadow(color: .black.opacity(0.09), radius: 3, x: 0, y: 2)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Edit your rating")
+                    } else {
+                        Button(action: { showRatingOverlay = true }) {
+                            HStack(spacing: 6) {
+                                Text("Add Rating")
+                                    .font(.subheadline)
+                                    .bold()
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 7)
+                            .background(Color.accentColor.opacity(0.15))
+                            .foregroundColor(.accentColor)
+                            .cornerRadius(20)
+                            .shadow(color: .black.opacity(0.09), radius: 3, x: 0, y: 2)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Add a rating for this city")
                     }
                 }
             }
@@ -51,9 +68,11 @@ struct RecommendationsView: View {
                     ratingPopoverContent
                 }
             }
-        }.task {
+        }
+        .task {
             await vm.getRecs(cityId: UUID(uuidString: cityId)!)
             await vm.fetchUser()
+            vm.cityRating = await vm.getUserCityRating(for: UUID(uuidString: cityId)!)
         }
     }
     
@@ -79,12 +98,12 @@ struct RecommendationsView: View {
                         Text(category.rawValue.capitalized)
                             .padding(.horizontal)
                             .padding(.vertical, 6)
-                            .background(selectedCategory == category ? category.pillColor : Color(.systemGray6))
-                            .foregroundStyle(selectedCategory == category ? .secondary : .primary)
+                            .background(vm.selectedCategory == category ? category.pillColor : Color(.systemGray6))
+                            .foregroundStyle(vm.selectedCategory == category ? .secondary : .primary)
                             .cornerRadius(10)
                             .onTapGesture {
                                 withAnimation {
-                                    selectedCategory = category
+                                    vm.selectedCategory = category
                                 }
                             }
                     }
@@ -95,51 +114,63 @@ struct RecommendationsView: View {
     
     private var recommendationsListSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(filteredRecommendations) { rec in
+            ForEach(vm.filteredRecs) { rec in
                 RecommendationsCardView(rec: rec)
             }
         }
     }
     
     private var ratingPopoverContent: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 22) {
             Text("Rate \(cityName)")
-                .font(.headline)
-            
+                .font(.title2).bold()
+                .padding(.top, 10)
             Text("How would you rate this city?")
-                .font(.subheadline)
+                .font(.body)
                 .foregroundColor(.secondary)
-            
-            Picker("Rating", selection: $selectedRating) {
-                ForEach(Array(stride(from: 1.0, through: 10.0, by: 0.1)), id: \.self) { rating in
-                    Text(String(format: "%.1f", rating)).tag(rating)
+            HStack(spacing: 8) {
+                ForEach(1...5, id: \.self) { i in
+                    Image(systemName: (vm.cityRating ?? 5.0) >= Double(i * 2) ? "star.fill" : (vm.cityRating ?? 5.0) >= Double(i * 2 - 1) ? "star.lefthalf.fill" : "star")
+                        .resizable()
+                        .frame(width: 28, height: 28)
+                        .foregroundColor(.yellow)
+                        .onTapGesture {
+                            vm.cityRating = Double(i * 2)
+                        }
                 }
             }
-            .pickerStyle(.wheel)
-            .frame(height: 120)
-            
+            Text(String(format: "%.1f", vm.cityRating ?? 5.0))
+                .font(.headline)
+                .foregroundColor(.accentColor)
+                .padding(.bottom, 8)
+            Slider(value: Binding(
+                get: { vm.cityRating ?? 5.5 },
+                set: { vm.cityRating = $0 }
+            ), in: 1...10, step: 0.1)
+                .accentColor(.yellow)
+                .padding(.horizontal, 8)
             HStack(spacing: 16) {
                 Button("Cancel") {
                     showRatingOverlay = false
                 }
                 .foregroundColor(.secondary)
-                
                 Button("Submit Rating") {
                     Task {
-                        await vm.updateCityReview(userId: vm.userId, cityId: UUID(uuidString: cityId)!, rating: Int(selectedRating))
+                        await vm.updateCityReview(userId: vm.userId, cityId: UUID(uuidString: cityId)!, rating: vm.cityRating ?? 5.5)
                     }
                     showRatingOverlay = false
                 }
                 .fontWeight(.semibold)
                 .foregroundColor(.accentColor)
             }
+            .padding(.top, 2)
         }
         .padding()
-        .frame(width: 280, height: 240)
+        .frame(width: 320, height: 320)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 20)
                 .fill(.regularMaterial)
-                .shadow(radius: 10)
+                .shadow(radius: 14)
         )
     }
 }
@@ -276,3 +307,4 @@ private struct PreviewRecommendationsView: View {
         .frame(width: 280, height: 240)
     }
 }
+

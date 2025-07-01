@@ -116,6 +116,48 @@ class SupabaseManager {
 
     // EVERYTHING UNDERNEATH THIS COMMENT HAS NOT BEEN TESTED YET, I HAVE NO CLUE IF THEY WORK (but i feel like they mostly should)
     
+    // get the rating of a specific city from a specific user
+    func getCityRatingForUser(cityId: UUID, userId: UUID) async throws -> Double? {
+        struct RatingResponse: Decodable {
+            let overall_rating: Double?
+        }
+        let response: PostgrestResponse<RatingResponse> = try await supabase.from("city_reviews")
+            .select("overall_rating")
+            .eq("user_id", value: userId)
+            .eq("city_id", value: cityId)
+            .single()
+            .execute()
+
+        let rating = try JSONDecoder().decode(RatingResponse.self, from: response.data)
+        print("rating for user: \(rating.overall_rating ?? 0.0)")
+        return rating.overall_rating
+    }
+    
+    func fetchUserTravelHistory(userId: UUID) async throws -> [City] {
+        struct CityIdRow: Decodable {
+            let cityId: UUID
+            
+            enum CodingKeys: String, CodingKey {
+                case cityId = "city_id"
+            }
+        }
+        let cityIdsResponse: PostgrestResponse<[CityIdRow]> = try await supabase.from("city_reviews")
+            .select("city_id")
+            .eq("user_id", value: userId)
+            .execute()
+        
+        let cityIds = cityIdsResponse.value.map { $0.cityId }
+        print("user has reviewed cities: \(cityIds)")
+        
+        let cities: [City] = try await supabase.from("city_with_avg_rating")
+            .select()
+            .in("id", values: cityIds)
+            .execute()
+            .value
+        print("supabase cities: \(cities)")
+        return cities
+    }
+    
 
     // fetches the overall reviews for each city (this is how i will calculator avg review for each city to be displayed on main page
     // not sure if i actually need this
@@ -159,7 +201,7 @@ class SupabaseManager {
     }
     
     //adds or updates a review for a city
-    func addCityReview(userId: UUID, cityId: UUID, rating: Int) async throws {
+    func addCityReview(userId: UUID, cityId: UUID, rating: Double) async throws {
         guard let currentUserId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }

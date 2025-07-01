@@ -1,5 +1,5 @@
 {
-  "originHash" : "68523ad871daf65a52a4695b808b83eab004563e39a01066ae178ad793091aa2",
+  "originHash" : "17e80c9f2b96406826e3c215389e5b242080b3461ba292e1597e276ab292e503",
   "pins" : [
     {
       "identity" : "ios-places-sdk",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/onevcat/Kingfisher",
       "state" : {
-        "revision" : "7deda23bbdca612076c5c315003d8638a08ed0f1",
-        "version" : "8.3.2"
+        "revision" : "010a06c4387cea2d13606222b6c08e0454e6dd2d",
+        "version" : "8.3.3"
       }
     },
     {
