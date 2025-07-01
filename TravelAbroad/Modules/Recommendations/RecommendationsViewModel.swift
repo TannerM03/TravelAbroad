@@ -14,7 +14,21 @@ class RecommendationsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var userId: UUID = UUID()
     @Published var user: User?
+    @Published var cityRating: Double? = nil
+    @Published var selectedCategory: CategoryType? = .activities
 
+    
+    var categorizedRecs: [Recommendation] {
+        if let selected = selectedCategory {
+            return recommendations.filter { $0.category == selected }
+        } else {
+            return recommendations
+        }
+    }
+    
+    var filteredRecs: [Recommendation] {
+        return categorizedRecs.sorted { $0.avgRating > $1.avgRating }
+    }
 
     func getRecs(cityId: UUID) async {
         isLoading = true
@@ -26,7 +40,7 @@ class RecommendationsViewModel: ObservableObject {
         }
     }
     
-    func updateCityReview(userId: UUID, cityId: UUID, rating: Int) async {
+    func updateCityReview(userId: UUID, cityId: UUID, rating: Double) async {
         do {
             try await SupabaseManager.shared.addCityReview(userId: userId, cityId: cityId, rating: rating)
             print("vm userId: \(userId)")
@@ -46,5 +60,15 @@ class RecommendationsViewModel: ObservableObject {
         } catch {
             print("Failed to fetch user: \(error)")
         }
+    }
+    
+    func getUserCityRating(for cityId: UUID) async -> Double? {
+        do {
+            cityRating = try await SupabaseManager.shared.getCityRatingForUser(cityId: cityId, userId: userId)
+        } catch {
+            print("Failed to fetch city rating for user: \(error)")
+            cityRating = nil
+        }
+        return cityRating
     }
 }

@@ -11,7 +11,7 @@ import Foundation
 struct CityReviewModel: Encodable {
     let cityId: String
     let userId: String
-    let rating: Int
+    let rating: Double
 
     enum CodingKeys: String, CodingKey {
         case cityId = "city_id"

@@ -16,19 +16,28 @@ struct ProfileView: View {
     @State private var profileImage: Image? = nil
     @State private var selectedUIImage: UIImage? = nil
     @State private var showLogoutDialog = false
+    @State private var fromProfile = true
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section(header: Text("Profile")) {
-                    profileImageSection
+        ZStack {
+            LinearGradient(gradient: Gradient(colors: [Color(.systemTeal).opacity(0.18), Color(.systemIndigo).opacity(0.14)]), startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+            NavigationStack {
+                Form {
+                    Section(header: Text("Profile")) {
+                        profileImageSection
+                    }
+                    
+                    Section {
+                        travelSection
+                    }
+                    
+                    Section {
+                        logoutSection
+                    }
                 }
-
-                Section {
-                    logoutSection
-                }
+                .navigationTitle(vm.username)
             }
-            .navigationTitle(vm.username)
         }
         .task {
             await vm.fetchUser()
@@ -54,6 +63,21 @@ struct ProfileView: View {
                     .padding()
             }
             Spacer()
+        }
+    }
+    
+    private var travelSection: some View {
+        VStack {
+            NavigationLink {
+                TravelHistoryView()
+            } label: {
+                Text("Travel History")
+            }
+            Button {
+                
+            } label: {
+                Text("Saved Cities")
+            }
         }
     }
     
