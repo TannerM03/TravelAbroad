@@ -79,16 +79,34 @@ struct RecommendationsView: View {
     private var cityImageSection: some View {
         Group {
             if let url = URL(string: imageUrl) {
-                KFImage(url)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 250)
-                    .frame(maxWidth: .infinity)
-                    .clipped()
-                    .ignoresSafeArea(edges: .top)
+                ZStack(alignment: .topTrailing) {
+                    KFImage(url)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 250)
+                        .frame(maxWidth: .infinity)
+                        .clipped()
+                        .ignoresSafeArea(edges: .top)
+
+                    Button {
+                        Task {
+                            // do i need to change this UUID() fallback?
+                            await vm.addOrRemoveFavorite(cityId: UUID(uuidString: cityId) ?? UUID())
+                        }
+                    } label: {
+                        Image(systemName: vm.isFavorite ? "bookmark.fill" :"bookmark")
+                            .font(.title)
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.black.opacity(0.6))
+                            .clipShape(Circle())
+                            .padding([.top, .trailing], 16)
+                    }
+                }
             }
         }
     }
+
     
     private var categoryFilterSection: some View {
         HStack {
@@ -242,7 +260,7 @@ private struct PreviewRecommendationsView: View {
                                 }
                             }
                         }.padding()
-                    }
+                    }.padding()
                     VStack(alignment: .leading, spacing: 8) {
                         ForEach(filteredRecommendations) { rec in
                             RecommendationsCardView(rec: rec)

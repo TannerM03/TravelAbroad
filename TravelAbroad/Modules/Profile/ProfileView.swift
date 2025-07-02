@@ -27,11 +27,12 @@ struct ProfileView: View {
                     Section(header: Text("Profile")) {
                         profileImageSection
                     }
-                    
                     Section {
-                        travelSection
+                        travelHistorySection
                     }
-                    
+                    Section {
+                        bucketListSection
+                    }
                     Section {
                         logoutSection
                     }
@@ -66,18 +67,19 @@ struct ProfileView: View {
         }
     }
     
-    private var travelSection: some View {
-        VStack {
-            NavigationLink {
-                TravelHistoryView()
-            } label: {
-                Text("Travel History")
-            }
-            Button {
-                
-            } label: {
-                Text("Saved Cities")
-            }
+    private var travelHistorySection: some View {
+                NavigationLink {
+                    TravelHistoryView()
+                } label: {
+                    Text("Travel History")
+                }
+    }
+    
+    private var bucketListSection: some View {
+        NavigationLink {
+            BucketListView()
+        } label: {
+            Text("Bucket List")
         }
     }
     

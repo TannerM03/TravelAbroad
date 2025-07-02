@@ -1,5 +1,5 @@
 //
-//  TravelHistoryView.swift
+//  BucketListView.swift
 //  TravelAbroad
 //
 //  Created by Tanner Macpherson on 7/1/25.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct TravelHistoryView: View {
-    @StateObject private var vm = TravelHistoryViewModel()
+struct BucketListView: View {
+    @StateObject private var vm = BucketListViewModel()
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
     var body: some View {
@@ -19,7 +19,7 @@ struct TravelHistoryView: View {
 
                 citiesGridSection
             }
-            .navigationBarTitle("My Ratings")
+            .navigationBarTitle("Bucket List")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     filterToolbarSection
@@ -93,6 +93,6 @@ struct TravelHistoryView: View {
     }
 }
 
-//#Preview {
-//    TravelHistoryView()
-//}
+#Preview {
+    BucketListView()
+}
