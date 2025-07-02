@@ -16,6 +16,7 @@ class RecommendationsViewModel: ObservableObject {
     @Published var user: User?
     @Published var cityRating: Double? = nil
     @Published var selectedCategory: CategoryType? = .activities
+    @Published var isFavorite: Bool = false
 
     
     var categorizedRecs: [Recommendation] {
@@ -43,9 +44,6 @@ class RecommendationsViewModel: ObservableObject {
     func updateCityReview(userId: UUID, cityId: UUID, rating: Double) async {
         do {
             try await SupabaseManager.shared.addCityReview(userId: userId, cityId: cityId, rating: rating)
-            print("vm userId: \(userId)")
-            print("vm cityId: \(cityId)")
-            print("vm rating: \(rating)")
         } catch {
             print("Error updating/creating city review in vm: \(error)")
         }
@@ -70,5 +68,20 @@ class RecommendationsViewModel: ObservableObject {
             cityRating = nil
         }
         return cityRating
+    }
+    
+    func addOrRemoveFavorite(cityId: UUID) async {
+        do {
+            if isFavorite {
+                isFavorite = false
+                try await SupabaseManager.shared.removeUserFavoriteCity(userId: userId, cityId: cityId)
+            }
+            else {
+                isFavorite = true
+                try await SupabaseManager.shared.addUserFavoriteCity(userId: userId, cityId: cityId)
+            }
+        } catch {
+            print("failed to add or remove from bucket list: \(error)")
+        }
     }
 }

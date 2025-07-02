@@ -113,8 +113,6 @@ class SupabaseManager {
         let profile = try JSONDecoder().decode(Profile.self, from: response.data)
         return profile.imageURL ?? ""
     }
-
-    // EVERYTHING UNDERNEATH THIS COMMENT HAS NOT BEEN TESTED YET, I HAVE NO CLUE IF THEY WORK (but i feel like they mostly should)
     
     // get the rating of a specific city from a specific user
     func getCityRatingForUser(cityId: UUID, userId: UUID) async throws -> Double? {
@@ -147,28 +145,58 @@ class SupabaseManager {
             .execute()
         
         let cityIds = cityIdsResponse.value.map { $0.cityId }
-        print("user has reviewed cities: \(cityIds)")
         
         let cities: [City] = try await supabase.from("city_with_avg_rating")
             .select()
             .in("id", values: cityIds)
             .execute()
             .value
-        print("supabase cities: \(cities)")
         return cities
     }
     
+    func fetchUserBucketList(userId: UUID) async throws -> [City] {
+        struct CityIdRow: Decodable {
+            let cityId: UUID
+            
+            enum CodingKeys: String, CodingKey {
+                case cityId = "city_id"
+            }
+        }
+        let cityIdsResponse: PostgrestResponse<[CityIdRow]> = try await supabase.from("user_bucket_list")
+            .select("city_id")
+            .eq("user_id", value: userId)
+            .execute()
+        
+        let cityIds = cityIdsResponse.value.map { $0.cityId }
+        print("supabase bucketlist city ids: \(cityIds)")
+        
+        let cities: [City] = try await supabase.from("city_with_avg_rating")
+            .select()
+            .in("id", values: cityIds)
+            .execute()
+            .value
+        print("supabase bucketlist cities: \(cities)")
+        return cities
+    }
+        
+    // remove a city from bucket list
+    func removeUserFavoriteCity(userId: UUID, cityId: UUID) async throws {
+        try await supabase.from("user_bucket_list")
+            .delete()
+            .eq("user_id", value: userId.uuidString)
+            .eq("city_id", value: cityId.uuidString)
+            .execute()
+    }
+    
+    // add a city to bucket list
+    func addUserFavoriteCity(userId: UUID, cityId: UUID) async throws {
+        try await supabase.from("user_bucket_list")
+            .insert(["user_id": userId.uuidString, "city_id": cityId.uuidString])
+            .execute()
+    }
+    
+    // EVERYTHING UNDERNEATH THIS COMMENT HAS NOT BEEN TESTED YET, I HAVE NO CLUE IF THEY WORK (but i feel like they mostly should)
 
-    // fetches the overall reviews for each city (this is how i will calculator avg review for each city to be displayed on main page
-    // not sure if i actually need this
-//    func fetchCityReviews(cityId: UUID) async throws -> [CityReviewModel] {
-//        let reviews: [CityReviewModel] = try await supabase.from("city_reviews")
-//            .select()
-//            .eq("city_id", value: cityId.uuidString)
-//            .execute()
-//            .value
-//        return reviews
-//    }
 
     // fetches all of the reviews of a specific recommended place (this is how i will calculate the avg rating for a restaurant, etc.)
     func fetchRecReviews(recId: UUID) async throws -> [RecReview] {
