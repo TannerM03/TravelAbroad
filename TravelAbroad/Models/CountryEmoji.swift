@@ -20,6 +20,7 @@ enum CountryEmoji: String {
     case morocco = "🇲🇦"
     case czechia = "🇨🇿"
     case portugal = "🇵🇹"
+    case denmark = "🇩🇰"
 }
 
 extension CountryEmoji {
@@ -37,10 +38,8 @@ extension CountryEmoji {
         case "morocco": return CountryEmoji.morocco.rawValue
         case "czechia": return CountryEmoji.czechia.rawValue
         case "portugal": return CountryEmoji.portugal.rawValue
-
-
+        case "denmark": return CountryEmoji.denmark.rawValue
         default: return ""
         }
     }
 }
-

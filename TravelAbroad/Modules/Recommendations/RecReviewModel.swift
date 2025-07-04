@@ -14,7 +14,7 @@ struct RecReview: Codable, Identifiable {
     let recId: String
     let rating: Int
     let comment: String
-    
+
     enum CodingKeys: String, CodingKey {
         case id
         case userId = "user_id"
