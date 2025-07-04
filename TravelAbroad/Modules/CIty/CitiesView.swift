@@ -9,7 +9,7 @@ import SwiftUI
 
 // This view will be the home page where users can select between cities to see reviews for
 struct CitiesView: View {
-    @StateObject private var vm = CityListViewModel()
+    @ObservedObject var vm: CityListViewModel
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
     var body: some View {
@@ -28,7 +28,9 @@ struct CitiesView: View {
             }
         }
         .task {
-            await vm.getCities()
+            if vm.cities.isEmpty {
+                await vm.getCities()
+            }
         }
         .overlay {
             overlayContentSection
@@ -92,11 +94,15 @@ struct CitiesView: View {
 }
 
 #Preview("With Cities") {
-    PreviewCitiesView(isLoading: false, cities: MockData.sampleCities)
+    let vm = CityListViewModel()
+    vm.cities = MockData.sampleCities
+    return CitiesView(vm: vm)
 }
 
 #Preview("Loading State") {
-    PreviewCitiesView(isLoading: true, cities: [])
+    let vm = CityListViewModel()
+    vm.isLoading = true
+    return CitiesView(vm: vm)
 }
 
 // MARK: - Preview Helper View

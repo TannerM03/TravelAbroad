@@ -11,8 +11,9 @@ import PhotosUI
 
 struct ProfileView: View {
     @Binding var isAuthenticated: Bool
-    // Need to make vm for getting real user data
-    @StateObject var vm = ProfileViewModel()
+    @ObservedObject var vm: ProfileViewModel
+    @StateObject private var bucketListViewModel = BucketListViewModel()
+    @StateObject private var travelHistoryViewModel = TravelHistoryViewModel()
     @State private var profileImage: Image? = nil
     @State private var selectedUIImage: UIImage? = nil
     @State private var showLogoutDialog = false
@@ -41,7 +42,22 @@ struct ProfileView: View {
             }
         }
         .task {
-            await vm.fetchUser()
+            if vm.user == nil {
+                await vm.fetchUser()
+                
+                // Preload bucket list and travel history data
+                if let userId = vm.userId {
+                    await bucketListViewModel.fetchUser()
+                    await travelHistoryViewModel.fetchUser()
+                    
+                    if bucketListViewModel.cities.isEmpty {
+                        await bucketListViewModel.getCities(userId: userId)
+                    }
+                    if travelHistoryViewModel.cities.isEmpty {
+                        await travelHistoryViewModel.getCities(userId: userId, showLoading: true)
+                    }
+                }
+            }
         }
     }
     
@@ -69,7 +85,7 @@ struct ProfileView: View {
     
     private var travelHistorySection: some View {
                 NavigationLink {
-                    TravelHistoryView()
+                    TravelHistoryView(vm: travelHistoryViewModel)
                 } label: {
                     Text("Travel History")
                 }
@@ -77,7 +93,7 @@ struct ProfileView: View {
     
     private var bucketListSection: some View {
         NavigationLink {
-            BucketListView()
+            BucketListView(vm: bucketListViewModel)
         } label: {
             Text("Bucket List")
         }
@@ -103,5 +119,5 @@ struct ProfileView: View {
 }
 
 #Preview {
-    ProfileView(isAuthenticated: .constant(true))
+    ProfileView(isAuthenticated: .constant(true), vm: ProfileViewModel())
 }

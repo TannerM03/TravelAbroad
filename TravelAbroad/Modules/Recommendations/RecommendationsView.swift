@@ -72,7 +72,9 @@ struct RecommendationsView: View {
         .task {
             await vm.getRecs(cityId: UUID(uuidString: cityId)!)
             await vm.fetchUser()
+            await vm.isCityFavorite(cityId: UUID(uuidString: cityId)!)
             vm.cityRating = await vm.getUserCityRating(for: UUID(uuidString: cityId)!)
+//            await vm.checkIfCityIsFavorite(cityId: UUID(uuidString: cityId)!)
         }
     }
     
@@ -94,8 +96,8 @@ struct RecommendationsView: View {
                             await vm.addOrRemoveFavorite(cityId: UUID(uuidString: cityId) ?? UUID())
                         }
                     } label: {
-                        Image(systemName: vm.isFavorite ? "bookmark.fill" :"bookmark")
-                            .font(.title)
+                        Image(systemName: vm.isFavoriteCity ? "bookmark.fill" :"bookmark")
+                            .font(.title3)
                             .foregroundColor(.white)
                             .padding()
                             .background(Color.black.opacity(0.6))

@@ -43,7 +43,6 @@ struct RecommendationsCardView: View {
                     .foregroundColor(.yellow)
                     .font(.subheadline)
                 Text("Avg Rating: \(String(format: "%.1f", rec.avgRating))")
-//                Text("Avg Rating: \(rec.avgRating)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -58,7 +57,7 @@ struct RecommendationsCardView: View {
         .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(14)
         .shadow(color: Color(Color.secondary).opacity(0.07), radius: 5, x: 0, y: 3)
-        .padding(.horizontal)
+        .padding(.horizontal, 16)
         .padding(.vertical, 6)
     }
 }

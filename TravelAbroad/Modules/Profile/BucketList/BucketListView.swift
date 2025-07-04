@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct BucketListView: View {
-    @StateObject private var vm = BucketListViewModel()
+    @ObservedObject var vm: BucketListViewModel
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
     var body: some View {
@@ -27,9 +27,11 @@ struct BucketListView: View {
             }
         }
         .task {
-            await vm.fetchUser()
-            if let userId = vm.userId {
-                await vm.getCities(userId: userId)
+            if vm.userId == nil {
+                await vm.fetchUser()
+                if let userId = vm.userId {
+                    await vm.getCities(userId: userId)
+                }
             }
         }
         .overlay {
@@ -94,5 +96,5 @@ struct BucketListView: View {
 }
 
 #Preview {
-    BucketListView()
+    BucketListView(vm: BucketListViewModel())
 }

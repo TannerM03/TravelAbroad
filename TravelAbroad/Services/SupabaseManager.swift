@@ -58,7 +58,6 @@ class SupabaseManager {
                     .eq("id", value: user.id)
                     .execute()
                 
-                print("Uploaded image successfully")
             } catch {
                 print("error uploading image: \(error.localizedDescription)")
             }
@@ -127,31 +126,55 @@ class SupabaseManager {
             .execute()
 
         let rating = try JSONDecoder().decode(RatingResponse.self, from: response.data)
-        print("rating for user: \(rating.overall_rating ?? 0.0)")
         return rating.overall_rating
     }
     
-    func fetchUserTravelHistory(userId: UUID) async throws -> [City] {
-        struct CityIdRow: Decodable {
+    func fetchUserTravelHistory(userId: UUID) async throws -> [UserRatedCity] {
+        struct CityReviewWithCity: Decodable {
             let cityId: UUID
+            let overallRating: Double?
+            let createdAt: Date?
+            let city: CityInfo
             
             enum CodingKeys: String, CodingKey {
                 case cityId = "city_id"
+                case overallRating = "overall_rating"
+                case createdAt = "created_at"
+                case city = "cities"
             }
         }
-        let cityIdsResponse: PostgrestResponse<[CityIdRow]> = try await supabase.from("city_reviews")
-            .select("city_id")
+        
+        struct CityInfo: Decodable {
+            let id: UUID
+            let name: String
+            let country: String
+            let imageUrl: String?
+            
+            enum CodingKeys: String, CodingKey {
+                case id
+                case name
+                case country
+                case imageUrl = "image_url"
+            }
+        }
+        
+        let userRatedCities: [CityReviewWithCity] = try await supabase
+            .from("city_reviews")
+            .select("city_id, overall_rating, created_at, cities!inner(id, name, country, image_url)")
             .eq("user_id", value: userId)
             .execute()
-        
-        let cityIds = cityIdsResponse.value.map { $0.cityId }
-        
-        let cities: [City] = try await supabase.from("city_with_avg_rating")
-            .select()
-            .in("id", values: cityIds)
-            .execute()
             .value
-        return cities
+        
+        return userRatedCities.map { reviewData in
+            UserRatedCity(
+                id: reviewData.city.id,
+                name: reviewData.city.name,
+                country: reviewData.city.country,
+                imageUrl: reviewData.city.imageUrl,
+                userRating: reviewData.overallRating,
+                createdAt: reviewData.createdAt
+            )
+        }
     }
     
     func fetchUserBucketList(userId: UUID) async throws -> [City] {
@@ -168,14 +191,12 @@ class SupabaseManager {
             .execute()
         
         let cityIds = cityIdsResponse.value.map { $0.cityId }
-        print("supabase bucketlist city ids: \(cityIds)")
         
         let cities: [City] = try await supabase.from("city_with_avg_rating")
             .select()
             .in("id", values: cityIds)
             .execute()
             .value
-        print("supabase bucketlist cities: \(cities)")
         return cities
     }
         
@@ -230,22 +251,44 @@ class SupabaseManager {
     
     //adds or updates a review for a city
     func addCityReview(userId: UUID, cityId: UUID, rating: Double) async throws {
-        guard let currentUserId = supabase.auth.currentUser?.id else {
+        guard supabase.auth.currentUser?.id  != nil else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
 
+        // Try to insert a new review
         let review: CityReviewModel = CityReviewModel(cityId: cityId.uuidString, userId: userId.uuidString, rating: rating)
         
-        let response = try await supabase
-            .from("city_reviews")
-            .upsert(review,
-                    onConflict: "user_id,city_id")
+        do {
+            try await supabase
+                .from("city_reviews")
+                .insert(review)
+                .execute()
+        } catch {
+            // If insert fails (likely due to duplicate), update only the rating to preserve created_at
+            try await supabase
+                .from("city_reviews")
+                .update(["overall_rating": rating])
+                .eq("city_id", value: cityId)
+                .eq("user_id", value: userId)
+                .execute()
+        }
+    }
+    
+    func getIsCityFavorite(cityId: UUID, userId: UUID) async throws -> Bool {
+        struct Favorite: Codable {
+            let city_id: UUID
+        }
+
+        let response: [Favorite] = try await SupabaseManager.shared.supabase
+            .from("user_bucket_list")
+            .select("city_id")
+            .eq("user_id", value: userId)
+            .eq("city_id", value: cityId)
+            .limit(1)
             .execute()
-        
-        print(response)
-        print("status: \(response.status)")
-        print("response data: \(String(describing: response.data))")
-        
+            .value
+
+        return !response.isEmpty
     }
 
 

@@ -28,6 +28,8 @@ class ProfileViewModel: ObservableObject {
             }
         }
     }
+    
+    private var imageCache: [String: Image] = [:]
 
     func logOut() async throws {
         try await SupabaseManager.shared.supabase.auth.signOut()
@@ -53,10 +55,19 @@ class ProfileViewModel: ObservableObject {
     }
     
     private func loadImageFromURL(_ url: URL) async {
+        let urlString = url.absoluteString
+        
+        // Check cache first
+        if let cachedImage = imageCache[urlString] {
+            imageState = .success(cachedImage)
+            return
+        }
+        
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             if let uiImage = UIImage(data: data) {
                 let image = Image(uiImage: uiImage)
+                imageCache[urlString] = image
                 imageState = .success(image)
             }
         } catch {

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TravelHistoryView: View {
-    @StateObject private var vm = TravelHistoryViewModel()
+    @ObservedObject var vm: TravelHistoryViewModel
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
     var body: some View {
@@ -27,9 +27,19 @@ struct TravelHistoryView: View {
             }
         }
         .task {
-            await vm.fetchUser()
+            if vm.userId == nil {
+                await vm.fetchUser()
+                if let userId = vm.userId {
+                    await vm.getCities(userId: userId, showLoading: true)
+                }
+            }
+        }
+        .onAppear {
+            // Refresh data when view appears to catch rating updates
             if let userId = vm.userId {
-                await vm.getCities(userId: userId)
+                Task {
+                    await vm.getCities(userId: userId, showLoading: false)
+                }
             }
         }
         .overlay {
@@ -43,9 +53,9 @@ struct TravelHistoryView: View {
                 ForEach(vm.sortedCities) { city in
                     let emoji = CountryEmoji.emoji(for: city.country)
                     NavigationLink {
-                        RecommendationsView(cityId: city.id, cityName: city.name, imageUrl: city.imageUrl ?? "")
+                        RecommendationsView(cityId: city.id.uuidString, cityName: city.name, imageUrl: city.imageUrl ?? "")
                     } label: {
-                        CityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.avgRating, flagEmoji: emoji)
+                        TravelHistoryCityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.userRating, flagEmoji: emoji)
                     }
                 }
             }
@@ -93,6 +103,6 @@ struct TravelHistoryView: View {
     }
 }
 
-//#Preview {
-//    TravelHistoryView()
-//}
+#Preview {
+    TravelHistoryView(vm: TravelHistoryViewModel())
+}

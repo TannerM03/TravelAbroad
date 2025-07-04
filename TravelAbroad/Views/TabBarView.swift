@@ -9,16 +9,25 @@ import SwiftUI
 
 struct TabBarView: View {
     @Binding var isAuthenticated: Bool
+    @StateObject private var cityListViewModel = CityListViewModel()
+    @StateObject private var profileViewModel = ProfileViewModel()
+    
     var body: some View {
         TabView {
-            CitiesView()
+            CitiesView(vm: cityListViewModel)
                 .tabItem {
                     Label("Cities", systemImage: "building.2.crop.circle")
                 }
-            ProfileView(isAuthenticated: $isAuthenticated)
+            ProfileView(isAuthenticated: $isAuthenticated, vm: profileViewModel)
                 .tabItem {
                     Label("Profile", systemImage: "person.crop.circle")
                 }
+        }
+        .task {
+            // Preload profile data on app launch
+            if profileViewModel.user == nil {
+                await profileViewModel.fetchUser()
+            }
         }
     }
 }

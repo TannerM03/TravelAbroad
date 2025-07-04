@@ -1,2 +1,5 @@
 Secrets.plist
 .secrets.plist
+
+# Claude context file
+CLAUDE.md
