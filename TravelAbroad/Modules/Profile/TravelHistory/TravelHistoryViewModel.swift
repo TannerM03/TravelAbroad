@@ -12,15 +12,15 @@ import SwiftUI
 
 @MainActor
 class TravelHistoryViewModel: ObservableObject {
-    @Published var cities: [City] = []
-    @Published var isLoading = false
+    @Published var cities: [UserRatedCity] = []
+    @Published var isLoading = true
     @Published var userSearch = ""
     @Published var filter: CityFilter = .none
     @Published var user: User?
     @Published var userId: UUID? = nil
 
     // what will be shown to the user, includes the text the user is searching for and searches for the city name and the country it's in
-    var filteredCities: [City] {
+    var filteredCities: [UserRatedCity] {
         if userSearch.isEmpty {
             return cities
         } else {
@@ -30,13 +30,17 @@ class TravelHistoryViewModel: ObservableObject {
         }
     }
 
-    var sortedCities: [City] {
+    var sortedCities: [UserRatedCity] {
         if filter == .none {
-            return filteredCities
+            // Sort by newest created_at date first
+            return filteredCities.sorted { 
+                guard let date1 = $0.createdAt, let date2 = $1.createdAt else { return false }
+                return date1 > date2
+            }
         } else if filter == .best {
-            return filteredCities.sorted { $0.avgRating ?? 0 > $1.avgRating ?? 0 }
+            return filteredCities.sorted { $0.userRating ?? 0 > $1.userRating ?? 0 }
         } else {
-            return filteredCities.sorted { $0.avgRating ?? 0 < $1.avgRating ?? 0 }
+            return filteredCities.sorted { $0.userRating ?? 0 < $1.userRating ?? 0 }
         }
     }
     
@@ -50,13 +54,17 @@ class TravelHistoryViewModel: ObservableObject {
         }
     }
 
-    func getCities(userId: UUID) async {
-        isLoading = true
-        defer { isLoading = false }
+    func getCities(userId: UUID, showLoading: Bool = true) async {
+        if showLoading {
+            isLoading = true
+        }
+        defer { 
+            if showLoading {
+                isLoading = false 
+            }
+        }
         do {
-            print("in vm getCities")
             cities = try await SupabaseManager.shared.fetchUserTravelHistory(userId: userId)
-            print("vm cities: \(cities)")
         } catch {
             print("Error getting cities in vm: \(error)")
         }

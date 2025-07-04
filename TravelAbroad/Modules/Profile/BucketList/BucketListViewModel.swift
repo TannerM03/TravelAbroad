@@ -11,7 +11,7 @@ import Supabase
 @MainActor
 class BucketListViewModel: ObservableObject {
     @Published var cities: [City] = []
-    @Published var isLoading = false
+    @Published var isLoading = true
     @Published var userSearch = ""
     @Published var filter: CityFilter = .none
     @Published var user: User?

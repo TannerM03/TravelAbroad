@@ -23,3 +23,22 @@ struct City: Codable, Identifiable {
         case avgRating = "avg_rating"
     }
 }
+
+// model for cities with user's personal rating
+struct UserRatedCity: Codable, Identifiable {
+    let id: UUID
+    let name: String
+    let country: String
+    let imageUrl: String?
+    let userRating: Double?
+    let createdAt: Date?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case country
+        case imageUrl
+        case userRating
+        case createdAt = "created_at"
+    }
+}
