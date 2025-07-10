@@ -12,10 +12,16 @@ import UIKit
 class SupabaseManager {
     static let shared = SupabaseManager()
 
-    let supabase = SupabaseClient(
-        supabaseURL: URL(string: ConfigManager.shared.supabaseURL)!,
-        supabaseKey: ConfigManager.shared.supabaseKey
-    )
+    let supabase: SupabaseClient = {
+        let url = ConfigManager.shared.supabaseURL
+        let key = ConfigManager.shared.supabaseKey
+        
+        guard let supabaseURL = URL(string: url) else {
+            fatalError("Invalid Supabase URL: \(url)")
+        }
+        
+        return SupabaseClient(supabaseURL: supabaseURL, supabaseKey: key)
+    }()
 
     // fetches the cities to be displayed as travel options,
     func fetchCities() async throws -> [City] {
