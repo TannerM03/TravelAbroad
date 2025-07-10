@@ -296,6 +296,118 @@ class SupabaseManager {
 
         return !response.isEmpty
     }
+    
+    func fetchComments(for recommendationId: String) async throws -> [Comment] {
+        let comments: [Comment] = try await supabase
+            .from("comments")
+            .select("*, profiles!inner(username)")
+            .eq("recommendation_id", value: recommendationId)
+            .order("created_at", ascending: false)
+            .execute()
+            .value
+        return comments
+    }
+    
+    func submitComment(recommendationId: String, text: String, imageUrl: String?) async throws -> Comment {
+        guard let userId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
+        }
+        
+        struct CommentInsert: Codable {
+            let recommendation_id: String
+            let user_id: String
+            let text: String
+            let image_url: String?
+            let created_at: String
+        }
+        
+        let commentData = CommentInsert(
+            recommendation_id: recommendationId,
+            user_id: userId.uuidString,
+            text: text,
+            image_url: imageUrl,
+            created_at: ISO8601DateFormatter().string(from: Date())
+        )
+        
+        let newComment: Comment = try await supabase
+            .from("comments")
+            .insert(commentData)
+            .select("*, profiles!inner(username)")
+            .single()
+            .execute()
+            .value
+        
+        return newComment
+    }
+    
+    func uploadCommentImage(_ image: UIImage) async throws -> String {
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            throw NSError(domain: "ImageError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image to JPEG"])
+        }
+        
+        let fileName = "comment_\(UUID().uuidString).jpg"
+        
+        let bucket = supabase.storage.from("comment-images")
+        try await bucket.upload(fileName, data: imageData, options: FileOptions(contentType: "image/jpeg"))
+        
+        let imageUrl = try bucket.getPublicURL(path: fileName).absoluteString
+        return imageUrl
+    }
+    
+    func getUserRecommendationRating(recommendationId: String) async throws -> Double? {
+        guard let userId = supabase.auth.currentUser?.id else {
+            return nil
+        }
+        
+        struct RatingResponse: Decodable {
+            let rating: Int
+        }
+        
+        let response: [RatingResponse] = try await supabase
+            .from("rec_reviews")
+            .select("rating")
+            .eq("user_id", value: userId.uuidString)
+            .eq("rec_id", value: recommendationId)
+            .limit(1)
+            .execute()
+            .value
+        
+        return response.first.map { Double($0.rating) }
+    }
+    
+    func submitRecommendationRating(recommendationId: String, rating: Int) async throws {
+        guard let userId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
+        }
+        
+        struct RatingInsert: Codable {
+            let rec_id: String
+            let user_id: String
+            let rating: Int
+            let comment: String
+        }
+        
+        let ratingData = RatingInsert(
+            rec_id: recommendationId,
+            user_id: userId.uuidString,
+            rating: rating,
+            comment: ""
+        )
+        
+        do {
+            try await supabase
+                .from("rec_reviews")
+                .insert(ratingData)
+                .execute()
+        } catch {
+            try await supabase
+                .from("rec_reviews")
+                .update(["rating": rating])
+                .eq("user_id", value: userId.uuidString)
+                .eq("rec_id", value: recommendationId)
+                .execute()
+        }
+    }
 
 
 }

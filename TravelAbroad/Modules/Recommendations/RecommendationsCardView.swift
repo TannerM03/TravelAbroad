@@ -12,7 +12,8 @@ struct RecommendationsCardView: View {
     let rec: Recommendation
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        NavigationLink(destination: CommentsView(recommendation: rec)) {
+            VStack(alignment: .leading, spacing: 8) {
             if let urlStr = rec.imageUrl, let url = URL(string: urlStr) {
                 KFImage(url)
                     .resizable()
@@ -52,13 +53,15 @@ struct RecommendationsCardView: View {
                     .foregroundColor(.secondary)
                     .padding(.top, 2)
             }
+            }
+            .padding()
+            .background(Color(.tertiarySystemGroupedBackground))
+            .cornerRadius(14)
+            .shadow(color: Color(Color.secondary).opacity(0.07), radius: 5, x: 0, y: 3)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
         }
-        .padding()
-        .background(Color(.tertiarySystemGroupedBackground))
-        .cornerRadius(14)
-        .shadow(color: Color(Color.secondary).opacity(0.07), radius: 5, x: 0, y: 3)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
