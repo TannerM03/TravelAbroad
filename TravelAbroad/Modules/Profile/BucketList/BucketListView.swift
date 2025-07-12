@@ -38,7 +38,7 @@ struct BucketListView: View {
             overlayContentSection
         }
     }
-    
+
     private var citiesGridSection: some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 20) {
@@ -53,7 +53,7 @@ struct BucketListView: View {
             }
         }
     }
-    
+
     private var filterToolbarSection: some View {
         Menu {
             ForEach(CityFilter.allCases) { option in
@@ -83,7 +83,7 @@ struct BucketListView: View {
         .animation(.easeInOut(duration: 0.18), value: vm.filter)
         .accessibilityLabel("City filter menu")
     }
-    
+
     private var overlayContentSection: some View {
         Group {
             if vm.isLoading {

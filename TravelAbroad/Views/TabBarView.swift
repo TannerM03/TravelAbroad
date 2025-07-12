@@ -11,7 +11,7 @@ struct TabBarView: View {
     @Binding var isAuthenticated: Bool
     @StateObject private var cityListViewModel = CityListViewModel()
     @StateObject private var profileViewModel = ProfileViewModel()
-    
+
     var body: some View {
         TabView {
             CitiesView(vm: cityListViewModel)

@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import Supabase
 import PhotosUI
+import Supabase
 import SwiftUI
 
 @MainActor
@@ -33,7 +33,7 @@ class TravelHistoryViewModel: ObservableObject {
     var sortedCities: [UserRatedCity] {
         if filter == .none {
             // Sort by newest created_at date first
-            return filteredCities.sorted { 
+            return filteredCities.sorted {
                 guard let date1 = $0.createdAt, let date2 = $1.createdAt else { return false }
                 return date1 > date2
             }
@@ -43,12 +43,12 @@ class TravelHistoryViewModel: ObservableObject {
             return filteredCities.sorted { $0.userRating ?? 0 < $1.userRating ?? 0 }
         }
     }
-    
+
     func fetchUser() async {
         do {
             user = try await SupabaseManager.shared.supabase.auth.user()
             userId = user?.id
-            
+
         } catch {
             print("Failed to fetch user: \(error)")
         }
@@ -58,9 +58,9 @@ class TravelHistoryViewModel: ObservableObject {
         if showLoading {
             isLoading = true
         }
-        defer { 
+        defer {
             if showLoading {
-                isLoading = false 
+                isLoading = false
             }
         }
         do {

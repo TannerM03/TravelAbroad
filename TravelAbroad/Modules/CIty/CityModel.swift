@@ -1,5 +1,5 @@
 //
-//  City.swift
+//  CityModel.swift
 //  TravelAbroad
 //
 //  Created by Tanner Macpherson on 6/2/25.
@@ -32,7 +32,7 @@ struct UserRatedCity: Codable, Identifiable {
     let imageUrl: String?
     let userRating: Double?
     let createdAt: Date?
-    
+
     enum CodingKeys: String, CodingKey {
         case id
         case name

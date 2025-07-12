@@ -3,21 +3,22 @@
 //
 //  Created as a login/signup screen for Supabase Auth.
 
-import SwiftUI
 import Foundation
+import SwiftUI
 
 struct LoginView: View {
     @StateObject private var vm = LoginViewModel()
+    @StateObject private var profileVm = ProfileViewModel()
     @Binding var isAuthenticated: Bool
 
     var body: some View {
         ZStack {
             LinearGradient(gradient: Gradient(colors: [Color(.systemTeal).opacity(0.18), Color(.systemIndigo).opacity(0.14)]), startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
-            
+
             VStack {
                 Spacer(minLength: 60)
-                
+
                 VStack(spacing: 24) {
                     titleSection
                     inputFieldsSection
@@ -39,13 +40,13 @@ struct LoginView: View {
             }
         }
     }
-    
+
     private var titleSection: some View {
         Text(vm.isSignUp ? "Create Account" : "Login")
             .font(.largeTitle).bold()
             .padding(.top, 8)
     }
-    
+
     private var inputFieldsSection: some View {
         VStack(spacing: 18) {
             HStack {
@@ -79,7 +80,7 @@ struct LoginView: View {
         }
         .padding(.horizontal, 8)
     }
-    
+
     private var errorMessageSection: some View {
         Group {
             if let errorMessage = vm.errorMessage {
@@ -91,10 +92,13 @@ struct LoginView: View {
             }
         }
     }
-    
+
     private var actionButtonSection: some View {
         Button {
-            Task { isAuthenticated = await vm.authAction() }
+            Task {
+                isAuthenticated = await vm.authAction()
+                await profileVm.fetchUser()
+            }
         } label: {
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
@@ -108,7 +112,7 @@ struct LoginView: View {
         .disabled(vm.email == "" || vm.password == "" || vm.isLoading || (vm.username.count < 4 && vm.isSignUp))
         .padding(.horizontal, 4)
     }
-    
+
     private var toggleModeSection: some View {
         Button(action: {
             vm.isSignUp.toggle()
