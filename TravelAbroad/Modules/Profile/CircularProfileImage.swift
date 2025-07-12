@@ -1,5 +1,5 @@
 //
-//  ProfileImage.swift
+//  CircularProfileImage.swift
 //  TravelAbroad
 //
 //  Created by Tanner Macpherson on 6/27/25.
@@ -21,7 +21,7 @@ struct CircularProfileImage: View {
                     .overlay(Circle().stroke(Color.white, lineWidth: 6))
             case .loading:
                 ProgressView()
-            case .success(let image):
+            case let .success(image):
                 image
                     .resizable()
                     .scaledToFill()

@@ -14,39 +14,39 @@ struct RecommendationsCardView: View {
     var body: some View {
         NavigationLink(destination: CommentsView(recommendation: rec)) {
             VStack(alignment: .leading, spacing: 8) {
-            if let urlStr = rec.imageUrl, let url = URL(string: urlStr) {
-                KFImage(url)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 170)
-                    .clipped()
-                    .cornerRadius(15)
-            } else {
-                KFImage(URL(string: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0"))
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 170)
-                    .clipped()
-                    .cornerRadius(15)
-            }
-            HStack(alignment: .center, spacing: 8) {
-                Text(rec.name)
-                    .font(.headline)
-                Spacer()
-                Text(rec.category.rawValue.capitalized)
-                    .font(.subheadline)
-                    .padding(6)
-                    .background(rec.category.pillColor)
-                    .cornerRadius(8)
-            }
-            HStack(spacing: 6) {
-                Image(systemName: "star.fill")
-                    .foregroundColor(.yellow)
-                    .font(.subheadline)
-                Text("Avg Rating: \(String(format: "%.1f", rec.avgRating))")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
+                if let urlStr = rec.imageUrl, let url = URL(string: urlStr) {
+                    KFImage(url)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 170)
+                        .clipped()
+                        .cornerRadius(15)
+                } else {
+                    KFImage(URL(string: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0"))
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 170)
+                        .clipped()
+                        .cornerRadius(15)
+                }
+                HStack(alignment: .center, spacing: 8) {
+                    Text(rec.name)
+                        .font(.headline)
+                    Spacer()
+                    Text(rec.category.rawValue.capitalized)
+                        .font(.subheadline)
+                        .padding(6)
+                        .background(rec.category.pillColor)
+                        .cornerRadius(8)
+                }
+                HStack(spacing: 6) {
+                    Image(systemName: "star.fill")
+                        .foregroundColor(.yellow)
+                        .font(.subheadline)
+                    Text("Avg Rating: \(String(format: "%.1f", rec.avgRating))")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
                 // these descriptions are the same as comments, don't want to show for now until i can make it a summary
 //            if let desc = rec.description, !desc.isEmpty {
 //                Text(desc)

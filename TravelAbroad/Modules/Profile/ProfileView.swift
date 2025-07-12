@@ -5,9 +5,9 @@
 //  Created by Tanner Macpherson on 6/18/25.
 //
 
+import PhotosUI
 import Supabase
 import SwiftUI
-import PhotosUI
 
 struct ProfileView: View {
     @Binding var isAuthenticated: Bool
@@ -44,12 +44,12 @@ struct ProfileView: View {
         .task {
             if vm.user == nil {
                 await vm.fetchUser()
-                
+
                 // Preload bucket list and travel history data
                 if let userId = vm.userId {
                     await bucketListViewModel.fetchUser()
                     await travelHistoryViewModel.fetchUser()
-                    
+
                     if bucketListViewModel.cities.isEmpty {
                         await bucketListViewModel.getCities(userId: userId)
                     }
@@ -60,7 +60,7 @@ struct ProfileView: View {
             }
         }
     }
-    
+
     private var profileImageSection: some View {
         HStack(alignment: .center) {
             Spacer()
@@ -69,7 +69,8 @@ struct ProfileView: View {
                     .overlay(alignment: .bottomTrailing) {
                         PhotosPicker(selection: $vm.imageSelection,
                                      matching: .images,
-                                     photoLibrary: .shared()) {
+                                     photoLibrary: .shared())
+                        {
                             Image(systemName: "pencil.circle.fill")
                                 .symbolRenderingMode(.multicolor)
                                 .font(.system(size: 30))
@@ -82,15 +83,15 @@ struct ProfileView: View {
             Spacer()
         }
     }
-    
+
     private var travelHistorySection: some View {
-                NavigationLink {
-                    TravelHistoryView(vm: travelHistoryViewModel)
-                } label: {
-                    Text("Travel History")
-                }
+        NavigationLink {
+            TravelHistoryView(vm: travelHistoryViewModel)
+        } label: {
+            Text("Travel History")
+        }
     }
-    
+
     private var bucketListSection: some View {
         NavigationLink {
             BucketListView(vm: bucketListViewModel)
@@ -98,7 +99,7 @@ struct ProfileView: View {
             Text("Bucket List")
         }
     }
-    
+
     private var logoutSection: some View {
         Button(action: {
             showLogoutDialog = true

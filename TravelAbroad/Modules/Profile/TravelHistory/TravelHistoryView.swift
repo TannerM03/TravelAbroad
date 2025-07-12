@@ -46,7 +46,7 @@ struct TravelHistoryView: View {
             overlayContentSection
         }
     }
-    
+
     private var citiesGridSection: some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 20) {
@@ -61,7 +61,7 @@ struct TravelHistoryView: View {
             }
         }
     }
-    
+
     private var filterToolbarSection: some View {
         Menu {
             ForEach(CityFilter.allCases) { option in
@@ -91,7 +91,7 @@ struct TravelHistoryView: View {
         .animation(.easeInOut(duration: 0.18), value: vm.filter)
         .accessibilityLabel("City filter menu")
     }
-    
+
     private var overlayContentSection: some View {
         Group {
             if vm.isLoading {

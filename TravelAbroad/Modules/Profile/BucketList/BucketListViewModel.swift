@@ -37,12 +37,12 @@ class BucketListViewModel: ObservableObject {
             return filteredCities.sorted { $0.avgRating ?? 0 < $1.avgRating ?? 0 }
         }
     }
-    
+
     func fetchUser() async {
         do {
             user = try await SupabaseManager.shared.supabase.auth.user()
             userId = user?.id
-            
+
         } catch {
             print("Failed to fetch user: \(error)")
         }

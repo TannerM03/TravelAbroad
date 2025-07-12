@@ -9,8 +9,9 @@ import Foundation
 
 class MockData {
     static let shared = MockData()
-    
+
     // MARK: - Mock Cities
+
     static let sampleCities: [City] = [
         City(
             id: "49e5f9fb-e080-4365-9de6-cab823acf033",
@@ -46,10 +47,11 @@ class MockData {
             country: "Spain",
             imageUrl: "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62",
             avgRating: 4.6
-        )
+        ),
     ]
-    
+
     // MARK: - Mock Recommendations
+
     static let sampleRecommendations: [Recommendation] = [
         Recommendation(
             id: "rec1",
@@ -116,22 +118,24 @@ class MockData {
             imageUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1",
             location: "Plaza de San Miguel, s/n, Madrid",
             avgRating: 4.0
-        )
+        ),
     ]
-    
+
     // MARK: - Helper Methods
+
     static func getRecommendations(for cityId: String) -> [Recommendation] {
         return sampleRecommendations.filter { $0.cityId == cityId }
     }
-    
+
     static func getRecommendations(for category: CategoryType, cityId: String) -> [Recommendation] {
-        return sampleRecommendations.filter { 
-            $0.category == category && $0.cityId == cityId 
+        return sampleRecommendations.filter {
+            $0.category == category && $0.cityId == cityId
         }
     }
 }
 
 // MARK: - Preview Environment Configuration
+
 extension MockData {
     static var isPreview: Bool {
         ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"

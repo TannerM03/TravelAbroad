@@ -12,12 +12,12 @@ import Supabase
 class RecommendationsViewModel: ObservableObject {
     @Published var recommendations: [Recommendation] = []
     @Published var isLoading = false
-    @Published var userId: UUID = UUID()
+    @Published var userId: UUID = .init()
     @Published var user: User?
     @Published var cityRating: Double? = nil
     @Published var selectedCategory: CategoryType? = .activities
     @Published var isFavoriteCity: Bool = false
-    
+
 //    @Published var favoriteCities: [City] = []
 
 //    func isFavorite(cityId: UUID) -> Bool {
@@ -25,7 +25,6 @@ class RecommendationsViewModel: ObservableObject {
 //        return favoriteCities.contains(where: { $0.id == cityId.uuidString })
 //    }
 
-    
     var categorizedRecs: [Recommendation] {
         if let selected = selectedCategory {
             return recommendations.filter { $0.category == selected }
@@ -33,11 +32,10 @@ class RecommendationsViewModel: ObservableObject {
             return recommendations
         }
     }
-    
+
     var filteredRecs: [Recommendation] {
         return categorizedRecs.sorted { $0.avgRating > $1.avgRating }
     }
-    
 
     func getRecs(cityId: UUID) async {
         isLoading = true
@@ -48,7 +46,7 @@ class RecommendationsViewModel: ObservableObject {
             print("Error getting cities in vm: \(error)")
         }
     }
-    
+
     func updateCityReview(userId: UUID, cityId: UUID, rating: Double) async {
         do {
             try await SupabaseManager.shared.addCityReview(userId: userId, cityId: cityId, rating: rating)
@@ -56,17 +54,17 @@ class RecommendationsViewModel: ObservableObject {
             print("Error updating/creating city review in vm: \(error)")
         }
     }
-    
+
     func fetchUser() async {
         do {
             user = try await SupabaseManager.shared.supabase.auth.user()
             userId = user?.id ?? UUID()
-            
+
         } catch {
             print("Failed to fetch user: \(error)")
         }
     }
-    
+
 //    func getUserCityRating(for cityId: UUID) async -> Double? {
 //        do {
 //            cityRating = try await SupabaseManager.shared.getCityRatingForUser(cityId: cityId, userId: userId)
@@ -76,7 +74,7 @@ class RecommendationsViewModel: ObservableObject {
 //        }
 //        return cityRating
 //    }
-    
+
     func getUserCityRating(for cityId: UUID) async {
         do {
             cityRating = try await SupabaseManager.shared.getCityRatingForUser(cityId: cityId, userId: userId)
@@ -86,7 +84,6 @@ class RecommendationsViewModel: ObservableObject {
         }
     }
 
-    
     func isCityFavorite(cityId: UUID) async {
         do {
             isFavoriteCity = try await SupabaseManager.shared.getIsCityFavorite(cityId: cityId, userId: userId)
@@ -94,7 +91,7 @@ class RecommendationsViewModel: ObservableObject {
             print("couldn't determine is city is favorite (vm): \(error)")
         }
     }
-    
+
 //    func getFavorites(cityId: UUID) async{
 //        do {
 //            favoriteCities = try await SupabaseManager.shared.fetchUserBucketList(userId: userId)
@@ -104,7 +101,7 @@ class RecommendationsViewModel: ObservableObject {
 //            print("failed to get bucket list: \(error)")
 //        }
 //    }
-    
+
 //    func checkIfCityIsFavorite(cityId: UUID) async {
 //        do {
 //            let bucketList = try await SupabaseManager.shared.fetchUserBucketList(userId: userId)
@@ -114,14 +111,13 @@ class RecommendationsViewModel: ObservableObject {
 //            isFavorite = false
 //        }
 //    }
-    
+
     func addOrRemoveFavorite(cityId: UUID) async {
         do {
             if isFavoriteCity {
                 isFavoriteCity = false
                 try await SupabaseManager.shared.removeUserFavoriteCity(userId: userId, cityId: cityId)
-            }
-            else {
+            } else {
                 isFavoriteCity = true
                 try await SupabaseManager.shared.addUserFavoriteCity(userId: userId, cityId: cityId)
             }
@@ -130,4 +126,3 @@ class RecommendationsViewModel: ObservableObject {
         }
     }
 }
-
