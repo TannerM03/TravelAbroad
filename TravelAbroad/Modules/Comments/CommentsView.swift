@@ -19,16 +19,38 @@ struct CommentsView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    recommendationHeader
-                    commentsSection
-                    Spacer(minLength: 100)
+            ZStack {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        recommendationHeader
+                        commentsSection
+                        Spacer(minLength: 100)
+                    }
+                    .padding()
                 }
-                .padding()
+                .navigationTitle("Comments")
+                .navigationBarTitleDisplayMode(.inline)
+                .blur(radius: showLeaveRating ? 8 : 0)
+                
+                if showLeaveRating {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                showLeaveRating = false
+                                newCommentText = ""
+                                selectedImage = nil
+                            }
+                        }
+                    
+                    VStack {
+                        recommendationHeader
+                            .padding()
+                        Spacer()
+                    }
+                    .allowsHitTesting(false)
+                }
             }
-            .navigationTitle("Comments")
-            .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom) {
                 if showLeaveRating {
                     ratingInputSection
@@ -103,12 +125,12 @@ struct CommentsView: View {
                     .font(.headline)
                     .fontWeight(.semibold)
                 Spacer()
-                Text("\(vm.comments.count)")
+                Text("\(vm.comments.filter { $0.comment != nil && !$0.comment!.isEmpty }.count)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
             
-            if vm.comments.isEmpty {
+            if vm.comments.filter({ $0.comment != nil && !$0.comment!.isEmpty }).isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "bubble.left")
                         .font(.system(size: 40))
@@ -125,7 +147,9 @@ struct CommentsView: View {
             } else {
                 LazyVStack(spacing: 12) {
                     ForEach(vm.comments) { comment in
-                        CommentCardView(comment: comment)
+                        if let _ = comment.comment {
+                            CommentCardView(comment: comment)
+                        }
                     }
                 }
             }
@@ -145,48 +169,38 @@ struct CommentsView: View {
                 .padding(.vertical, 16)
                 .background(Color.accentColor)
                 .cornerRadius(30)
+                .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(.regularMaterial)
+        .padding(.horizontal, 20)
+        .padding(.bottom, 20)
     }
     
     private var ratingInputSection: some View {
-        VStack(spacing: 16) {
-            HStack {
-                Text("Rate this place")
+        VStack(spacing: 20) {
+            VStack(spacing: 16) {
+                Text("Rate \(recommendation.name)")
                     .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 
-                Spacer()
-                
-                Button("Cancel") {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        showLeaveRating = false
-                        newCommentText = ""
-                        selectedImage = nil
+                VStack(spacing: 12) {
+                    HStack(spacing: 8) {
+                        ForEach(1...5, id: \.self) { i in
+                            Button(action: { userRating = Double(i) }) {
+                                Image(systemName: userRating >= Double(i) ? "star.fill" : "star")
+                                    .font(.title2)
+                                    .foregroundColor(.yellow)
+                            }
+                        }
                     }
+                    
+                    Text("\(Int(userRating)) star\(userRating == 1 ? "" : "s")")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
                 }
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
             .padding(.horizontal)
-            
-            HStack(spacing: 8) {
-                ForEach(1...5, id: \.self) { i in
-                    Button(action: { userRating = Double(i) }) {
-                        Image(systemName: userRating >= Double(i) ? "star.fill" : "star")
-                            .font(.title2)
-                            .foregroundColor(.yellow)
-                    }
-                }
-                
-                Spacer()
-                
-                Text("\(Int(userRating)) star\(userRating == 1 ? "" : "s")")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal)
+            .padding(.top, 20)
             
             if let selectedImage = selectedImage {
                 HStack {
@@ -208,39 +222,77 @@ struct CommentsView: View {
                 .padding(.horizontal)
             }
             
-            HStack(spacing: 12) {
-                Button(action: { showingImagePicker = true }) {
-                    Image(systemName: "camera")
-                        .font(.title3)
-                        .foregroundColor(.accentColor)
+            VStack(spacing: 16) {
+                ZStack(alignment: .trailing) {
+                    TextField("Add a comment (optional)", text: $newCommentText, axis: .vertical)
+                        .textFieldStyle(.roundedBorder)
+                        .lineLimit(3...6)
+                        .frame(minHeight: 80)
+                    
+                    Button(action: { showingImagePicker = true }) {
+                        Image(systemName: "camera")
+                            .font(.title3)
+                            .foregroundColor(.accentColor)
+                            .padding(.trailing, 12)
+                    }
                 }
                 
-                TextField("Add a comment (optional)...", text: $newCommentText, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
-                    .lineLimit(1...4)
-                
-                Button(action: submitRatingAndComment) {
-                    Image(systemName: "paperplane.fill")
-                        .font(.title3)
-                        .foregroundColor(.accentColor)
+                HStack {
+                    Button("Cancel") {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showLeaveRating = false
+                            newCommentText = ""
+                            selectedImage = nil
+                        }
+                    }
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Color(.systemGray5))
+                    .cornerRadius(12)
+                    
+                    Spacer()
+                    
+                    Button(action: submitRatingAndComment) {
+                        Text("Submit")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Color.accentColor)
+                    .cornerRadius(12)
                 }
             }
             .padding(.horizontal)
+            .padding(.bottom, 16)
         }
-        .padding(.vertical, 12)
         .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .mask(
+            Rectangle()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .mask(Rectangle().padding(.bottom, -20))
+                )
+        )
     }
     
     private func submitRatingAndComment() {
         Task {
-            await vm.submitRating(for: recommendation.id, rating: Int(userRating))
+//            await vm.submitRating(for: recommendation.id, rating: Int(userRating))
             
             if !newCommentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 await vm.submitComment(
                     recommendationId: recommendation.id,
                     text: newCommentText.trimmingCharacters(in: .whitespacesAndNewlines),
-                    image: selectedImage
+                    image: selectedImage,
+                    rating: Int(userRating)
                 )
+            }
+            else {
+                await vm.submitComment(recommendationId: recommendation.id, text: nil, image: selectedImage, rating: Int(userRating))
             }
             
             await MainActor.run {
@@ -259,10 +311,17 @@ struct CommentCardView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(comment.userDisplayName ?? "Anonymous")
+            HStack(spacing: 5) {
+                Text(comment.username ?? "Anonymous")
                     .font(.subheadline)
                     .fontWeight(.medium)
+                    .padding(.trailing, 5)
+                
+                ForEach(Array(0..<comment.rating), id: \.self) { star in
+                    Image(systemName: "star.fill")
+                        .foregroundColor(.yellow)
+                        .font(.caption)
+                }
                 
                 Spacer()
                 
@@ -271,7 +330,7 @@ struct CommentCardView: View {
                     .foregroundColor(.secondary)
             }
             
-            Text(comment.text)
+            Text(comment.comment!)
                 .font(.body)
             
             if let imageUrl = comment.imageUrl, let url = URL(string: imageUrl) {

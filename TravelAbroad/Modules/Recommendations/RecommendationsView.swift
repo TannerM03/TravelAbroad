@@ -73,7 +73,8 @@ struct RecommendationsView: View {
             await vm.getRecs(cityId: UUID(uuidString: cityId)!)
             await vm.fetchUser()
             await vm.isCityFavorite(cityId: UUID(uuidString: cityId)!)
-            vm.cityRating = await vm.getUserCityRating(for: UUID(uuidString: cityId)!)
+            await vm.getUserCityRating(for: UUID(uuidString: cityId)!)
+//            vm.cityRating = await vm.getUserCityRating(for: UUID(uuidString: cityId)!)
 //            await vm.checkIfCityIsFavorite(cityId: UUID(uuidString: cityId)!)
         }
     }

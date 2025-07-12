@@ -28,7 +28,7 @@ class CommentsViewModel: ObservableObject {
         isLoading = false
     }
     
-    func submitComment(recommendationId: String, text: String, image: UIImage?) async {
+    func submitComment(recommendationId: String, text: String?, image: UIImage?, rating: Int) async {
         do {
             var imageUrl: String? = nil
             
@@ -39,7 +39,8 @@ class CommentsViewModel: ObservableObject {
             let newComment = try await supabaseManager.submitComment(
                 recommendationId: recommendationId,
                 text: text,
-                imageUrl: imageUrl
+                imageUrl: imageUrl,
+                rating: rating
             )
             
             comments.insert(newComment, at: 0)
