@@ -15,16 +15,16 @@ class SupabaseManager {
     let supabase: SupabaseClient = {
         let url = ConfigManager.shared.supabaseURL
         let key = ConfigManager.shared.supabaseKey
-        
+
         guard let supabaseURL = URL(string: url) else {
             fatalError("Invalid Supabase URL: \(url)")
         }
-        
+
         return SupabaseClient(supabaseURL: supabaseURL, supabaseKey: key)
     }()
 
     // MARK: - CitiesView Functions
-    
+
     // fetches the cities to be displayed as travel options,
     func fetchCities() async throws -> [City] {
         let cities: [City] = try await supabase.from("city_with_avg_rating")
@@ -33,9 +33,9 @@ class SupabaseManager {
             .value
         return cities
     }
-    
+
     // MARK: - RecommendationsView Functions
-    
+
     // fetches the recommended place (restaurants, hostels, bars, etc.) for whichever city is specified in with the cityId parameter. Also has avg rating
     func fetchRecommendations(cityId: UUID) async throws -> [Recommendation] {
         let recs: [Recommendation] = try await supabase
@@ -46,9 +46,9 @@ class SupabaseManager {
             .value
         return recs
     }
-    
+
     // MARK: - CommentsView Functions
-    
+
     // fetches all the comments for a given rec
     func fetchComments(for recommendationId: String) async throws -> [Comment] {
         let response: [RatingTemporary] = try await supabase
@@ -58,9 +58,9 @@ class SupabaseManager {
             .order("created_at", ascending: false)
             .execute()
             .value
-        
+
         // Convert to your Comment struct
-        
+
         return response.map { review in
             Comment(
                 id: review.id,
@@ -75,13 +75,12 @@ class SupabaseManager {
         }
     }
 
-    
     // submits a comment
     func submitComment(recommendationId: String, text: String?, imageUrl: String?, rating: Int) async throws -> Comment {
         guard let userId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
-        
+
         struct CommentInsert: Codable {
             let user_id: String
             let rec_id: String
@@ -90,7 +89,7 @@ class SupabaseManager {
             let created_at: String
             let image_url: String?
         }
-        
+
         let commentData = CommentInsert(
             user_id: userId.uuidString,
             rec_id: recommendationId,
@@ -99,7 +98,7 @@ class SupabaseManager {
             created_at: ISO8601DateFormatter().string(from: Date()),
             image_url: imageUrl,
         )
-        
+
         let response: RatingTemporary = try await supabase
             .from("comments")
             .insert(commentData)
@@ -107,44 +106,44 @@ class SupabaseManager {
             .single()
             .execute()
             .value
-        
+
         let newComment = Comment(
-                id: response.id,
-                userId: response.userId,
-                recId: response.recommendationId,
-                rating: response.rating,
-                comment: response.comment,
-                createdAt: response.createdAt,
-                imageUrl: response.imageUrl,
-                username: response.profiles?.username,
-            )
-                    
+            id: response.id,
+            userId: response.userId,
+            recId: response.recommendationId,
+            rating: response.rating,
+            comment: response.comment,
+            createdAt: response.createdAt,
+            imageUrl: response.imageUrl,
+            username: response.profiles?.username,
+        )
+
         return newComment
     }
-    
+
     func uploadCommentImage(_ image: UIImage) async throws -> String {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             throw NSError(domain: "ImageError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image to JPEG"])
         }
-        
+
         let fileName = "comment_\(UUID().uuidString).jpg"
-        
+
         let bucket = supabase.storage.from("comment-images")
         try await bucket.upload(fileName, data: imageData, options: FileOptions(contentType: "image/jpeg"))
-        
+
         let imageUrl = try bucket.getPublicURL(path: fileName).absoluteString
         return imageUrl
     }
-    
+
     func getUserRecommendationRating(recommendationId: String) async throws -> Double? {
         guard let userId = supabase.auth.currentUser?.id else {
             return nil
         }
-        
+
         struct RatingResponse: Decodable {
             let rating: Int
         }
-        
+
         let response: [RatingResponse] = try await supabase
             .from("comments")
             .select("rating")
@@ -153,29 +152,29 @@ class SupabaseManager {
             .limit(1)
             .execute()
             .value
-        
+
         return response.first.map { Double($0.rating) }
     }
-    
+
     func submitRecommendationRating(recommendationId: String, rating: Int) async throws {
         guard let userId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
-        
+
         struct RatingInsert: Codable {
             let rec_id: String
             let user_id: String
             let rating: Int
             let comment: String
         }
-        
+
         let ratingData = RatingInsert(
             rec_id: recommendationId,
             user_id: userId.uuidString,
             rating: rating,
             comment: ""
         )
-        
+
         do {
             try await supabase
                 .from("comments")
@@ -190,36 +189,36 @@ class SupabaseManager {
                 .execute()
         }
     }
-    
+
     // MARK: - ProfileView Functions
-    
-    //adds profile image to profile-images bucket and profiles table
+
+    // adds profile image to profile-images bucket and profiles table
     func uploadProfileImageToSupabase(image: UIImage) async {
         guard let imageData = image.jpegData(compressionQuality: 0.8), let user = try? await SupabaseManager.shared.supabase.auth.session.user else {
             print("Failed to convert UIImage to jpeg data")
             return
         }
-        
+
         let fileName = UUID().uuidString + ".jpg"
-        
+
         Task {
             do {
                 let bucket = SupabaseManager.shared.supabase.storage.from("profile-images")
                 try await bucket.upload(fileName, data: imageData, options: FileOptions(contentType: "image/jpeg"))
-                
+
                 let imageUrl = try bucket.getPublicURL(path: fileName).absoluteString
-                
+
                 try await supabase.from("profiles")
                     .update(["image_url": imageUrl])
                     .eq("id", value: user.id)
                     .execute()
-                
+
             } catch {
                 print("error uploading image: \(error.localizedDescription)")
             }
         }
     }
-    
+
     // insert username into profiles table after user signup
     func insertUsername(username: String) async throws {
         guard let userId = supabase.auth.currentUser?.id else {
@@ -231,23 +230,23 @@ class SupabaseManager {
             .eq("id", value: userId)
             .execute()
     }
-    
+
     // fetch username from profiles table by user id
     func fetchUsername(userId: UUID) async throws -> String {
         struct Profile: Codable {
             let username: String?
         }
-                
+
         let profile: Profile = try await supabase.from("profiles")
             .select("username")
             .eq("id", value: userId)
             .single()
             .execute()
             .value
-        
+
         return profile.username ?? ""
     }
-    
+
     // fetch username from profiles table by user id
     func fetchProfilePic(userId: UUID) async throws -> String {
         struct Profile: Codable {
@@ -268,14 +267,14 @@ class SupabaseManager {
         let profile = try JSONDecoder().decode(Profile.self, from: response.data)
         return profile.imageURL ?? ""
     }
-    
+
     func fetchUserTravelHistory(userId: UUID) async throws -> [UserRatedCity] {
         struct CityReviewWithCity: Decodable {
             let cityId: UUID
             let overallRating: Double?
             let createdAt: Date?
             let city: CityInfo
-            
+
             enum CodingKeys: String, CodingKey {
                 case cityId = "city_id"
                 case overallRating = "overall_rating"
@@ -283,13 +282,13 @@ class SupabaseManager {
                 case city = "cities"
             }
         }
-        
+
         struct CityInfo: Decodable {
             let id: UUID
             let name: String
             let country: String
             let imageUrl: String?
-            
+
             enum CodingKeys: String, CodingKey {
                 case id
                 case name
@@ -297,14 +296,14 @@ class SupabaseManager {
                 case imageUrl = "image_url"
             }
         }
-        
+
         let userRatedCities: [CityReviewWithCity] = try await supabase
             .from("city_reviews")
             .select("city_id, overall_rating, created_at, cities!inner(id, name, country, image_url)")
             .eq("user_id", value: userId)
             .execute()
             .value
-        
+
         return userRatedCities.map { reviewData in
             UserRatedCity(
                 id: reviewData.city.id,
@@ -316,11 +315,11 @@ class SupabaseManager {
             )
         }
     }
-    
+
     func fetchUserBucketList(userId: UUID) async throws -> [City] {
         struct CityIdRow: Decodable {
             let cityId: UUID
-            
+
             enum CodingKeys: String, CodingKey {
                 case cityId = "city_id"
             }
@@ -329,9 +328,9 @@ class SupabaseManager {
             .select("city_id")
             .eq("user_id", value: userId)
             .execute()
-        
+
         let cityIds = cityIdsResponse.value.map { $0.cityId }
-        
+
         let cities: [City] = try await supabase.from("city_with_avg_rating")
             .select()
             .in("id", values: cityIds)
@@ -339,9 +338,9 @@ class SupabaseManager {
             .value
         return cities
     }
-    
+
     // MARK: - CityDetailView Functions
-    
+
     // get the rating of a specific city from a specific user
     func getCityRatingForUser(cityId: UUID, userId: UUID) async throws -> Double? {
         struct RatingResponse: Decodable {
@@ -361,16 +360,15 @@ class SupabaseManager {
         return ratings.first?.overall_rating
     }
 
-    
-    //adds or updates a review for a city
+    // adds or updates a review for a city
     func addCityReview(userId: UUID, cityId: UUID, rating: Double) async throws {
-        guard supabase.auth.currentUser?.id  != nil else {
+        guard supabase.auth.currentUser?.id != nil else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
 
         // Try to insert a new review
-        let review: CityReviewModel = CityReviewModel(cityId: cityId.uuidString, userId: userId.uuidString, rating: rating)
-        
+        let review = CityReviewModel(cityId: cityId.uuidString, userId: userId.uuidString, rating: rating)
+
         do {
             try await supabase
                 .from("city_reviews")
@@ -386,7 +384,7 @@ class SupabaseManager {
                 .execute()
         }
     }
-    
+
     func getIsCityFavorite(cityId: UUID, userId: UUID) async throws -> Bool {
         struct Favorite: Codable {
             let city_id: UUID
@@ -403,7 +401,7 @@ class SupabaseManager {
 
         return !response.isEmpty
     }
-        
+
     // remove a city from bucket list
     func removeUserFavoriteCity(userId: UUID, cityId: UUID) async throws {
         try await supabase.from("user_bucket_list")
@@ -412,16 +410,16 @@ class SupabaseManager {
             .eq("city_id", value: cityId.uuidString)
             .execute()
     }
-    
+
     // add a city to bucket list
     func addUserFavoriteCity(userId: UUID, cityId: UUID) async throws {
         try await supabase.from("user_bucket_list")
             .insert(["user_id": userId.uuidString, "city_id": cityId.uuidString])
             .execute()
     }
-    
+
     // MARK: - Future Features (Untested)
-    
+
     // EVERYTHING UNDERNEATH THIS COMMENT HAS NOT BEEN TESTED YET, I HAVE NO CLUE IF THEY WORK (but i feel like they mostly should)
 
     // fetches all of the reviews of a specific recommended place (this is how i will calculate the avg rating for a restaurant, etc.)
@@ -453,6 +451,4 @@ class SupabaseManager {
             .value
         return items
     }
-
-
 }

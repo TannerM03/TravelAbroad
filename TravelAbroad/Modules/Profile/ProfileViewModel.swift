@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import Supabase
 import PhotosUI
+import Supabase
 import SwiftUI
 
 @MainActor
@@ -28,44 +28,43 @@ class ProfileViewModel: ObservableObject {
             }
         }
     }
-    
+
     private var imageCache: [String: Image] = [:]
 
     func logOut() async throws {
         try await SupabaseManager.shared.supabase.auth.signOut()
     }
-    
+
     func fetchUser() async {
         do {
             user = try await SupabaseManager.shared.supabase.auth.user()
             email = user?.email ?? ""
             userId = user?.id
-            
+
             if let userId = userId {
                 username = try await SupabaseManager.shared.fetchUsername(userId: userId)
                 profileImageURL = try await SupabaseManager.shared.fetchProfilePic(userId: userId)
-                
+
                 if let urlString = profileImageURL, let url = URL(string: urlString) {
                     await loadImageFromURL(url)
                 }
-            }
-            else {
+            } else {
                 print("userId didn't work yet")
             }
         } catch {
             print("Failed to fetch user: \(error)")
         }
     }
-    
+
     private func loadImageFromURL(_ url: URL) async {
         let urlString = url.absoluteString
-        
+
         // Check cache first
         if let cachedImage = imageCache[urlString] {
             imageState = .success(cachedImage)
             return
         }
-        
+
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             if let uiImage = UIImage(data: data) {
@@ -77,7 +76,7 @@ class ProfileViewModel: ObservableObject {
             print("Failed to load image from URL: \(error)")
         }
     }
-    
+
     private func loadTransferable(from imageSelection: PhotosPickerItem) -> Progress {
         return imageSelection.loadTransferable(type: ProfileImage.self) { result in
             DispatchQueue.main.async {
@@ -86,14 +85,14 @@ class ProfileViewModel: ObservableObject {
                     return
                 }
                 switch result {
-                case .success(let profileImage?):
+                case let .success(profileImage?):
                     self.imageState = .success(profileImage.image)
                     Task {
                         await SupabaseManager.shared.uploadProfileImageToSupabase(image: profileImage.uiImage)
                     }
                 case .success(nil):
                     self.imageState = .empty
-                case .failure(let error):
+                case let .failure(error):
                     self.imageState = .failure(error)
                 }
             }

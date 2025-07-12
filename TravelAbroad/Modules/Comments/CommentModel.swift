@@ -1,5 +1,5 @@
 //
-//  RecReview.swift
+//  CommentModel.swift
 //  TravelAbroad
 //
 //  Created by Tanner Macpherson on 6/2/25.
@@ -40,7 +40,7 @@ struct RatingTemporary: Codable {
     let createdAt: Date
     let imageUrl: String?
     let profiles: TempProfile?
-    
+
     enum CodingKeys: String, CodingKey {
         case id
         case userId = "user_id"

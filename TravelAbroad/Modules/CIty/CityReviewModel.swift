@@ -1,5 +1,5 @@
 //
-//  CityReview.swift
+//  CityReviewModel.swift
 //  TravelAbroad
 //
 //  Created by Tanner Macpherson on 6/2/25.

@@ -78,7 +78,7 @@ struct RecommendationsView: View {
 //            await vm.checkIfCityIsFavorite(cityId: UUID(uuidString: cityId)!)
         }
     }
-    
+
     private var cityImageSection: some View {
         Group {
             if let url = URL(string: imageUrl) {
@@ -97,7 +97,7 @@ struct RecommendationsView: View {
                             await vm.addOrRemoveFavorite(cityId: UUID(uuidString: cityId) ?? UUID())
                         }
                     } label: {
-                        Image(systemName: vm.isFavoriteCity ? "bookmark.fill" :"bookmark")
+                        Image(systemName: vm.isFavoriteCity ? "bookmark.fill" : "bookmark")
                             .font(.title3)
                             .foregroundColor(.white)
                             .padding()
@@ -110,7 +110,6 @@ struct RecommendationsView: View {
         }
     }
 
-    
     private var categoryFilterSection: some View {
         HStack {
             ScrollView(.horizontal, showsIndicators: false) {
@@ -132,7 +131,7 @@ struct RecommendationsView: View {
             }.padding()
         }
     }
-    
+
     private var recommendationsListSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             ForEach(vm.filteredRecs) { rec in
@@ -140,7 +139,7 @@ struct RecommendationsView: View {
             }
         }
     }
-    
+
     private var ratingPopoverContent: some View {
         VStack(spacing: 22) {
             Text("Rate \(cityName)")
@@ -150,7 +149,7 @@ struct RecommendationsView: View {
                 .font(.body)
                 .foregroundColor(.secondary)
             HStack(spacing: 8) {
-                ForEach(1...5, id: \.self) { i in
+                ForEach(1 ... 5, id: \.self) { i in
                     Image(systemName: (vm.cityRating ?? 5.0) >= Double(i * 2) ? "star.fill" : (vm.cityRating ?? 5.0) >= Double(i * 2 - 1) ? "star.lefthalf.fill" : "star")
                         .resizable()
                         .frame(width: 28, height: 28)
@@ -167,7 +166,7 @@ struct RecommendationsView: View {
             Slider(value: Binding(
                 get: { vm.cityRating ?? 5.5 },
                 set: { vm.cityRating = $0 }
-            ), in: 1...10, step: 0.1)
+            ), in: 1 ... 10, step: 0.1)
                 .accentColor(.yellow)
                 .padding(.horizontal, 8)
             HStack(spacing: 16) {
@@ -215,6 +214,7 @@ struct RecommendationsView: View {
 }
 
 // MARK: - Preview Helper View
+
 private struct PreviewRecommendationsView: View {
     let cityId: String
     let cityName: String
@@ -223,7 +223,7 @@ private struct PreviewRecommendationsView: View {
     @State private var selectedCategory: CategoryType? = .activities
     @State private var showRatingPopover = false
     @State private var selectedRating = 5.0
-    
+
     var filteredRecommendations: [Recommendation] {
         if let selected = selectedCategory {
             return recommendations.filter { $0.category == selected }
@@ -231,7 +231,7 @@ private struct PreviewRecommendationsView: View {
             return recommendations
         }
     }
-    
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -293,16 +293,16 @@ private struct PreviewRecommendationsView: View {
             }
         }
     }
-    
+
     private var previewRatingPopoverContent: some View {
         VStack(spacing: 16) {
             Text("Rate \(cityName)")
                 .font(.headline)
-            
+
             Text("How would you rate this city?")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-            
+
             Picker("Rating", selection: $selectedRating) {
                 ForEach(Array(stride(from: 1.0, through: 10.0, by: 0.1)), id: \.self) { rating in
                     Text(String(format: "%.1f", rating)).tag(rating)
@@ -310,13 +310,13 @@ private struct PreviewRecommendationsView: View {
             }
             .pickerStyle(.wheel)
             .frame(height: 120)
-            
+
             HStack(spacing: 16) {
                 Button("Cancel") {
                     showRatingPopover = false
                 }
                 .foregroundColor(.secondary)
-                
+
                 Button("Submit Rating") {
                     showRatingPopover = false
                 }
@@ -328,4 +328,3 @@ private struct PreviewRecommendationsView: View {
         .frame(width: 280, height: 240)
     }
 }
-

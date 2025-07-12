@@ -1,5 +1,5 @@
 //
-//  Recommendation.swift
+//  RecommendationModel.swift
 //  TravelAbroad
 //
 //  Created by Tanner Macpherson on 6/2/25.

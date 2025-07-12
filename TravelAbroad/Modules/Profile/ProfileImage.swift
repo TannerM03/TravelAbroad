@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import SwiftUI
 import PhotosUI
+import SwiftUI
 
 struct ProfileImage: Transferable {
     let image: Image

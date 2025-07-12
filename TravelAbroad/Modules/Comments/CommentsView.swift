@@ -16,7 +16,7 @@ struct CommentsView: View {
     @State private var selectedImage: UIImage?
     @State private var showLeaveRating = false
     @State private var userRating: Double = 5.0
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -31,7 +31,7 @@ struct CommentsView: View {
                 .navigationTitle("Comments")
                 .navigationBarTitleDisplayMode(.inline)
                 .blur(radius: showLeaveRating ? 8 : 0)
-                
+
                 if showLeaveRating {
                     Color.black.opacity(0.3)
                         .ignoresSafeArea()
@@ -42,7 +42,7 @@ struct CommentsView: View {
                                 selectedImage = nil
                             }
                         }
-                    
+
                     VStack {
                         recommendationHeader
                             .padding()
@@ -67,7 +67,7 @@ struct CommentsView: View {
             ImagePicker(image: $selectedImage)
         }
     }
-    
+
     private var recommendationHeader: some View {
         VStack(alignment: .leading, spacing: 12) {
             if let urlStr = recommendation.imageUrl, let url = URL(string: urlStr) {
@@ -78,15 +78,15 @@ struct CommentsView: View {
                     .clipped()
                     .cornerRadius(16)
             }
-            
+
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text(recommendation.name)
                         .font(.title2)
                         .fontWeight(.bold)
-                    
+
                     Spacer()
-                    
+
                     Text(recommendation.category.rawValue.capitalized)
                         .font(.caption)
                         .fontWeight(.medium)
@@ -95,7 +95,7 @@ struct CommentsView: View {
                         .background(recommendation.category.pillColor)
                         .cornerRadius(12)
                 }
-                
+
                 HStack(spacing: 6) {
                     Image(systemName: "star.fill")
                         .foregroundColor(.yellow)
@@ -104,7 +104,7 @@ struct CommentsView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 if let description = recommendation.description, !description.isEmpty {
                     Text(description)
                         .font(.body)
@@ -117,7 +117,7 @@ struct CommentsView: View {
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(16)
     }
-    
+
     private var commentsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
@@ -129,7 +129,7 @@ struct CommentsView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             if vm.comments.filter({ $0.comment != nil && !$0.comment!.isEmpty }).isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "bubble.left")
@@ -155,9 +155,9 @@ struct CommentsView: View {
             }
         }
     }
-    
+
     private var leaveRatingButton: some View {
-        Button(action: { 
+        Button(action: {
             withAnimation(.easeInOut(duration: 0.3)) {
                 showLeaveRating = true
             }
@@ -174,17 +174,17 @@ struct CommentsView: View {
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
     }
-    
+
     private var ratingInputSection: some View {
         VStack(spacing: 20) {
             VStack(spacing: 16) {
                 Text("Rate \(recommendation.name)")
                     .font(.headline)
                     .frame(maxWidth: .infinity, alignment: .center)
-                
+
                 VStack(spacing: 12) {
                     HStack(spacing: 8) {
-                        ForEach(1...5, id: \.self) { i in
+                        ForEach(1 ... 5, id: \.self) { i in
                             Button(action: { userRating = Double(i) }) {
                                 Image(systemName: userRating >= Double(i) ? "star.fill" : "star")
                                     .font(.title2)
@@ -192,7 +192,7 @@ struct CommentsView: View {
                             }
                         }
                     }
-                    
+
                     Text("\(Int(userRating)) star\(userRating == 1 ? "" : "s")")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
@@ -201,7 +201,7 @@ struct CommentsView: View {
             }
             .padding(.horizontal)
             .padding(.top, 20)
-            
+
             if let selectedImage = selectedImage {
                 HStack {
                     Image(uiImage: selectedImage)
@@ -210,9 +210,9 @@ struct CommentsView: View {
                         .frame(width: 60, height: 60)
                         .clipped()
                         .cornerRadius(8)
-                    
+
                     Spacer()
-                    
+
                     Button("Remove") {
                         self.selectedImage = nil
                     }
@@ -221,14 +221,14 @@ struct CommentsView: View {
                 }
                 .padding(.horizontal)
             }
-            
+
             VStack(spacing: 16) {
                 ZStack(alignment: .trailing) {
                     TextField("Add a comment (optional)", text: $newCommentText, axis: .vertical)
                         .textFieldStyle(.roundedBorder)
-                        .lineLimit(3...6)
+                        .lineLimit(3 ... 6)
                         .frame(minHeight: 80)
-                    
+
                     Button(action: { showingImagePicker = true }) {
                         Image(systemName: "camera")
                             .font(.title3)
@@ -236,7 +236,7 @@ struct CommentsView: View {
                             .padding(.trailing, 12)
                     }
                 }
-                
+
                 HStack {
                     Button("Cancel") {
                         withAnimation(.easeInOut(duration: 0.3)) {
@@ -251,9 +251,9 @@ struct CommentsView: View {
                     .padding(.vertical, 12)
                     .background(Color(.systemGray5))
                     .cornerRadius(12)
-                    
+
                     Spacer()
-                    
+
                     Button(action: submitRatingAndComment) {
                         Text("Submit")
                             .font(.headline)
@@ -278,11 +278,11 @@ struct CommentsView: View {
                 )
         )
     }
-    
+
     private func submitRatingAndComment() {
         Task {
 //            await vm.submitRating(for: recommendation.id, rating: Int(userRating))
-            
+
             if !newCommentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 await vm.submitComment(
                     recommendationId: recommendation.id,
@@ -290,11 +290,10 @@ struct CommentsView: View {
                     image: selectedImage,
                     rating: Int(userRating)
                 )
-            }
-            else {
+            } else {
                 await vm.submitComment(recommendationId: recommendation.id, text: nil, image: selectedImage, rating: Int(userRating))
             }
-            
+
             await MainActor.run {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     showLeaveRating = false
@@ -308,7 +307,7 @@ struct CommentsView: View {
 
 struct CommentCardView: View {
     let comment: Comment
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 5) {
@@ -316,23 +315,23 @@ struct CommentCardView: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .padding(.trailing, 5)
-                
-                ForEach(Array(0..<comment.rating), id: \.self) { star in
+
+                ForEach(Array(0 ..< comment.rating), id: \.self) { _ in
                     Image(systemName: "star.fill")
                         .foregroundColor(.yellow)
                         .font(.caption)
                 }
-                
+
                 Spacer()
-                
+
                 Text(timeAgoText(from: comment.createdAt))
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
-            
+
             Text(comment.comment!)
                 .font(.body)
-            
+
             if let imageUrl = comment.imageUrl, let url = URL(string: imageUrl) {
                 KFImage(url)
                     .resizable()
@@ -345,11 +344,11 @@ struct CommentCardView: View {
         .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(12)
     }
-    
+
     private func timeAgoText(from date: Date) -> String {
         let now = Date()
         let timeInterval = now.timeIntervalSince(date)
-        
+
         if timeInterval < 60 {
             return "Just now"
         } else if timeInterval < 3600 {
@@ -367,28 +366,28 @@ struct CommentCardView: View {
 
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var image: UIImage?
-    
+
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
         picker.delegate = context.coordinator
         picker.sourceType = .photoLibrary
         return picker
     }
-    
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-    
+
+    func updateUIViewController(_: UIImagePickerController, context _: Context) {}
+
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
-    
+
     class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
         let parent: ImagePicker
-        
+
         init(_ parent: ImagePicker) {
             self.parent = parent
         }
-        
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
             if let selectedImage = info[.originalImage] as? UIImage {
                 parent.image = selectedImage
             }

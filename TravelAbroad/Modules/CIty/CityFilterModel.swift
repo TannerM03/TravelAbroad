@@ -1,5 +1,5 @@
 //
-//  CityFilter.swift
+//  CityFilterModel.swift
 //  TravelAbroad
 //
 //  Created by Tanner Macpherson on 6/10/25.
