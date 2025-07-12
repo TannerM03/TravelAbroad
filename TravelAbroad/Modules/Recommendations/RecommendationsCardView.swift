@@ -47,12 +47,13 @@ struct RecommendationsCardView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
-            if let desc = rec.description, !desc.isEmpty {
-                Text(desc)
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .padding(.top, 2)
-            }
+                // these descriptions are the same as comments, don't want to show for now until i can make it a summary
+//            if let desc = rec.description, !desc.isEmpty {
+//                Text(desc)
+//                    .font(.body)
+//                    .foregroundColor(.secondary)
+//                    .padding(.top, 2)
+//            }
             }
             .padding()
             .background(Color(.tertiarySystemGroupedBackground))

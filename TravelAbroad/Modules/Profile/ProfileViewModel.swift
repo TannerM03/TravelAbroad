@@ -49,6 +49,9 @@ class ProfileViewModel: ObservableObject {
                     await loadImageFromURL(url)
                 }
             }
+            else {
+                print("userId didn't work yet")
+            }
         } catch {
             print("Failed to fetch user: \(error)")
         }

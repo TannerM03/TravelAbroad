@@ -67,15 +67,25 @@ class RecommendationsViewModel: ObservableObject {
         }
     }
     
-    func getUserCityRating(for cityId: UUID) async -> Double? {
+//    func getUserCityRating(for cityId: UUID) async -> Double? {
+//        do {
+//            cityRating = try await SupabaseManager.shared.getCityRatingForUser(cityId: cityId, userId: userId)
+//        } catch {
+//            print("Failed to fetch city rating for user: \(error)")
+//            cityRating = nil
+//        }
+//        return cityRating
+//    }
+    
+    func getUserCityRating(for cityId: UUID) async {
         do {
             cityRating = try await SupabaseManager.shared.getCityRatingForUser(cityId: cityId, userId: userId)
         } catch {
-            print("Failed to fetch city rating for user: \(error)")
+            print("Failed to fetch city rating for user: \(error.localizedDescription)")
             cityRating = nil
         }
-        return cityRating
     }
+
     
     func isCityFavorite(cityId: UUID) async {
         do {

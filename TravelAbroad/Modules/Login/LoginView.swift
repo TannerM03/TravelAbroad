@@ -8,6 +8,7 @@ import Foundation
 
 struct LoginView: View {
     @StateObject private var vm = LoginViewModel()
+    @StateObject private var profileVm = ProfileViewModel()
     @Binding var isAuthenticated: Bool
 
     var body: some View {
@@ -94,7 +95,10 @@ struct LoginView: View {
     
     private var actionButtonSection: some View {
         Button {
-            Task { isAuthenticated = await vm.authAction() }
+            Task {
+                isAuthenticated = await vm.authAction()
+                await profileVm.fetchUser()
+            }
         } label: {
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
