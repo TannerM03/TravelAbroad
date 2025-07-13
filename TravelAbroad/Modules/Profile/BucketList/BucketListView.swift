@@ -45,7 +45,7 @@ struct BucketListView: View {
                 ForEach(vm.sortedCities) { city in
                     let emoji = CountryEmoji.emoji(for: city.country)
                     NavigationLink {
-                        RecommendationsView(cityId: city.id, cityName: city.name, imageUrl: city.imageUrl ?? "", userRating: nil, onRatingUpdated: nil)
+                        RecommendationsView(cityId: city.id, cityName: city.name, imageUrl: city.imageUrl ?? "", userRating: nil, isBucketList: city.isBucketList, onRatingUpdated: nil)
                     } label: {
                         CityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.avgRating, flagEmoji: emoji)
                     }

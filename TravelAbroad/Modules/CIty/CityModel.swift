@@ -15,6 +15,7 @@ struct City: Codable, Identifiable {
     let imageUrl: String?
     let avgRating: Double?
     var userRating: Double?
+    var isBucketList: Bool = false
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -23,6 +24,7 @@ struct City: Codable, Identifiable {
         case imageUrl = "image_url"
         case avgRating = "avg_rating"
         case userRating = "user_rating"
+        case isBucketList = "is_bucket_list"
     }
 }
 

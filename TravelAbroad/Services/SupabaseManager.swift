@@ -41,7 +41,8 @@ class SupabaseManager {
             let imageUrl: String?
             let avgRating: Double?
             let cityReviews: [UserReview]?
-            
+            let userBucketList: [BucketListEntry]?
+
             enum CodingKeys: String, CodingKey {
                 case id
                 case name
@@ -49,26 +50,37 @@ class SupabaseManager {
                 case imageUrl = "image_url"
                 case avgRating = "avg_rating"
                 case cityReviews = "city_reviews"
+                case userBucketList = "user_bucket_list"
             }
         }
-        
+
+        struct BucketListEntry: Codable {
+            let cityId: String
+
+            enum CodingKeys: String, CodingKey {
+                case cityId = "city_id"
+            }
+        }
+
         struct UserReview: Codable {
             let overallRating: Double
-            
+
             enum CodingKeys: String, CodingKey {
                 case overallRating = "overall_rating"
             }
         }
-        
+
         let response: [CityWithUserRating] = try await supabase
             .from("city_with_avg_rating")
-            .select("*, city_reviews!left(overall_rating)")
+            .select("*, city_reviews!left(overall_rating), user_bucket_list!left(city_id)")
             .eq("city_reviews.user_id", value: userId.uuidString)
+            .eq("user_bucket_list.user_id", value: userId.uuidString)
             .execute()
             .value
-        
+
         return response.map { cityData in
-            City(id: cityData.id, name: cityData.name, country: cityData.country, imageUrl: cityData.imageUrl, avgRating: cityData.avgRating, userRating: cityData.cityReviews?.first?.overallRating)
+            let isBucketList = cityData.userBucketList?.first?.cityId != nil
+            return City(id: cityData.id, name: cityData.name, country: cityData.country, imageUrl: cityData.imageUrl, avgRating: cityData.avgRating, userRating: cityData.cityReviews?.first?.overallRating, isBucketList: isBucketList)
         }
     }
 

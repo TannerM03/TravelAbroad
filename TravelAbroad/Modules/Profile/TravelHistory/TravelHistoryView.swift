@@ -54,10 +54,11 @@ struct TravelHistoryView: View {
                     let emoji = CountryEmoji.emoji(for: city.country)
                     NavigationLink {
                         RecommendationsView(
-                            cityId: city.id.uuidString, 
-                            cityName: city.name, 
-                            imageUrl: city.imageUrl ?? "", 
+                            cityId: city.id.uuidString,
+                            cityName: city.name,
+                            imageUrl: city.imageUrl ?? "",
                             userRating: city.userRating,
+                            isBucketList: false,
                             onRatingUpdated: { newRating in
                                 vm.updateCityRating(cityId: city.id.uuidString, newRating: newRating)
                             }

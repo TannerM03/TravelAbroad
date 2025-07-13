@@ -13,8 +13,15 @@ class CommentsViewModel: ObservableObject {
     @Published var comments: [Comment] = []
     @Published var isLoading = false
     @Published var userRating: Double? = nil
+    @Published var recommendation: Recommendation?
 
     private let supabaseManager = SupabaseManager.shared
+
+    var displayedAverageRating: Double {
+        guard !comments.isEmpty else { return recommendation?.avgRating ?? 0.0 }
+        let total = comments.reduce(0) { $0 + $1.rating }
+        return Double(total) / Double(comments.count)
+    }
 
     func fetchComments(for recommendationId: String) async {
         isLoading = true
@@ -63,6 +70,19 @@ class CommentsViewModel: ObservableObject {
             userRating = Double(rating)
         } catch {
             print("Error submitting rating: \(error)")
+        }
+    }
+
+    func refreshRecommendationData() async {
+        guard let recId = recommendation?.id else { return }
+        do {
+            // Fetch updated recommendation data from database
+            let updatedRecs = try await supabaseManager.fetchRecommendations(cityId: UUID(uuidString: recommendation?.cityId ?? "") ?? UUID())
+            if let updatedRec = updatedRecs.first(where: { $0.id == recId }) {
+                recommendation = updatedRec
+            }
+        } catch {
+            print("Error refreshing recommendation data: \(error)")
         }
     }
 }

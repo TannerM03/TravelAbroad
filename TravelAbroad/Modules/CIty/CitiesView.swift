@@ -44,10 +44,11 @@ struct CitiesView: View {
                     let emoji = CountryEmoji.emoji(for: city.country)
                     NavigationLink {
                         RecommendationsView(
-                            cityId: city.id, 
-                            cityName: city.name, 
-                            imageUrl: city.imageUrl ?? "", 
+                            cityId: city.id,
+                            cityName: city.name,
+                            imageUrl: city.imageUrl ?? "",
                             userRating: city.userRating,
+                            isBucketList: city.isBucketList,
                             onRatingUpdated: { newRating in
                                 vm.updateCityRating(cityId: city.id, newRating: newRating)
                             }
@@ -101,17 +102,17 @@ struct CitiesView: View {
     }
 }
 
-//#Preview("With Cities") {
+// #Preview("With Cities") {
 //    let vm = CityListViewModel()
 //    vm.cities = MockData.sampleCities
 //    return CitiesView(vm: vm)
-//}
+// }
 //
-//#Preview("Loading State") {
+// #Preview("Loading State") {
 //    let vm = CityListViewModel()
 //    vm.isLoading = true
 //    return CitiesView(vm: vm)
-//}
+// }
 
 // MARK: - Preview Helper View
 

@@ -14,6 +14,7 @@ struct RecommendationsView: View {
     let cityName: String
     let imageUrl: String
     let userRating: Double?
+    let isBucketList: Bool
     let onRatingUpdated: ((Double) -> Void)?
     @State private var showRatingOverlay = false
 
@@ -62,8 +63,7 @@ struct RecommendationsView: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Edit your rating")
-                    }
-                    else {
+                    } else {
                         Button(action: { showRatingOverlay = true }) {
                             HStack(spacing: 6) {
                                 Text("Add Rating")
@@ -91,19 +91,10 @@ struct RecommendationsView: View {
         .task {
             vm.userRating = userRating
             vm.tempRating = userRating
+            vm.isFavoriteCity = isBucketList
             await vm.getRecs(cityId: UUID(uuidString: cityId)!)
             await vm.fetchUser()
-            await vm.isCityFavorite(cityId: UUID(uuidString: cityId)!)
-//            await vm.getUserCityRating(for: UUID(uuidString: cityId)!)
-            print("task userRating: \(vm.userRating)")
-            print("task tempRating: \(vm.tempRating)")
-            print("task local rating: \(userRating)")
-        }.onAppear {
-            print("init userRating: \(vm.userRating)")
-            print("init tempRating: \(vm.tempRating)")
-            print("init local rating: \(userRating)")
         }
-            
     }
 
     private var cityImageSection: some View {
@@ -112,9 +103,8 @@ struct RecommendationsView: View {
                 ZStack(alignment: .topTrailing) {
                     KFImage(url)
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 250)
-                        .frame(maxWidth: .infinity)
+                        .scaledToFill()
+                        .frame(width: UIScreen.main.bounds.width, height: 250)
                         .clipped()
                         .ignoresSafeArea(edges: .top)
 
@@ -208,9 +198,6 @@ struct RecommendationsView: View {
                         onRatingUpdated?(vm.userRating ?? 5.0)
                     }
                     showRatingOverlay = false
-                    print("userRating: \(vm.userRating)")
-                    print("tempRating: \(vm.tempRating)")
-                    print("local rating: \(userRating)")
                 }
                 .fontWeight(.semibold)
                 .foregroundColor(.accentColor)
@@ -228,20 +215,24 @@ struct RecommendationsView: View {
 }
 
 #Preview("With Recommendations") {
-    PreviewRecommendationsView(
+    RecommendationsView(
         cityId: "49e5f9fb-e080-4365-9de6-cab823acf033",
         cityName: "Madrid",
         imageUrl: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4",
-        recommendations: MockData.sampleRecommendations
+        userRating: nil,
+        isBucketList: false,
+        onRatingUpdated: nil
     )
 }
 
 #Preview("Empty State") {
-    PreviewRecommendationsView(
+    RecommendationsView(
         cityId: "49e5f9fb-e080-4365-9de6-cab823acf033",
         cityName: "Madrid",
         imageUrl: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4",
-        recommendations: []
+        userRating: nil,
+        isBucketList: true,
+        onRatingUpdated: nil
     )
 }
 

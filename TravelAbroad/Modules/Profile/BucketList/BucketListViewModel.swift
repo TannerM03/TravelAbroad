@@ -48,12 +48,13 @@ class BucketListViewModel: ObservableObject {
         }
     }
 
-    func getCities(userId: UUID) async {
+    func getCities(userId _: UUID) async {
         isLoading = true
         defer { isLoading = false }
         do {
             print("in vm getCities bucketlist")
-            cities = try await SupabaseManager.shared.fetchUserBucketList(userId: userId)
+            let allCities = try await SupabaseManager.shared.fetchCities()
+            cities = allCities.filter { $0.isBucketList }
             print("vm bucket list cities: \(cities)")
         } catch {
             print("Error getting cities in vm: \(error)")

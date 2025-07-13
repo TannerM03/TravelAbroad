@@ -19,13 +19,6 @@ class RecommendationsViewModel: ObservableObject {
     @Published var isFavoriteCity: Bool = false
     @Published var tempRating: Double? = nil
 
-//    @Published var favoriteCities: [City] = []
-
-//    func isFavorite(cityId: UUID) -> Bool {
-//        print("returning isFavorite")
-//        return favoriteCities.contains(where: { $0.id == cityId.uuidString })
-//    }
-
     var categorizedRecs: [Recommendation] {
         if let selected = selectedCategory {
             return recommendations.filter { $0.category == selected }
@@ -37,7 +30,7 @@ class RecommendationsViewModel: ObservableObject {
     var filteredRecs: [Recommendation] {
         return categorizedRecs.sorted { $0.avgRating > $1.avgRating }
     }
-    
+
     func initialize(rating: Double) {
         userRating = rating
     }
@@ -71,25 +64,6 @@ class RecommendationsViewModel: ObservableObject {
         }
     }
 
-//    func getUserCityRating(for cityId: UUID) async -> Double? {
-//        do {
-//            cityRating = try await SupabaseManager.shared.getCityRatingForUser(cityId: cityId, userId: userId)
-//        } catch {
-//            print("Failed to fetch city rating for user: \(error)")
-//            cityRating = nil
-//        }
-//        return cityRating
-//    }
-
-//    func getUserCityRating(for cityId: UUID) async {
-//        do {
-//            cityRating = try await SupabaseManager.shared.getCityRatingForUser(cityId: cityId, userId: userId)
-//        } catch {
-//            print("Failed to fetch city rating for user: \(error.localizedDescription)")
-//            cityRating = nil
-//        }
-//    }
-
     func isCityFavorite(cityId: UUID) async {
         do {
             isFavoriteCity = try await SupabaseManager.shared.getIsCityFavorite(cityId: cityId, userId: userId)
@@ -97,26 +71,6 @@ class RecommendationsViewModel: ObservableObject {
             print("couldn't determine is city is favorite (vm): \(error)")
         }
     }
-
-//    func getFavorites(cityId: UUID) async{
-//        do {
-//            favoriteCities = try await SupabaseManager.shared.fetchUserBucketList(userId: userId)
-//            print("fav cities vm: \(favoriteCities)")
-//            isFavoriteCity = favoriteCities.contains(where: { $0.id == cityId.uuidString })
-//        } catch {
-//            print("failed to get bucket list: \(error)")
-//        }
-//    }
-
-//    func checkIfCityIsFavorite(cityId: UUID) async {
-//        do {
-//            let bucketList = try await SupabaseManager.shared.fetchUserBucketList(userId: userId)
-//            isFavorite = bucketList.contains { $0.id == cityId.uuidString }
-//        } catch {
-//            print("failed to check if city is favorite: \(error)")
-//            isFavorite = false
-//        }
-//    }
 
     func addOrRemoveFavorite(cityId: UUID) async {
         do {

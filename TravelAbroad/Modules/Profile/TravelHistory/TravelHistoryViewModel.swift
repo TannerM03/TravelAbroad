@@ -69,7 +69,7 @@ class TravelHistoryViewModel: ObservableObject {
             print("Error getting cities in vm: \(error)")
         }
     }
-    
+
     func updateCityRating(cityId: String, newRating: Double) {
         if let index = cities.firstIndex(where: { $0.id.uuidString == cityId }) {
             cities[index].userRating = newRating
