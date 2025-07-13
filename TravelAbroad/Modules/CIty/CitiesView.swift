@@ -43,7 +43,15 @@ struct CitiesView: View {
                 ForEach(vm.sortedCities) { city in
                     let emoji = CountryEmoji.emoji(for: city.country)
                     NavigationLink {
-                        RecommendationsView(cityId: city.id, cityName: city.name, imageUrl: city.imageUrl ?? "")
+                        RecommendationsView(
+                            cityId: city.id, 
+                            cityName: city.name, 
+                            imageUrl: city.imageUrl ?? "", 
+                            userRating: city.userRating,
+                            onRatingUpdated: { newRating in
+                                vm.updateCityRating(cityId: city.id, newRating: newRating)
+                            }
+                        )
                     } label: {
                         CityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.avgRating, flagEmoji: emoji)
                     }
@@ -93,17 +101,17 @@ struct CitiesView: View {
     }
 }
 
-#Preview("With Cities") {
-    let vm = CityListViewModel()
-    vm.cities = MockData.sampleCities
-    return CitiesView(vm: vm)
-}
-
-#Preview("Loading State") {
-    let vm = CityListViewModel()
-    vm.isLoading = true
-    return CitiesView(vm: vm)
-}
+//#Preview("With Cities") {
+//    let vm = CityListViewModel()
+//    vm.cities = MockData.sampleCities
+//    return CitiesView(vm: vm)
+//}
+//
+//#Preview("Loading State") {
+//    let vm = CityListViewModel()
+//    vm.isLoading = true
+//    return CitiesView(vm: vm)
+//}
 
 // MARK: - Preview Helper View
 

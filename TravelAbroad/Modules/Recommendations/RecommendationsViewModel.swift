@@ -14,9 +14,10 @@ class RecommendationsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var userId: UUID = .init()
     @Published var user: User?
-    @Published var cityRating: Double? = nil
+    @Published var userRating: Double? = nil
     @Published var selectedCategory: CategoryType? = .activities
     @Published var isFavoriteCity: Bool = false
+    @Published var tempRating: Double? = nil
 
 //    @Published var favoriteCities: [City] = []
 
@@ -36,6 +37,10 @@ class RecommendationsViewModel: ObservableObject {
     var filteredRecs: [Recommendation] {
         return categorizedRecs.sorted { $0.avgRating > $1.avgRating }
     }
+    
+    func initialize(rating: Double) {
+        userRating = rating
+    }
 
     func getRecs(cityId: UUID) async {
         isLoading = true
@@ -49,6 +54,7 @@ class RecommendationsViewModel: ObservableObject {
 
     func updateCityReview(userId: UUID, cityId: UUID, rating: Double) async {
         do {
+            userRating = tempRating
             try await SupabaseManager.shared.addCityReview(userId: userId, cityId: cityId, rating: rating)
         } catch {
             print("Error updating/creating city review in vm: \(error)")
@@ -75,14 +81,14 @@ class RecommendationsViewModel: ObservableObject {
 //        return cityRating
 //    }
 
-    func getUserCityRating(for cityId: UUID) async {
-        do {
-            cityRating = try await SupabaseManager.shared.getCityRatingForUser(cityId: cityId, userId: userId)
-        } catch {
-            print("Failed to fetch city rating for user: \(error.localizedDescription)")
-            cityRating = nil
-        }
-    }
+//    func getUserCityRating(for cityId: UUID) async {
+//        do {
+//            cityRating = try await SupabaseManager.shared.getCityRatingForUser(cityId: cityId, userId: userId)
+//        } catch {
+//            print("Failed to fetch city rating for user: \(error.localizedDescription)")
+//            cityRating = nil
+//        }
+//    }
 
     func isCityFavorite(cityId: UUID) async {
         do {

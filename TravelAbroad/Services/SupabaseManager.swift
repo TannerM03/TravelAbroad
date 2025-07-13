@@ -27,11 +27,49 @@ class SupabaseManager {
 
     // fetches the cities to be displayed as travel options,
     func fetchCities() async throws -> [City] {
-        let cities: [City] = try await supabase.from("city_with_avg_rating")
-            .select()
+        guard let userId = supabase.auth.currentUser?.id else {
+            let cities: [City] = try await supabase.from("city_with_avg_rating")
+                .select()
+                .execute()
+                .value
+            return cities
+        }
+        struct CityWithUserRating: Codable {
+            let id: String
+            let name: String
+            let country: String
+            let imageUrl: String?
+            let avgRating: Double?
+            let cityReviews: [UserReview]?
+            
+            enum CodingKeys: String, CodingKey {
+                case id
+                case name
+                case country
+                case imageUrl = "image_url"
+                case avgRating = "avg_rating"
+                case cityReviews = "city_reviews"
+            }
+        }
+        
+        struct UserReview: Codable {
+            let overallRating: Double
+            
+            enum CodingKeys: String, CodingKey {
+                case overallRating = "overall_rating"
+            }
+        }
+        
+        let response: [CityWithUserRating] = try await supabase
+            .from("city_with_avg_rating")
+            .select("*, city_reviews!left(overall_rating)")
+            .eq("city_reviews.user_id", value: userId.uuidString)
             .execute()
             .value
-        return cities
+        
+        return response.map { cityData in
+            City(id: cityData.id, name: cityData.name, country: cityData.country, imageUrl: cityData.imageUrl, avgRating: cityData.avgRating, userRating: cityData.cityReviews?.first?.overallRating)
+        }
     }
 
     // MARK: - RecommendationsView Functions

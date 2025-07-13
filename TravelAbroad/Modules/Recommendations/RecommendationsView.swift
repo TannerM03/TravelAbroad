@@ -13,6 +13,8 @@ struct RecommendationsView: View {
     let cityId: String
     let cityName: String
     let imageUrl: String
+    let userRating: Double?
+    let onRatingUpdated: ((Double) -> Void)?
     @State private var showRatingOverlay = false
 
     var body: some View {
@@ -28,7 +30,7 @@ struct RecommendationsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    if let rating = vm.cityRating, rating > 0.0 {
+                    if let rating = vm.userRating, rating > 0.0 {
                         Button(action: { showRatingOverlay = true }) {
                             HStack(spacing: 4) {
                                 Text(String(format: "%.1f", rating))
@@ -44,7 +46,24 @@ struct RecommendationsView: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Edit your rating")
-                    } else {
+                    } else if let rating = userRating, rating > 0.0 {
+                        Button(action: { showRatingOverlay = true }) {
+                            HStack(spacing: 4) {
+                                Text(String(format: "%.1f", rating))
+                                    .font(.subheadline)
+                                    .bold()
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(Color.accentColor.opacity(0.15))
+                            .foregroundColor(.accentColor)
+                            .cornerRadius(20)
+                            .shadow(color: .black.opacity(0.09), radius: 3, x: 0, y: 2)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Edit your rating")
+                    }
+                    else {
                         Button(action: { showRatingOverlay = true }) {
                             HStack(spacing: 6) {
                                 Text("Add Rating")
@@ -70,13 +89,21 @@ struct RecommendationsView: View {
             }
         }
         .task {
+            vm.userRating = userRating
+            vm.tempRating = userRating
             await vm.getRecs(cityId: UUID(uuidString: cityId)!)
             await vm.fetchUser()
             await vm.isCityFavorite(cityId: UUID(uuidString: cityId)!)
-            await vm.getUserCityRating(for: UUID(uuidString: cityId)!)
-//            vm.cityRating = await vm.getUserCityRating(for: UUID(uuidString: cityId)!)
-//            await vm.checkIfCityIsFavorite(cityId: UUID(uuidString: cityId)!)
+//            await vm.getUserCityRating(for: UUID(uuidString: cityId)!)
+            print("task userRating: \(vm.userRating)")
+            print("task tempRating: \(vm.tempRating)")
+            print("task local rating: \(userRating)")
+        }.onAppear {
+            print("init userRating: \(vm.userRating)")
+            print("init tempRating: \(vm.tempRating)")
+            print("init local rating: \(userRating)")
         }
+            
     }
 
     private var cityImageSection: some View {
@@ -150,22 +177,23 @@ struct RecommendationsView: View {
                 .foregroundColor(.secondary)
             HStack(spacing: 8) {
                 ForEach(1 ... 5, id: \.self) { i in
-                    Image(systemName: (vm.cityRating ?? 5.0) >= Double(i * 2) ? "star.fill" : (vm.cityRating ?? 5.0) >= Double(i * 2 - 1) ? "star.lefthalf.fill" : "star")
+                    Image(systemName: (vm.tempRating ?? 5.0) >= Double(i * 2) ? "star.fill" : (vm.tempRating ?? 5.0) >= Double(i * 2 - 1) ? "star.lefthalf.fill" : "star")
                         .resizable()
                         .frame(width: 28, height: 28)
                         .foregroundColor(.yellow)
                         .onTapGesture {
-                            vm.cityRating = Double(i * 2)
+//                            vm.userRating = Double(i * 2)
+                            vm.tempRating = Double(i * 2)
                         }
                 }
             }
-            Text(String(format: "%.1f", vm.cityRating ?? 5.0))
+            Text(String(format: "%.1f", vm.tempRating ?? 5.0))
                 .font(.headline)
                 .foregroundColor(.accentColor)
                 .padding(.bottom, 8)
             Slider(value: Binding(
-                get: { vm.cityRating ?? 5.5 },
-                set: { vm.cityRating = $0 }
+                get: { vm.tempRating ?? 5.5 },
+                set: { vm.tempRating = $0 }
             ), in: 1 ... 10, step: 0.1)
                 .accentColor(.yellow)
                 .padding(.horizontal, 8)
@@ -176,9 +204,13 @@ struct RecommendationsView: View {
                 .foregroundColor(.secondary)
                 Button("Submit Rating") {
                     Task {
-                        await vm.updateCityReview(userId: vm.userId, cityId: UUID(uuidString: cityId)!, rating: vm.cityRating ?? 5.5)
+                        await vm.updateCityReview(userId: vm.userId, cityId: UUID(uuidString: cityId)!, rating: vm.tempRating ?? 5.0)
+                        onRatingUpdated?(vm.userRating ?? 5.0)
                     }
                     showRatingOverlay = false
+                    print("userRating: \(vm.userRating)")
+                    print("tempRating: \(vm.tempRating)")
+                    print("local rating: \(userRating)")
                 }
                 .fontWeight(.semibold)
                 .foregroundColor(.accentColor)

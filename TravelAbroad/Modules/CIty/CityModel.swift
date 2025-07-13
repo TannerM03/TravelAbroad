@@ -14,6 +14,7 @@ struct City: Codable, Identifiable {
     let country: String
     let imageUrl: String?
     let avgRating: Double?
+    var userRating: Double?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -21,6 +22,7 @@ struct City: Codable, Identifiable {
         case country
         case imageUrl = "image_url"
         case avgRating = "avg_rating"
+        case userRating = "user_rating"
     }
 }
 
@@ -30,7 +32,7 @@ struct UserRatedCity: Codable, Identifiable {
     let name: String
     let country: String
     let imageUrl: String?
-    let userRating: Double?
+    var userRating: Double?
     let createdAt: Date?
 
     enum CodingKeys: String, CodingKey {
