@@ -25,7 +25,7 @@ struct ProfileView: View {
                 .ignoresSafeArea()
             NavigationStack {
                 Form {
-                    Section(header: Text("Profile")) {
+                    Section {
                         profileImageSection
                     }
                     Section {
@@ -38,7 +38,8 @@ struct ProfileView: View {
                         logoutSection
                     }
                 }
-                .navigationTitle(vm.username)
+                .navigationTitle("Profile")
+                .navigationBarTitleDisplayMode(.inline)
             }
         }
         .task {
@@ -64,7 +65,13 @@ struct ProfileView: View {
     private var profileImageSection: some View {
         HStack(alignment: .center) {
             Spacer()
-            VStack(alignment: .center, spacing: 8) {
+            VStack(alignment: .center, spacing: 12) {
+                Text("@\(vm.username)")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                    .padding(.bottom, 4)
+
                 CircularProfileImage(imageState: vm.imageState)
                     .overlay(alignment: .bottomTrailing) {
                         PhotosPicker(selection: $vm.imageSelection,
@@ -77,11 +84,41 @@ struct ProfileView: View {
                                 .foregroundStyle(Color.accentColor)
                         }.buttonStyle(.borderless)
                     }
-                Text(vm.email)
-                    .padding()
+
+                HStack(spacing: 40) {
+                    VStack(spacing: 4) {
+                        Text("\(vm.citiesVisited)")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                        Text("Cities Visited")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fontWeight(.medium)
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    Rectangle()
+                        .fill(Color.secondary.opacity(0.3))
+                        .frame(width: 1, height: 40)
+
+                    VStack(spacing: 4) {
+                        Text("\(vm.recsSubmitted)")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                        Text("Reviews")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fontWeight(.medium)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .padding(.top, 8)
             }
             Spacer()
         }
+        .padding(.vertical, 8)
     }
 
     private var travelHistorySection: some View {

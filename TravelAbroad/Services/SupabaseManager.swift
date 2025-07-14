@@ -240,6 +240,38 @@ class SupabaseManager {
         }
     }
 
+    // MARK: - LoginView Functions
+
+    func fetchEmailWithUsername(username: String) async throws -> String? {
+        struct Profile: Codable {
+            let email: String?
+        }
+
+        let profile: Profile = try await supabase.from("profiles")
+            .select("email")
+            .ilike("username", pattern: username.lowercased())
+            .single()
+            .execute()
+            .value
+
+        return profile.email
+    }
+
+    func isUsernameAvailable(username: String) async throws -> Bool {
+        struct Profile: Codable {
+            let username: String?
+        }
+
+        let profiles: [Profile] = try await supabase
+            .from("profiles")
+            .select("username")
+            .ilike("username", pattern: username.lowercased())
+            .execute()
+            .value
+
+        return profiles.isEmpty
+    }
+
     // MARK: - ProfileView Functions
 
     // adds profile image to profile-images bucket and profiles table
@@ -387,6 +419,26 @@ class SupabaseManager {
             .execute()
             .value
         return cities
+    }
+
+    func fetchNumCitiesVisited(userId: UUID) async throws -> Int {
+        print("userId: \(userId)")
+        let response = try await supabase.from("city_reviews")
+            .select("id", count: .exact)
+            .eq("user_id", value: userId)
+            .execute()
+
+        print("cities visited: \(response)")
+        return response.count ?? 0
+    }
+
+    func fetchNumRecsSubmitted(userId: UUID) async throws -> Int {
+        let num = try await supabase.from("comments")
+            .select("id", count: .exact)
+            .eq("user_id", value: userId)
+            .execute()
+        print("recs submitted: \(num)")
+        return num.count ?? 0
     }
 
     // MARK: - CityDetailView Functions
