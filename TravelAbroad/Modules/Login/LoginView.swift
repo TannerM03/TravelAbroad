@@ -52,7 +52,7 @@ struct LoginView: View {
             HStack {
                 Image(systemName: "envelope")
                     .foregroundColor(.accentColor)
-                TextField("Email", text: $vm.email)
+                TextField(vm.isSignUp ? "Email" : "Email or username (case sensitive)", text: $vm.loginCredential)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .keyboardType(.emailAddress)
@@ -88,6 +88,8 @@ struct LoginView: View {
                     .foregroundColor(.red)
                     .font(.callout.bold())
                     .multilineTextAlignment(.center)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 2)
             }
         }
@@ -102,14 +104,14 @@ struct LoginView: View {
         } label: {
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(vm.email.isEmpty || vm.password.isEmpty || vm.isLoading ? Color.gray.opacity(0.5) : Color.accentColor)
+                    .fill(vm.loginCredential.isEmpty || vm.password.isEmpty || vm.isLoading ? Color.gray.opacity(0.5) : Color.accentColor)
                     .frame(height: 48)
                 Text(vm.isSignUp ? "Sign Up" : "Login")
                     .foregroundColor(.white)
                     .font(.headline.bold())
             }
         }
-        .disabled(vm.email == "" || vm.password == "" || vm.isLoading || (vm.username.count < 4 && vm.isSignUp))
+        .disabled(vm.loginCredential == "" || vm.password == "" || vm.isLoading || (vm.username.count < 4 && vm.isSignUp))
         .padding(.horizontal, 4)
     }
 

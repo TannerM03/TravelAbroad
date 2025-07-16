@@ -13,7 +13,9 @@ struct RecommendationsView: View {
     let cityId: String
     let cityName: String
     let imageUrl: String
-    @State private var showRatingOverlay = false
+    let userRating: Double?
+    let isBucketList: Bool
+    let onRatingUpdated: ((Double) -> Void)?
 
     var body: some View {
         NavigationStack {
@@ -21,15 +23,33 @@ struct RecommendationsView: View {
                 VStack(alignment: .leading) {
                     cityImageSection
                     categoryFilterSection
+                    SearchBar(placeholder: "Search for a recommendation", searchText: $vm.userSearch)
+                        .padding(.bottom, 10)
                     recommendationsListSection
                 }
             }
-            .navigationTitle(cityName)
+            .navigationTitle(vm.cityName)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    if let rating = vm.cityRating, rating > 0.0 {
-                        Button(action: { showRatingOverlay = true }) {
+                    if let rating = vm.userRating, rating > 0.0 {
+                        Button(action: { vm.showRatingOverlay() }) {
+                            HStack(spacing: 4) {
+                                Text(String(format: "%.1f", rating))
+                                    .font(.subheadline)
+                                    .bold()
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(Color.accentColor.opacity(0.15))
+                            .foregroundColor(.accentColor)
+                            .cornerRadius(20)
+                            .shadow(color: .black.opacity(0.09), radius: 3, x: 0, y: 2)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Edit your rating")
+                    } else if let rating = userRating, rating > 0.0 {
+                        Button(action: { vm.showRatingOverlay() }) {
                             HStack(spacing: 4) {
                                 Text(String(format: "%.1f", rating))
                                     .font(.subheadline)
@@ -45,7 +65,7 @@ struct RecommendationsView: View {
                         .buttonStyle(.plain)
                         .accessibilityLabel("Edit your rating")
                     } else {
-                        Button(action: { showRatingOverlay = true }) {
+                        Button(action: { vm.showRatingOverlay() }) {
                             HStack(spacing: 6) {
                                 Text("Add Rating")
                                     .font(.subheadline)
@@ -64,37 +84,33 @@ struct RecommendationsView: View {
                 }
             }
             .overlay {
-                if showRatingOverlay {
+                if vm.isRatingOverlay {
                     ratingPopoverContent
                 }
             }
         }
         .task {
+            vm.initializeCity(cityId: cityId, cityName: cityName, imageUrl: imageUrl, userRating: userRating, isBucketList: isBucketList, onRatingUpdated: onRatingUpdated)
             await vm.getRecs(cityId: UUID(uuidString: cityId)!)
             await vm.fetchUser()
-            await vm.isCityFavorite(cityId: UUID(uuidString: cityId)!)
-            await vm.getUserCityRating(for: UUID(uuidString: cityId)!)
-//            vm.cityRating = await vm.getUserCityRating(for: UUID(uuidString: cityId)!)
-//            await vm.checkIfCityIsFavorite(cityId: UUID(uuidString: cityId)!)
         }
     }
 
     private var cityImageSection: some View {
         Group {
-            if let url = URL(string: imageUrl) {
+            if let url = URL(string: vm.imageUrl) {
                 ZStack(alignment: .topTrailing) {
                     KFImage(url)
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 250)
-                        .frame(maxWidth: .infinity)
+                        .scaledToFill()
+                        .frame(width: UIScreen.main.bounds.width, height: 250)
                         .clipped()
                         .ignoresSafeArea(edges: .top)
 
                     Button {
                         Task {
                             // do i need to change this UUID() fallback?
-                            await vm.addOrRemoveFavorite(cityId: UUID(uuidString: cityId) ?? UUID())
+                            await vm.addOrRemoveFavorite(cityId: UUID(uuidString: vm.cityId) ?? UUID())
                         }
                     } label: {
                         Image(systemName: vm.isFavoriteCity ? "bookmark.fill" : "bookmark")
@@ -134,7 +150,7 @@ struct RecommendationsView: View {
 
     private var recommendationsListSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(vm.filteredRecs) { rec in
+            ForEach(vm.searchedRecs) { rec in
                 RecommendationsCardView(rec: rec)
             }
         }
@@ -142,7 +158,7 @@ struct RecommendationsView: View {
 
     private var ratingPopoverContent: some View {
         VStack(spacing: 22) {
-            Text("Rate \(cityName)")
+            Text("Rate \(vm.cityName)")
                 .font(.title2).bold()
                 .padding(.top, 10)
             Text("How would you rate this city?")
@@ -150,35 +166,36 @@ struct RecommendationsView: View {
                 .foregroundColor(.secondary)
             HStack(spacing: 8) {
                 ForEach(1 ... 5, id: \.self) { i in
-                    Image(systemName: (vm.cityRating ?? 5.0) >= Double(i * 2) ? "star.fill" : (vm.cityRating ?? 5.0) >= Double(i * 2 - 1) ? "star.lefthalf.fill" : "star")
+                    Image(systemName: (vm.tempRating ?? 5.0) >= Double(i * 2) ? "star.fill" : (vm.tempRating ?? 5.0) >= Double(i * 2 - 1) ? "star.lefthalf.fill" : "star")
                         .resizable()
                         .frame(width: 28, height: 28)
                         .foregroundColor(.yellow)
                         .onTapGesture {
-                            vm.cityRating = Double(i * 2)
+//                            vm.userRating = Double(i * 2)
+                            vm.tempRating = Double(i * 2)
                         }
                 }
             }
-            Text(String(format: "%.1f", vm.cityRating ?? 5.0))
+            Text(String(format: "%.1f", vm.tempRating ?? 5.0))
                 .font(.headline)
                 .foregroundColor(.accentColor)
                 .padding(.bottom, 8)
             Slider(value: Binding(
-                get: { vm.cityRating ?? 5.5 },
-                set: { vm.cityRating = $0 }
+                get: { vm.tempRating ?? 5.5 },
+                set: { vm.tempRating = $0 }
             ), in: 1 ... 10, step: 0.1)
                 .accentColor(.yellow)
                 .padding(.horizontal, 8)
             HStack(spacing: 16) {
                 Button("Cancel") {
-                    showRatingOverlay = false
+                    vm.hideRatingOverlay()
                 }
                 .foregroundColor(.secondary)
                 Button("Submit Rating") {
                     Task {
-                        await vm.updateCityReview(userId: vm.userId, cityId: UUID(uuidString: cityId)!, rating: vm.cityRating ?? 5.5)
+                        await vm.updateCityReview(userId: vm.userId, cityId: UUID(uuidString: vm.cityId)!, rating: vm.tempRating ?? 5.0)
                     }
-                    showRatingOverlay = false
+                    vm.hideRatingOverlay()
                 }
                 .fontWeight(.semibold)
                 .foregroundColor(.accentColor)
@@ -196,20 +213,24 @@ struct RecommendationsView: View {
 }
 
 #Preview("With Recommendations") {
-    PreviewRecommendationsView(
+    RecommendationsView(
         cityId: "49e5f9fb-e080-4365-9de6-cab823acf033",
         cityName: "Madrid",
         imageUrl: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4",
-        recommendations: MockData.sampleRecommendations
+        userRating: nil,
+        isBucketList: false,
+        onRatingUpdated: nil
     )
 }
 
 #Preview("Empty State") {
-    PreviewRecommendationsView(
+    RecommendationsView(
         cityId: "49e5f9fb-e080-4365-9de6-cab823acf033",
         cityName: "Madrid",
         imageUrl: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4",
-        recommendations: []
+        userRating: nil,
+        isBucketList: true,
+        onRatingUpdated: nil
     )
 }
 

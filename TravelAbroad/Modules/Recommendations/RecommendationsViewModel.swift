@@ -14,16 +14,18 @@ class RecommendationsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var userId: UUID = .init()
     @Published var user: User?
-    @Published var cityRating: Double? = nil
+    @Published var userRating: Double? = nil
     @Published var selectedCategory: CategoryType? = .activities
     @Published var isFavoriteCity: Bool = false
-
-//    @Published var favoriteCities: [City] = []
-
-//    func isFavorite(cityId: UUID) -> Bool {
-//        print("returning isFavorite")
-//        return favoriteCities.contains(where: { $0.id == cityId.uuidString })
-//    }
+    @Published var tempRating: Double? = nil
+    @Published var userSearch: String = ""
+    @Published var isRatingOverlay = false
+    @Published var cityId: String = ""
+    @Published var cityName: String = ""
+    @Published var imageUrl: String = ""
+    @Published var isBucketList: Bool = false
+    
+    var onRatingUpdated: ((Double) -> Void)?
 
     var categorizedRecs: [Recommendation] {
         if let selected = selectedCategory {
@@ -32,9 +34,34 @@ class RecommendationsViewModel: ObservableObject {
             return recommendations
         }
     }
+    
+    var searchedRecs: [Recommendation] {
+        if userSearch.isEmpty {
+            return categorizedRecs
+        } else {
+            return categorizedRecs.filter { rec in
+                rec.name.lowercased().contains(userSearch.lowercased())
+            }
+        }
+    }
 
     var filteredRecs: [Recommendation] {
         return categorizedRecs.sorted { $0.avgRating > $1.avgRating }
+    }
+
+    func initialize(rating: Double) {
+        userRating = rating
+    }
+    
+    func initializeCity(cityId: String, cityName: String, imageUrl: String, userRating: Double?, isBucketList: Bool, onRatingUpdated: ((Double) -> Void)?) {
+        self.cityId = cityId
+        self.cityName = cityName
+        self.imageUrl = imageUrl
+        self.userRating = userRating
+        self.tempRating = userRating
+        self.isBucketList = isBucketList
+        self.isFavoriteCity = isBucketList
+        self.onRatingUpdated = onRatingUpdated
     }
 
     func getRecs(cityId: UUID) async {
@@ -49,10 +76,20 @@ class RecommendationsViewModel: ObservableObject {
 
     func updateCityReview(userId: UUID, cityId: UUID, rating: Double) async {
         do {
+            userRating = tempRating
             try await SupabaseManager.shared.addCityReview(userId: userId, cityId: cityId, rating: rating)
+            onRatingUpdated?(userRating ?? 5.0)
         } catch {
             print("Error updating/creating city review in vm: \(error)")
         }
+    }
+    
+    func showRatingOverlay() {
+        self.isRatingOverlay = true
+    }
+    
+    func hideRatingOverlay() {
+        self.isRatingOverlay = false
     }
 
     func fetchUser() async {
@@ -65,25 +102,6 @@ class RecommendationsViewModel: ObservableObject {
         }
     }
 
-//    func getUserCityRating(for cityId: UUID) async -> Double? {
-//        do {
-//            cityRating = try await SupabaseManager.shared.getCityRatingForUser(cityId: cityId, userId: userId)
-//        } catch {
-//            print("Failed to fetch city rating for user: \(error)")
-//            cityRating = nil
-//        }
-//        return cityRating
-//    }
-
-    func getUserCityRating(for cityId: UUID) async {
-        do {
-            cityRating = try await SupabaseManager.shared.getCityRatingForUser(cityId: cityId, userId: userId)
-        } catch {
-            print("Failed to fetch city rating for user: \(error.localizedDescription)")
-            cityRating = nil
-        }
-    }
-
     func isCityFavorite(cityId: UUID) async {
         do {
             isFavoriteCity = try await SupabaseManager.shared.getIsCityFavorite(cityId: cityId, userId: userId)
@@ -91,26 +109,6 @@ class RecommendationsViewModel: ObservableObject {
             print("couldn't determine is city is favorite (vm): \(error)")
         }
     }
-
-//    func getFavorites(cityId: UUID) async{
-//        do {
-//            favoriteCities = try await SupabaseManager.shared.fetchUserBucketList(userId: userId)
-//            print("fav cities vm: \(favoriteCities)")
-//            isFavoriteCity = favoriteCities.contains(where: { $0.id == cityId.uuidString })
-//        } catch {
-//            print("failed to get bucket list: \(error)")
-//        }
-//    }
-
-//    func checkIfCityIsFavorite(cityId: UUID) async {
-//        do {
-//            let bucketList = try await SupabaseManager.shared.fetchUserBucketList(userId: userId)
-//            isFavorite = bucketList.contains { $0.id == cityId.uuidString }
-//        } catch {
-//            print("failed to check if city is favorite: \(error)")
-//            isFavorite = false
-//        }
-//    }
 
     func addOrRemoveFavorite(cityId: UUID) async {
         do {

@@ -12,43 +12,43 @@ class MockData {
 
     // MARK: - Mock Cities
 
-    static let sampleCities: [City] = [
-        City(
-            id: "49e5f9fb-e080-4365-9de6-cab823acf033",
-            name: "Madrid",
-            country: "Spain",
-            imageUrl: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4",
-            avgRating: 4.5
-        ),
-        City(
-            id: "8c9a7b2d-e4f3-4a5b-9c8d-7e6f5a4b3c2d",
-            name: "Paris",
-            country: "France",
-            imageUrl: "https://images.unsplash.com/photo-1502602898536-47ad22581b52",
-            avgRating: 4.7
-        ),
-        City(
-            id: "3f2e1d9c-8b7a-6958-4736-251e0d9c8b7a",
-            name: "Tokyo",
-            country: "Japan",
-            imageUrl: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf",
-            avgRating: 4.8
-        ),
-        City(
-            id: "7a6b5c4d-3e2f-1a9b-8c7d-6e5f4a3b2c1d",
-            name: "New York",
-            country: "United States",
-            imageUrl: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9",
-            avgRating: 4.2
-        ),
-        City(
-            id: "9b8c7d6e-5f4a-3b2c-1d9e-8f7a6b5c4d3e",
-            name: "Barcelona",
-            country: "Spain",
-            imageUrl: "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62",
-            avgRating: 4.6
-        ),
-    ]
+//    static let sampleCities: [City] = [
+//        City(
+//            id: "49e5f9fb-e080-4365-9de6-cab823acf033",
+//            name: "Madrid",
+//            country: "Spain",
+//            imageUrl: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4",
+//            avgRating: 4.5
+//        ),
+//        City(
+//            id: "8c9a7b2d-e4f3-4a5b-9c8d-7e6f5a4b3c2d",
+//            name: "Paris",
+//            country: "France",
+//            imageUrl: "https://images.unsplash.com/photo-1502602898536-47ad22581b52",
+//            avgRating: 4.7
+//        ),
+//        City(
+//            id: "3f2e1d9c-8b7a-6958-4736-251e0d9c8b7a",
+//            name: "Tokyo",
+//            country: "Japan",
+//            imageUrl: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf",
+//            avgRating: 4.8
+//        ),
+//        City(
+//            id: "7a6b5c4d-3e2f-1a9b-8c7d-6e5f4a3b2c1d",
+//            name: "New York",
+//            country: "United States",
+//            imageUrl: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9",
+//            avgRating: 4.2
+//        ),
+//        City(
+//            id: "9b8c7d6e-5f4a-3b2c-1d9e-8f7a6b5c4d3e",
+//            name: "Barcelona",
+//            country: "Spain",
+//            imageUrl: "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62",
+//            avgRating: 4.6
+//        ),
+//    ]
 
     // MARK: - Mock Recommendations
 

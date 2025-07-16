@@ -60,6 +60,7 @@ struct CommentsView: View {
             }
         }
         .task {
+            vm.recommendation = recommendation
             await vm.fetchComments(for: recommendation.id)
             await vm.fetchUserRating(for: recommendation.id)
         }
@@ -100,7 +101,7 @@ struct CommentsView: View {
                     Image(systemName: "star.fill")
                         .foregroundColor(.yellow)
                         .font(.caption)
-                    Text("Avg Rating: \(String(format: "%.1f", recommendation.avgRating))")
+                    Text("Avg Rating: \(String(format: "%.1f", vm.displayedAverageRating))")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -293,6 +294,9 @@ struct CommentsView: View {
             } else {
                 await vm.submitComment(recommendationId: recommendation.id, text: nil, image: selectedImage, rating: Int(userRating))
             }
+
+            // Optionally refresh the recommendation data in background
+            await vm.refreshRecommendationData()
 
             await MainActor.run {
                 withAnimation(.easeInOut(duration: 0.3)) {

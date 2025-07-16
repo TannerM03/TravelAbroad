@@ -15,7 +15,7 @@ struct CitiesView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                SearchBar(searchText: $vm.userSearch)
+                SearchBar(placeholder: "Search for a city or country", searchText: $vm.userSearch)
                     .padding(.bottom, 10)
 
                 citiesGridSection
@@ -43,7 +43,16 @@ struct CitiesView: View {
                 ForEach(vm.sortedCities) { city in
                     let emoji = CountryEmoji.emoji(for: city.country)
                     NavigationLink {
-                        RecommendationsView(cityId: city.id, cityName: city.name, imageUrl: city.imageUrl ?? "")
+                        RecommendationsView(
+                            cityId: city.id,
+                            cityName: city.name,
+                            imageUrl: city.imageUrl ?? "",
+                            userRating: city.userRating,
+                            isBucketList: city.isBucketList,
+                            onRatingUpdated: { newRating in
+                                vm.updateCityRating(cityId: city.id, newRating: newRating)
+                            }
+                        )
                     } label: {
                         CityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.avgRating, flagEmoji: emoji)
                     }
@@ -93,17 +102,17 @@ struct CitiesView: View {
     }
 }
 
-#Preview("With Cities") {
-    let vm = CityListViewModel()
-    vm.cities = MockData.sampleCities
-    return CitiesView(vm: vm)
-}
-
-#Preview("Loading State") {
-    let vm = CityListViewModel()
-    vm.isLoading = true
-    return CitiesView(vm: vm)
-}
+// #Preview("With Cities") {
+//    let vm = CityListViewModel()
+//    vm.cities = MockData.sampleCities
+//    return CitiesView(vm: vm)
+// }
+//
+// #Preview("Loading State") {
+//    let vm = CityListViewModel()
+//    vm.isLoading = true
+//    return CitiesView(vm: vm)
+// }
 
 // MARK: - Preview Helper View
 
@@ -114,7 +123,7 @@ private struct PreviewCitiesView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                SearchBar(searchText: .constant(""))
+                SearchBar(placeholder: "Search for a city or country", searchText: .constant(""))
                     .padding(.bottom, 10)
 
                 ScrollView {
@@ -145,9 +154,10 @@ private struct PreviewCitiesView: View {
 // MARK: - SearchBar
 
 struct SearchBar: View {
+    let placeholder: String
     @Binding var searchText: String
     var body: some View {
-        TextField("Search for a city or country", text: $searchText)
+        TextField(placeholder, text: $searchText)
             .padding(10)
             .padding(.horizontal, 25)
             .background(Color(.systemGray6))

@@ -27,11 +27,61 @@ class SupabaseManager {
 
     // fetches the cities to be displayed as travel options,
     func fetchCities() async throws -> [City] {
-        let cities: [City] = try await supabase.from("city_with_avg_rating")
-            .select()
+        guard let userId = supabase.auth.currentUser?.id else {
+            let cities: [City] = try await supabase.from("city_with_avg_rating")
+                .select()
+                .execute()
+                .value
+            return cities
+        }
+        struct CityWithUserRating: Codable {
+            let id: String
+            let name: String
+            let country: String
+            let imageUrl: String?
+            let avgRating: Double?
+            let cityReviews: [UserReview]?
+            let userBucketList: [BucketListEntry]?
+
+            enum CodingKeys: String, CodingKey {
+                case id
+                case name
+                case country
+                case imageUrl = "image_url"
+                case avgRating = "avg_rating"
+                case cityReviews = "city_reviews"
+                case userBucketList = "user_bucket_list"
+            }
+        }
+
+        struct BucketListEntry: Codable {
+            let cityId: String
+
+            enum CodingKeys: String, CodingKey {
+                case cityId = "city_id"
+            }
+        }
+
+        struct UserReview: Codable {
+            let overallRating: Double
+
+            enum CodingKeys: String, CodingKey {
+                case overallRating = "overall_rating"
+            }
+        }
+
+        let response: [CityWithUserRating] = try await supabase
+            .from("city_with_avg_rating")
+            .select("*, city_reviews!left(overall_rating), user_bucket_list!left(city_id)")
+            .eq("city_reviews.user_id", value: userId.uuidString)
+            .eq("user_bucket_list.user_id", value: userId.uuidString)
             .execute()
             .value
-        return cities
+
+        return response.map { cityData in
+            let isBucketList = cityData.userBucketList?.first?.cityId != nil
+            return City(id: cityData.id, name: cityData.name, country: cityData.country, imageUrl: cityData.imageUrl, avgRating: cityData.avgRating, userRating: cityData.cityReviews?.first?.overallRating, isBucketList: isBucketList)
+        }
     }
 
     // MARK: - RecommendationsView Functions
@@ -42,6 +92,7 @@ class SupabaseManager {
             .from("recommendations_with_avg_rating")
             .select()
             .eq("city_id", value: cityId)
+            .order("avg_rating", ascending: false)
             .execute()
             .value
         return recs
@@ -188,6 +239,38 @@ class SupabaseManager {
                 .eq("rec_id", value: recommendationId)
                 .execute()
         }
+    }
+
+    // MARK: - LoginView Functions
+
+    func fetchEmailWithUsername(username: String) async throws -> String? {
+        struct Profile: Codable {
+            let email: String?
+        }
+
+        let profile: Profile = try await supabase.from("profiles")
+            .select("email")
+            .ilike("username", pattern: username.lowercased())
+            .single()
+            .execute()
+            .value
+
+        return profile.email
+    }
+
+    func isUsernameAvailable(username: String) async throws -> Bool {
+        struct Profile: Codable {
+            let username: String?
+        }
+
+        let profiles: [Profile] = try await supabase
+            .from("profiles")
+            .select("username")
+            .ilike("username", pattern: username.lowercased())
+            .execute()
+            .value
+
+        return profiles.isEmpty
     }
 
     // MARK: - ProfileView Functions
@@ -337,6 +420,26 @@ class SupabaseManager {
             .execute()
             .value
         return cities
+    }
+
+    func fetchNumCitiesVisited(userId: UUID) async throws -> Int {
+        print("userId: \(userId)")
+        let response = try await supabase.from("city_reviews")
+            .select("id", count: .exact)
+            .eq("user_id", value: userId)
+            .execute()
+
+        print("cities visited: \(response)")
+        return response.count ?? 0
+    }
+
+    func fetchNumRecsSubmitted(userId: UUID) async throws -> Int {
+        let num = try await supabase.from("comments")
+            .select("id", count: .exact)
+            .eq("user_id", value: userId)
+            .execute()
+        print("recs submitted: \(num)")
+        return num.count ?? 0
     }
 
     // MARK: - CityDetailView Functions

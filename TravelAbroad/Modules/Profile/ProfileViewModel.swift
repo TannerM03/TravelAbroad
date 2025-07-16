@@ -13,11 +13,12 @@ import SwiftUI
 @MainActor
 class ProfileViewModel: ObservableObject {
     @Published var username: String = ""
-    @Published var email: String = ""
     @Published var user: User?
     @Published var profileImageURL: String?
     @Published var userId: UUID? = nil
     @Published var imageState: ImageState = .empty
+    @Published var citiesVisited: Int = 0
+    @Published var recsSubmitted: Int = 0
     @Published var imageSelection: PhotosPickerItem? = nil {
         didSet {
             if let imageSelection {
@@ -38,7 +39,6 @@ class ProfileViewModel: ObservableObject {
     func fetchUser() async {
         do {
             user = try await SupabaseManager.shared.supabase.auth.user()
-            email = user?.email ?? ""
             userId = user?.id
 
             if let userId = userId {
@@ -48,9 +48,13 @@ class ProfileViewModel: ObservableObject {
                 if let urlString = profileImageURL, let url = URL(string: urlString) {
                     await loadImageFromURL(url)
                 }
+                citiesVisited = try await SupabaseManager.shared.fetchNumCitiesVisited(userId: userId)
+                recsSubmitted = try await SupabaseManager.shared.fetchNumRecsSubmitted(userId: userId)
+
             } else {
                 print("userId didn't work yet")
             }
+
         } catch {
             print("Failed to fetch user: \(error)")
         }
