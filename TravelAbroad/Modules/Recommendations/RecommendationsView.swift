@@ -16,7 +16,6 @@ struct RecommendationsView: View {
     let userRating: Double?
     let isBucketList: Bool
     let onRatingUpdated: ((Double) -> Void)?
-    @State private var showRatingOverlay = false
 
     var body: some View {
         NavigationStack {
@@ -24,15 +23,17 @@ struct RecommendationsView: View {
                 VStack(alignment: .leading) {
                     cityImageSection
                     categoryFilterSection
+                    SearchBar(placeholder: "Search for a recommendation", searchText: $vm.userSearch)
+                        .padding(.bottom, 10)
                     recommendationsListSection
                 }
             }
-            .navigationTitle(cityName)
+            .navigationTitle(vm.cityName)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     if let rating = vm.userRating, rating > 0.0 {
-                        Button(action: { showRatingOverlay = true }) {
+                        Button(action: { vm.showRatingOverlay() }) {
                             HStack(spacing: 4) {
                                 Text(String(format: "%.1f", rating))
                                     .font(.subheadline)
@@ -48,7 +49,7 @@ struct RecommendationsView: View {
                         .buttonStyle(.plain)
                         .accessibilityLabel("Edit your rating")
                     } else if let rating = userRating, rating > 0.0 {
-                        Button(action: { showRatingOverlay = true }) {
+                        Button(action: { vm.showRatingOverlay() }) {
                             HStack(spacing: 4) {
                                 Text(String(format: "%.1f", rating))
                                     .font(.subheadline)
@@ -64,7 +65,7 @@ struct RecommendationsView: View {
                         .buttonStyle(.plain)
                         .accessibilityLabel("Edit your rating")
                     } else {
-                        Button(action: { showRatingOverlay = true }) {
+                        Button(action: { vm.showRatingOverlay() }) {
                             HStack(spacing: 6) {
                                 Text("Add Rating")
                                     .font(.subheadline)
@@ -83,15 +84,13 @@ struct RecommendationsView: View {
                 }
             }
             .overlay {
-                if showRatingOverlay {
+                if vm.isRatingOverlay {
                     ratingPopoverContent
                 }
             }
         }
         .task {
-            vm.userRating = userRating
-            vm.tempRating = userRating
-            vm.isFavoriteCity = isBucketList
+            vm.initializeCity(cityId: cityId, cityName: cityName, imageUrl: imageUrl, userRating: userRating, isBucketList: isBucketList, onRatingUpdated: onRatingUpdated)
             await vm.getRecs(cityId: UUID(uuidString: cityId)!)
             await vm.fetchUser()
         }
@@ -99,7 +98,7 @@ struct RecommendationsView: View {
 
     private var cityImageSection: some View {
         Group {
-            if let url = URL(string: imageUrl) {
+            if let url = URL(string: vm.imageUrl) {
                 ZStack(alignment: .topTrailing) {
                     KFImage(url)
                         .resizable()
@@ -111,7 +110,7 @@ struct RecommendationsView: View {
                     Button {
                         Task {
                             // do i need to change this UUID() fallback?
-                            await vm.addOrRemoveFavorite(cityId: UUID(uuidString: cityId) ?? UUID())
+                            await vm.addOrRemoveFavorite(cityId: UUID(uuidString: vm.cityId) ?? UUID())
                         }
                     } label: {
                         Image(systemName: vm.isFavoriteCity ? "bookmark.fill" : "bookmark")
@@ -151,7 +150,7 @@ struct RecommendationsView: View {
 
     private var recommendationsListSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(vm.filteredRecs) { rec in
+            ForEach(vm.searchedRecs) { rec in
                 RecommendationsCardView(rec: rec)
             }
         }
@@ -159,7 +158,7 @@ struct RecommendationsView: View {
 
     private var ratingPopoverContent: some View {
         VStack(spacing: 22) {
-            Text("Rate \(cityName)")
+            Text("Rate \(vm.cityName)")
                 .font(.title2).bold()
                 .padding(.top, 10)
             Text("How would you rate this city?")
@@ -189,15 +188,14 @@ struct RecommendationsView: View {
                 .padding(.horizontal, 8)
             HStack(spacing: 16) {
                 Button("Cancel") {
-                    showRatingOverlay = false
+                    vm.hideRatingOverlay()
                 }
                 .foregroundColor(.secondary)
                 Button("Submit Rating") {
                     Task {
-                        await vm.updateCityReview(userId: vm.userId, cityId: UUID(uuidString: cityId)!, rating: vm.tempRating ?? 5.0)
-                        onRatingUpdated?(vm.userRating ?? 5.0)
+                        await vm.updateCityReview(userId: vm.userId, cityId: UUID(uuidString: vm.cityId)!, rating: vm.tempRating ?? 5.0)
                     }
-                    showRatingOverlay = false
+                    vm.hideRatingOverlay()
                 }
                 .fontWeight(.semibold)
                 .foregroundColor(.accentColor)

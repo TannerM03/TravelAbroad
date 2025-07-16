@@ -15,7 +15,7 @@ struct CitiesView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                SearchBar(searchText: $vm.userSearch)
+                SearchBar(placeholder: "Search for a city or country", searchText: $vm.userSearch)
                     .padding(.bottom, 10)
 
                 citiesGridSection
@@ -123,7 +123,7 @@ private struct PreviewCitiesView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                SearchBar(searchText: .constant(""))
+                SearchBar(placeholder: "Search for a city or country", searchText: .constant(""))
                     .padding(.bottom, 10)
 
                 ScrollView {
@@ -154,9 +154,10 @@ private struct PreviewCitiesView: View {
 // MARK: - SearchBar
 
 struct SearchBar: View {
+    let placeholder: String
     @Binding var searchText: String
     var body: some View {
-        TextField("Search for a city or country", text: $searchText)
+        TextField(placeholder, text: $searchText)
             .padding(10)
             .padding(.horizontal, 25)
             .background(Color(.systemGray6))

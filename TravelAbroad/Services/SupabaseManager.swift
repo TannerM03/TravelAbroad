@@ -92,6 +92,7 @@ class SupabaseManager {
             .from("recommendations_with_avg_rating")
             .select()
             .eq("city_id", value: cityId)
+            .order("avg_rating", ascending: false)
             .execute()
             .value
         return recs

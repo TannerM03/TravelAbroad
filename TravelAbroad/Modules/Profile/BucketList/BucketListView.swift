@@ -14,7 +14,7 @@ struct BucketListView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                SearchBar(searchText: $vm.userSearch)
+                SearchBar(placeholder: "Search for a city or country", searchText: $vm.userSearch)
                     .padding(.bottom, 10)
 
                 citiesGridSection

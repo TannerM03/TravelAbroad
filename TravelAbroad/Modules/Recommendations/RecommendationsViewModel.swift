@@ -18,12 +18,30 @@ class RecommendationsViewModel: ObservableObject {
     @Published var selectedCategory: CategoryType? = .activities
     @Published var isFavoriteCity: Bool = false
     @Published var tempRating: Double? = nil
+    @Published var userSearch: String = ""
+    @Published var isRatingOverlay = false
+    @Published var cityId: String = ""
+    @Published var cityName: String = ""
+    @Published var imageUrl: String = ""
+    @Published var isBucketList: Bool = false
+    
+    var onRatingUpdated: ((Double) -> Void)?
 
     var categorizedRecs: [Recommendation] {
         if let selected = selectedCategory {
             return recommendations.filter { $0.category == selected }
         } else {
             return recommendations
+        }
+    }
+    
+    var searchedRecs: [Recommendation] {
+        if userSearch.isEmpty {
+            return categorizedRecs
+        } else {
+            return categorizedRecs.filter { rec in
+                rec.name.lowercased().contains(userSearch.lowercased())
+            }
         }
     }
 
@@ -33,6 +51,17 @@ class RecommendationsViewModel: ObservableObject {
 
     func initialize(rating: Double) {
         userRating = rating
+    }
+    
+    func initializeCity(cityId: String, cityName: String, imageUrl: String, userRating: Double?, isBucketList: Bool, onRatingUpdated: ((Double) -> Void)?) {
+        self.cityId = cityId
+        self.cityName = cityName
+        self.imageUrl = imageUrl
+        self.userRating = userRating
+        self.tempRating = userRating
+        self.isBucketList = isBucketList
+        self.isFavoriteCity = isBucketList
+        self.onRatingUpdated = onRatingUpdated
     }
 
     func getRecs(cityId: UUID) async {
@@ -49,9 +78,18 @@ class RecommendationsViewModel: ObservableObject {
         do {
             userRating = tempRating
             try await SupabaseManager.shared.addCityReview(userId: userId, cityId: cityId, rating: rating)
+            onRatingUpdated?(userRating ?? 5.0)
         } catch {
             print("Error updating/creating city review in vm: \(error)")
         }
+    }
+    
+    func showRatingOverlay() {
+        self.isRatingOverlay = true
+    }
+    
+    func hideRatingOverlay() {
+        self.isRatingOverlay = false
     }
 
     func fetchUser() async {
