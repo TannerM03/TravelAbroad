@@ -19,43 +19,38 @@ struct CommentsView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        recommendationHeader
-                        commentsSection
-                        Spacer(minLength: 100)
-                    }
-                    .padding()
-                }
-                .navigationTitle("Comments")
-                .navigationBarTitleDisplayMode(.inline)
-                .blur(radius: showLeaveRating ? 8 : 0)
-
-                if showLeaveRating {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-                        .onTapGesture {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                showLeaveRating = false
-                                newCommentText = ""
-                                selectedImage = nil
-                            }
+            GeometryReader { geometry in
+                ZStack {
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            recommendationHeader
+                            commentsContentSection
+                                .background(Color(.systemBackground))
+                            Spacer(minLength: 120)
                         }
-
-                    VStack {
-                        recommendationHeader
-                            .padding()
-                        Spacer()
                     }
-                    .allowsHitTesting(false)
+                    .scrollDismissesKeyboard(.interactively)
+                    .navigationBarHidden(true)
+                    .blur(radius: showLeaveRating ? 8 : 0)
+
+                    if showLeaveRating {
+                        Color.black.opacity(0.4)
+                            .ignoresSafeArea()
+                            .onTapGesture {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                    showLeaveRating = false
+                                    newCommentText = ""
+                                    selectedImage = nil
+                                }
+                            }
+                    }
                 }
-            }
-            .safeAreaInset(edge: .bottom) {
-                if showLeaveRating {
-                    ratingInputSection
-                } else {
-                    leaveRatingButton
+                .safeAreaInset(edge: .bottom) {
+                    if showLeaveRating {
+                        ratingInputSection
+                    } else {
+                        leaveRatingButton
+                    }
                 }
             }
         }
@@ -70,88 +65,170 @@ struct CommentsView: View {
     }
 
     private var recommendationHeader: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        ZStack(alignment: .topLeading) {
             if let urlStr = recommendation.imageUrl, let url = URL(string: urlStr) {
                 KFImage(url)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(height: 200)
+                    .frame(height: 300)
                     .clipped()
-                    .cornerRadius(16)
+            } else {
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.purple, Color.blue, Color.teal]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .frame(height: 300)
             }
-
-            VStack(alignment: .leading, spacing: 8) {
+            
+            // Dark gradient overlay
+            LinearGradient(
+                gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.8)]),
+                startPoint: .center,
+                endPoint: .bottom
+            )
+            .frame(height: 300)
+            
+            VStack {
                 HStack {
-                    Text(recommendation.name)
-                        .font(.title2)
-                        .fontWeight(.bold)
-
+                    Button(action: {
+                        // Navigation back
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(.white)
+                            .padding(12)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
+                            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                    }
+                    
                     Spacer()
-
-                    Text(recommendation.category.rawValue.capitalized)
-                        .font(.caption)
-                        .fontWeight(.medium)
+                    
+                    VStack(spacing: 4) {
+                        Text("📍")
+                            .font(.system(size: 20))
+                        Text(recommendation.category.rawValue.capitalized)
+                            .font(.system(size: 10, weight: .semibold, design: .rounded))
+                            .foregroundColor(.white)
+                    }
+                    .padding(8)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 60)
+                
+                Spacer()
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(recommendation.name)
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                        .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                    
+                    HStack(spacing: 8) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "star.fill")
+                                .foregroundColor(.yellow)
+                                .font(.system(size: 14, weight: .bold))
+                            Text(String(format: "%.1f rating", vm.displayedAverageRating))
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundColor(.white)
+                        }
                         .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(recommendation.category.pillColor)
-                        .cornerRadius(12)
+                        .padding(.vertical, 6)
+                        .background(.ultraThinMaterial)
+                        .clipShape(Capsule())
+                        
+                        Text("💬 \(vm.comments.filter { $0.comment != nil && !$0.comment!.isEmpty }.count) comments")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Capsule())
+                    }
+                    
+                    if let description = recommendation.description, !description.isEmpty {
+                        Text(description)
+                            .font(.system(size: 14, weight: .medium, design: .rounded))
+                            .foregroundColor(.white.opacity(0.9))
+                            .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                            .lineLimit(3)
+                    }
                 }
-
-                HStack(spacing: 6) {
-                    Image(systemName: "star.fill")
-                        .foregroundColor(.yellow)
-                        .font(.caption)
-                    Text("Avg Rating: \(String(format: "%.1f", vm.displayedAverageRating))")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                if let description = recommendation.description, !description.isEmpty {
-                    Text(description)
-                        .font(.body)
-                        .foregroundColor(.primary)
-                        .padding(.top, 4)
-                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 30)
             }
         }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .cornerRadius(16)
     }
 
-    private var commentsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Comments")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                Spacer()
-                Text("\(vm.comments.filter { $0.comment != nil && !$0.comment!.isEmpty }.count)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            if vm.comments.filter({ $0.comment != nil && !$0.comment!.isEmpty }).isEmpty {
-                VStack(spacing: 12) {
-                    Image(systemName: "bubble.left")
-                        .font(.system(size: 40))
+    private var commentsContentSection: some View {
+        VStack(spacing: 24) {
+            VStack(alignment: .leading, spacing: 20) {
+                HStack {
+                    Text("💬 Community Reviews")
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Text("\(vm.comments.filter { $0.comment != nil && !$0.comment!.isEmpty }.count) reviews")
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundColor(.secondary)
-                    Text("No comments yet")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    Text("Be the first to share your thoughts!")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color(.systemGray6))
+                        .clipShape(Capsule())
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 40)
-            } else {
-                LazyVStack(spacing: 12) {
-                    ForEach(vm.comments) { comment in
-                        if let _ = comment.comment {
-                            CommentCardView(comment: comment)
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+
+                if vm.comments.filter({ $0.comment != nil && !$0.comment!.isEmpty }).isEmpty {
+                    VStack(spacing: 16) {
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.purple.opacity(0.1), Color.blue.opacity(0.1)]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 80, height: 80)
+                            
+                            Image(systemName: "bubble.left.and.bubble.right")
+                                .font(.system(size: 32, weight: .medium))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                        }
+                        
+                        VStack(spacing: 8) {
+                            Text("No reviews yet")
+                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .foregroundColor(.primary)
+                            Text("Be the first to share your experience!")
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
                         }
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 40)
+                } else {
+                    LazyVStack(spacing: 16) {
+                        ForEach(vm.comments) { comment in
+                            if let _ = comment.comment {
+                                CommentCardView(comment: comment)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
                 }
             }
         }
@@ -159,123 +236,193 @@ struct CommentsView: View {
 
     private var leaveRatingButton: some View {
         Button(action: {
-            withAnimation(.easeInOut(duration: 0.3)) {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                 showLeaveRating = true
             }
         }) {
-            Text("Leave Rating")
-                .font(.headline)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Color.accentColor)
-                .cornerRadius(30)
-                .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
+            HStack(spacing: 12) {
+                Image(systemName: "star.fill")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.white)
+                
+                Text("Leave a Review")
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.white)
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 18)
+            .background(
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.purple, Color.blue]),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
+            .shadow(color: .purple.opacity(0.3), radius: 12, x: 0, y: 6)
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
     }
 
     private var ratingInputSection: some View {
-        VStack(spacing: 20) {
-            VStack(spacing: 16) {
-                Text("Rate \(recommendation.name)")
-                    .font(.headline)
+        VStack(spacing: 24) {
+            VStack(spacing: 20) {
+                Text("⭐ Rate \(recommendation.name)")
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.purple, Color.blue]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                     .frame(maxWidth: .infinity, alignment: .center)
 
-                VStack(spacing: 12) {
-                    HStack(spacing: 8) {
+                VStack(spacing: 16) {
+                    HStack(spacing: 12) {
                         ForEach(1 ... 5, id: \.self) { i in
-                            Button(action: { userRating = Double(i) }) {
+                            Button(action: { 
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                    userRating = Double(i)
+                                }
+                            }) {
                                 Image(systemName: userRating >= Double(i) ? "star.fill" : "star")
-                                    .font(.title2)
+                                    .font(.system(size: 32, weight: .medium))
                                     .foregroundColor(.yellow)
+                                    .scaleEffect(userRating >= Double(i) ? 1.1 : 1.0)
+                                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: userRating)
                             }
                         }
                     }
 
                     Text("\(Int(userRating)) star\(userRating == 1 ? "" : "s")")
-                        .font(.subheadline)
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
             }
-            .padding(.horizontal)
-            .padding(.top, 20)
+            .padding(.horizontal, 24)
+            .padding(.top, 24)
 
             if let selectedImage = selectedImage {
-                HStack {
+                HStack(spacing: 12) {
                     Image(uiImage: selectedImage)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 60, height: 60)
                         .clipped()
-                        .cornerRadius(8)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
 
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("📸 Image attached")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundColor(.primary)
+                        Text("Tap remove to delete")
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundColor(.secondary)
+                    }
+                    
                     Spacer()
 
                     Button("Remove") {
-                        self.selectedImage = nil
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            self.selectedImage = nil
+                        }
                     }
-                    .font(.caption)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundColor(.red)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(Capsule())
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(Color(.systemGray6).opacity(0.5))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .padding(.horizontal, 24)
             }
 
-            VStack(spacing: 16) {
-                ZStack(alignment: .trailing) {
-                    TextField("Add a comment (optional)", text: $newCommentText, axis: .vertical)
-                        .textFieldStyle(.roundedBorder)
+            VStack(spacing: 20) {
+                ZStack(alignment: .topTrailing) {
+                    TextField("Share your thoughts... (optional)", text: $newCommentText, axis: .vertical)
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .padding(16)
+                        .background(Color(.systemGray6).opacity(0.5))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                         .lineLimit(3 ... 6)
-                        .frame(minHeight: 80)
+                        .frame(minHeight: 100)
 
                     Button(action: { showingImagePicker = true }) {
-                        Image(systemName: "camera")
-                            .font(.title3)
-                            .foregroundColor(.accentColor)
-                            .padding(.trailing, 12)
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
+                            .padding(12)
+                            .background(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .clipShape(Circle())
                     }
+                    .padding(.top, 12)
+                    .padding(.trailing, 12)
                 }
 
-                HStack {
+                HStack(spacing: 16) {
                     Button("Cancel") {
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                             showLeaveRating = false
                             newCommentText = ""
                             selectedImage = nil
                         }
                     }
-                    .font(.headline)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 14)
                     .background(Color(.systemGray5))
-                    .cornerRadius(12)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
 
                     Spacer()
 
                     Button(action: submitRatingAndComment) {
-                        Text("Submit")
-                            .font(.headline)
+                        Text("Submit Review")
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
                     }
                     .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.accentColor)
-                    .cornerRadius(12)
+                    .padding(.vertical, 14)
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.purple, Color.blue]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .shadow(color: .purple.opacity(0.3), radius: 8, x: 0, y: 4)
                 }
             }
-            .padding(.horizontal)
-            .padding(.bottom, 16)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 20)
         }
         .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .mask(
             Rectangle()
                 .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .mask(Rectangle().padding(.bottom, -20))
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .mask(Rectangle().padding(.bottom, -24))
                 )
         )
     }
@@ -311,42 +458,89 @@ struct CommentsView: View {
 
 struct CommentCardView: View {
     let comment: Comment
+    @State private var isPressed = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 5) {
-                Text(comment.username ?? "Anonymous")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .padding(.trailing, 5)
-
-                ForEach(Array(0 ..< comment.rating), id: \.self) { _ in
-                    Image(systemName: "star.fill")
-                        .foregroundColor(.yellow)
-                        .font(.caption)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(comment.username ?? "Anonymous")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    
+                    HStack(spacing: 4) {
+                        ForEach(Array(0 ..< comment.rating), id: \.self) { _ in
+                            Image(systemName: "star.fill")
+                                .foregroundColor(.yellow)
+                                .font(.system(size: 12, weight: .bold))
+                        }
+                        
+                        ForEach(Array(comment.rating ..< 5), id: \.self) { _ in
+                            Image(systemName: "star")
+                                .foregroundColor(.yellow.opacity(0.3))
+                                .font(.system(size: 12, weight: .bold))
+                        }
+                    }
                 }
-
+                
                 Spacer()
-
-                Text(timeAgoText(from: comment.createdAt))
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(timeAgoText(from: comment.createdAt))
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundColor(.secondary)
+                    
+                    Text("\(comment.rating)/5")
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Color(.systemGray6))
+                        .clipShape(Capsule())
+                }
             }
 
             Text(comment.comment!)
-                .font(.body)
+                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .foregroundColor(.primary)
+                .lineLimit(nil)
 
             if let imageUrl = comment.imageUrl, let url = URL(string: imageUrl) {
                 KFImage(url)
                     .resizable()
-                    .aspectRatio(contentMode: .fit)
+                    .aspectRatio(contentMode: .fill)
                     .frame(maxHeight: 200)
-                    .cornerRadius(8)
+                    .clipped()
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
             }
         }
-        .padding()
-        .background(Color(.tertiarySystemGroupedBackground))
-        .cornerRadius(12)
+        .padding(20)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.white.opacity(0.1), Color.clear]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ), lineWidth: 1
+                )
+        )
+        .shadow(color: .black.opacity(0.05), radius: 12, x: 0, y: 6)
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
+        .onTapGesture {
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.4)) {
+                isPressed = true
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.spring(response: 0.2, dampingFraction: 0.4)) {
+                    isPressed = false
+                }
+            }
+        }
     }
 
     private func timeAgoText(from date: Date) -> String {
@@ -357,13 +551,24 @@ struct CommentCardView: View {
             return "Just now"
         } else if timeInterval < 3600 {
             let minutes = Int(timeInterval / 60)
-            return "\(minutes)m"
+            return "\(minutes)m ago"
         } else if timeInterval < 86400 {
             let hours = Int(timeInterval / 3600)
-            return "\(hours)h"
+            return "\(hours)h ago"
         } else {
             let days = Int(timeInterval / 86400)
-            return "\(days)d"
+            return "\(days)d ago"
+        }
+    }
+    
+    private func categoryEmoji(for category: CategoryType) -> String {
+        switch category {
+        case .restaurants: return "🍽️"
+        case .hostels: return "🏨"
+        case .activities: return "🎯"
+        case .nightlife: return "🌃"
+        case .sights: return "🏛️"
+        case .other: return "📍"
         }
     }
 }

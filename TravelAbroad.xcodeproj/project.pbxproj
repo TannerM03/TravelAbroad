@@ -11,10 +11,12 @@
 		E3A5F2F02E12592C00BA61CE /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = E3A5F2EF2E12592C00BA61CE /* Kingfisher */; };
 		E3A5F2F32E12596200BA61CE /* GooglePlaces in Frameworks */ = {isa = PBXBuildFile; productRef = E3A5F2F22E12596200BA61CE /* GooglePlaces */; };
 		E3A5F2F52E12596200BA61CE /* GooglePlacesSwift in Frameworks */ = {isa = PBXBuildFile; productRef = E3A5F2F42E12596200BA61CE /* GooglePlacesSwift */; };
+		E3E945072E2A213700C89C66 /* RLS_Notes.txt in Resources */ = {isa = PBXBuildFile; fileRef = E3E945062E2A212D00C89C66 /* RLS_Notes.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		E34EE77E2DDBD5CA002B09DD /* TravelAbroad.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TravelAbroad.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E3E945062E2A212D00C89C66 /* RLS_Notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = RLS_Notes.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -43,6 +45,7 @@
 		E34EE7752DDBD5CA002B09DD = {
 			isa = PBXGroup;
 			children = (
+				E3E945062E2A212D00C89C66 /* RLS_Notes.txt */,
 				E34EE7802DDBD5CA002B09DD /* TravelAbroad */,
 				E34EE77F2DDBD5CA002B09DD /* Products */,
 			);
@@ -129,6 +132,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E3E945072E2A213700C89C66 /* RLS_Notes.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

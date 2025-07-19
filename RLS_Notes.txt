@@ -1,0 +1,13 @@
+//
+//  RLS_Notes.txt
+//  TravelAbroad
+//
+//  Created by Tanner Macpherson on 7/17/25.
+//
+
+Some notes about RLS policies:
+- Cities cannot be updated, inserted, or deleted by users
+- Recommendations cannot be updated, inserted, or deleted by users (will need to change this when I allow users to add recs)
+- Comments are viewable by everyone but only users can create, update, or delete their own comments
+- Profiles are viewable by everyone but ^^
+- Bucket lists are viewable by everyone but ^^
