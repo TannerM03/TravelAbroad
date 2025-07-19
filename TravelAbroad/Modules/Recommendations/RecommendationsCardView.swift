@@ -13,7 +13,7 @@ struct RecommendationsCardView: View {
 
     var body: some View {
         NavigationLink(destination: CommentsView(recommendation: rec)) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 0) {
                 if let urlStr = rec.imageUrl, let url = URL(string: urlStr) {
                     KFImage(url)
                         .resizable()
@@ -29,24 +29,22 @@ struct RecommendationsCardView: View {
                         .clipped()
                         .cornerRadius(15)
                 }
+
                 HStack(alignment: .center, spacing: 8) {
                     Text(rec.name)
                         .font(.headline)
-                    Spacer()
-                    Text(rec.category.rawValue.capitalized)
-                        .font(.subheadline)
-                        .padding(6)
-                        .background(rec.category.pillColor)
-                        .cornerRadius(8)
+                        .padding(.top, 5)
                 }
+                .padding(.bottom, 8)
                 HStack(spacing: 6) {
                     Image(systemName: "star.fill")
                         .foregroundColor(.yellow)
-                        .font(.subheadline)
-                    Text("Avg Rating: \(String(format: "%.1f", rec.avgRating))")
-                        .font(.subheadline)
+                        .font(.footnote)
+                    Text("\(String(format: "%.1f", rec.avgRating)) Rating")
+                        .font(.footnote)
                         .foregroundColor(.secondary)
                 }
+//                }
                 // these descriptions are the same as comments, don't want to show for now until i can make it a summary
 //            if let desc = rec.description, !desc.isEmpty {
 //                Text(desc)
@@ -56,7 +54,7 @@ struct RecommendationsCardView: View {
 //            }
             }
             .padding()
-            .background(Color(.tertiarySystemGroupedBackground))
+            .background(rec.category.pillColor.opacity(0.5))
             .cornerRadius(14)
             .shadow(color: Color(Color.secondary).opacity(0.07), radius: 5, x: 0, y: 3)
             .padding(.horizontal, 16)

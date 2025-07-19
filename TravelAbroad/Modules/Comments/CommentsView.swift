@@ -16,10 +16,18 @@ struct CommentsView: View {
     @State private var selectedImage: UIImage?
     @State private var showLeaveRating = false
     @State private var userRating: Double = 5.0
+    @FocusState private var isTextFieldFocused: Bool
 
     var body: some View {
         NavigationStack {
             ZStack {
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.purple.opacity(0.1), Color.blue.opacity(0.1), Color.clear]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
                         recommendationHeader
@@ -28,6 +36,7 @@ struct CommentsView: View {
                     }
                     .padding()
                 }
+                .toolbar(showLeaveRating ? .hidden : .automatic)
                 .navigationTitle("Comments")
                 .navigationBarTitleDisplayMode(.inline)
                 .blur(radius: showLeaveRating ? 8 : 0)
@@ -105,13 +114,13 @@ struct CommentsView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-
-                if let description = recommendation.description, !description.isEmpty {
-                    Text(description)
-                        .font(.body)
-                        .foregroundColor(.primary)
-                        .padding(.top, 4)
-                }
+                // commenting out until i have actual descriptions not just the first comments
+//                if let description = recommendation.description, !description.isEmpty {
+//                    Text(description)
+//                        .font(.body)
+//                        .foregroundColor(.primary)
+//                        .padding(.top, 4)
+//                }
             }
         }
         .padding()
@@ -134,7 +143,7 @@ struct CommentsView: View {
             if vm.comments.filter({ $0.comment != nil && !$0.comment!.isEmpty }).isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "bubble.left")
-                        .font(.system(size: 40))
+                        .font(.largeTitle)
                         .foregroundColor(.secondary)
                     Text("No comments yet")
                         .font(.subheadline)
@@ -148,7 +157,7 @@ struct CommentsView: View {
             } else {
                 LazyVStack(spacing: 12) {
                     ForEach(vm.comments) { comment in
-                        if let _ = comment.comment {
+                        if comment.comment != nil || comment.imageUrl != nil {
                             CommentCardView(comment: comment)
                         }
                     }
@@ -159,131 +168,217 @@ struct CommentsView: View {
 
     private var leaveRatingButton: some View {
         Button(action: {
-            withAnimation(.easeInOut(duration: 0.3)) {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                 showLeaveRating = true
             }
         }) {
-            Text("Leave Rating")
-                .font(.headline)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Color.accentColor)
-                .cornerRadius(30)
-                .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
+            HStack(spacing: 12) {
+                Image(systemName: "star.fill")
+                    .font(.title3.weight(.bold))
+                    .foregroundColor(.white)
+
+                Text("Leave a Review")
+                    .font(.title3.weight(.bold))
+                    .fontDesign(.rounded)
+                    .foregroundColor(.white)
+
+                Spacer()
+
+                Image(systemName: "arrow.up.right")
+                    .font(.body.weight(.bold))
+                    .foregroundColor(.white)
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 18)
+            .background(
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.purple, Color.blue]),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
+            .shadow(color: .purple.opacity(0.3), radius: 12, x: 0, y: 6)
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
     }
 
     private var ratingInputSection: some View {
-        VStack(spacing: 20) {
-            VStack(spacing: 16) {
+        VStack(spacing: 24) {
+            VStack(spacing: 20) {
                 Text("Rate \(recommendation.name)")
-                    .font(.headline)
+                    .font(.title2.weight(.bold))
+                    .fontDesign(.rounded)
+                    .foregroundStyle(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.purple, Color.blue]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                     .frame(maxWidth: .infinity, alignment: .center)
 
-                VStack(spacing: 12) {
-                    HStack(spacing: 8) {
+                VStack(spacing: 16) {
+                    HStack(spacing: 12) {
                         ForEach(1 ... 5, id: \.self) { i in
-                            Button(action: { userRating = Double(i) }) {
+                            Button(action: {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                    userRating = Double(i)
+                                }
+                            }) {
                                 Image(systemName: userRating >= Double(i) ? "star.fill" : "star")
-                                    .font(.title2)
+                                    .font(.title.weight(.medium))
                                     .foregroundColor(.yellow)
+                                    .scaleEffect(userRating >= Double(i) ? 1.1 : 1.0)
+                                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: userRating)
                             }
                         }
                     }
 
                     Text("\(Int(userRating)) star\(userRating == 1 ? "" : "s")")
-                        .font(.subheadline)
+                        .font(.body.weight(.semibold))
+                        .fontDesign(.rounded)
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
             }
-            .padding(.horizontal)
-            .padding(.top, 20)
+            .padding(.horizontal, 24)
+            .padding(.top, 24)
 
             if let selectedImage = selectedImage {
-                HStack {
+                HStack(spacing: 12) {
                     Image(uiImage: selectedImage)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 60, height: 60)
                         .clipped()
-                        .cornerRadius(8)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Image attached")
+                            .font(.subheadline.weight(.semibold))
+                            .fontDesign(.rounded)
+                            .foregroundColor(.primary)
+                        Text("Tap remove to delete")
+                            .font(.caption.weight(.medium))
+                            .fontDesign(.rounded)
+                            .foregroundColor(.secondary)
+                    }
 
                     Spacer()
 
                     Button("Remove") {
-                        self.selectedImage = nil
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            self.selectedImage = nil
+                        }
                     }
-                    .font(.caption)
+                    .font(.caption.weight(.semibold))
+                    .fontDesign(.rounded)
                     .foregroundColor(.red)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(Capsule())
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(Color(.systemGray6).opacity(0.5))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .padding(.horizontal, 24)
             }
 
-            VStack(spacing: 16) {
-                ZStack(alignment: .trailing) {
-                    TextField("Add a comment (optional)", text: $newCommentText, axis: .vertical)
-                        .textFieldStyle(.roundedBorder)
+            VStack(spacing: 20) {
+                ZStack(alignment: .topTrailing) {
+                    TextField("Share your thoughts... (optional)", text: $newCommentText, axis: .vertical)
+                        .font(.body.weight(.medium))
+                        .fontDesign(.rounded)
+                        .padding(16)
+                        .background(Color(.systemGray6).opacity(0.5))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                         .lineLimit(3 ... 6)
-                        .frame(minHeight: 80)
+                        .frame(minHeight: 100)
+                        .focused($isTextFieldFocused)
+                        .toolbar {
+                            ToolbarItemGroup(placement: .keyboard) {
+                                Spacer()
+                                Button("Done") {
+                                    isTextFieldFocused = false
+                                }
+                            }
+                        }
 
                     Button(action: { showingImagePicker = true }) {
-                        Image(systemName: "camera")
-                            .font(.title3)
-                            .foregroundColor(.accentColor)
-                            .padding(.trailing, 12)
+                        Image(systemName: "camera.fill")
+                            .font(.title3.weight(.semibold))
+                            .foregroundColor(.white)
+                            .padding(12)
+                            .background(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .clipShape(Circle())
                     }
+                    .padding(.top, 12)
+                    .padding(.trailing, 12)
                 }
 
-                HStack {
+                HStack(spacing: 16) {
                     Button("Cancel") {
-                        withAnimation(.easeInOut(duration: 0.3)) {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                             showLeaveRating = false
                             newCommentText = ""
                             selectedImage = nil
                         }
                     }
-                    .font(.headline)
+                    .font(.body.weight(.semibold))
+                    .fontDesign(.rounded)
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 14)
                     .background(Color(.systemGray5))
-                    .cornerRadius(12)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
 
                     Spacer()
 
                     Button(action: submitRatingAndComment) {
-                        Text("Submit")
-                            .font(.headline)
+                        Text("Submit Review")
+                            .font(.body.weight(.bold))
+                            .fontDesign(.rounded)
                             .foregroundColor(.white)
                     }
                     .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.accentColor)
-                    .cornerRadius(12)
+                    .padding(.vertical, 14)
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.purple, Color.blue]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .shadow(color: .purple.opacity(0.3), radius: 8, x: 0, y: 4)
                 }
             }
-            .padding(.horizontal)
-            .padding(.bottom, 16)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 20)
         }
         .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .mask(
             Rectangle()
                 .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .mask(Rectangle().padding(.bottom, -20))
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .mask(Rectangle().padding(.bottom, -24))
                 )
         )
     }
 
     private func submitRatingAndComment() {
         Task {
-//            await vm.submitRating(for: recommendation.id, rating: Int(userRating))
-
             if !newCommentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 await vm.submitComment(
                     recommendationId: recommendation.id,
@@ -320,21 +415,23 @@ struct CommentCardView: View {
                     .fontWeight(.medium)
                     .padding(.trailing, 5)
 
-                ForEach(Array(0 ..< comment.rating), id: \.self) { _ in
-                    Image(systemName: "star.fill")
-                        .foregroundColor(.yellow)
-                        .font(.caption)
-                }
-
                 Spacer()
 
                 Text(timeAgoText(from: comment.createdAt))
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
-
-            Text(comment.comment!)
-                .font(.body)
+            HStack {
+                ForEach(Array(0 ..< comment.rating), id: \.self) { _ in
+                    Image(systemName: "star.fill")
+                        .foregroundColor(.yellow)
+                        .font(.caption)
+                }
+            }
+            if let comment = comment.comment {
+                Text(comment)
+                    .font(.body)
+            }
 
             if let imageUrl = comment.imageUrl, let url = URL(string: imageUrl) {
                 KFImage(url)

@@ -24,7 +24,7 @@ class RecommendationsViewModel: ObservableObject {
     @Published var cityName: String = ""
     @Published var imageUrl: String = ""
     @Published var isBucketList: Bool = false
-    
+
     var onRatingUpdated: ((Double) -> Void)?
 
     var categorizedRecs: [Recommendation] {
@@ -34,7 +34,7 @@ class RecommendationsViewModel: ObservableObject {
             return recommendations
         }
     }
-    
+
     var searchedRecs: [Recommendation] {
         if userSearch.isEmpty {
             return categorizedRecs
@@ -52,15 +52,15 @@ class RecommendationsViewModel: ObservableObject {
     func initialize(rating: Double) {
         userRating = rating
     }
-    
+
     func initializeCity(cityId: String, cityName: String, imageUrl: String, userRating: Double?, isBucketList: Bool, onRatingUpdated: ((Double) -> Void)?) {
         self.cityId = cityId
         self.cityName = cityName
         self.imageUrl = imageUrl
         self.userRating = userRating
-        self.tempRating = userRating
+        tempRating = userRating
         self.isBucketList = isBucketList
-        self.isFavoriteCity = isBucketList
+        isFavoriteCity = isBucketList
         self.onRatingUpdated = onRatingUpdated
     }
 
@@ -83,13 +83,13 @@ class RecommendationsViewModel: ObservableObject {
             print("Error updating/creating city review in vm: \(error)")
         }
     }
-    
+
     func showRatingOverlay() {
-        self.isRatingOverlay = true
+        isRatingOverlay = true
     }
-    
+
     func hideRatingOverlay() {
-        self.isRatingOverlay = false
+        isRatingOverlay = false
     }
 
     func fetchUser() async {
