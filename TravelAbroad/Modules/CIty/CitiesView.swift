@@ -11,21 +11,29 @@ import SwiftUI
 struct CitiesView: View {
     @ObservedObject var vm: CityListViewModel
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
+    private var groupedCities: [String: [City]] {
+        Dictionary(grouping: vm.sortedCities) { city in
+            city.country
+        }
+    }
 
     var body: some View {
         NavigationStack {
             VStack {
-                SearchBar(placeholder: "Search for a city or country", searchText: $vm.userSearch)
-                    .padding(.bottom, 10)
-
-                citiesGridSection
-            }
-            .navigationBarTitle("Where to next?")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    filterToolbarSection
+                headerSection
+                ScrollView {
+                    citiesGridSection
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
+            .navigationBarHidden(true)
+            .background(
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.purple.opacity(0.1), Color.blue.opacity(0.1), Color.clear]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
         }
         .task {
             if vm.cities.isEmpty {
@@ -37,24 +45,91 @@ struct CitiesView: View {
         }
     }
 
-    private var citiesGridSection: some View {
-        ScrollView {
-            LazyVGrid(columns: columns, spacing: 20) {
-                ForEach(vm.sortedCities) { city in
-                    let emoji = CountryEmoji.emoji(for: city.country)
-                    NavigationLink {
-                        RecommendationsView(
-                            cityId: city.id,
-                            cityName: city.name,
-                            imageUrl: city.imageUrl ?? "",
-                            userRating: city.userRating,
-                            isBucketList: city.isBucketList,
-                            onRatingUpdated: { newRating in
-                                vm.updateCityRating(cityId: city.id, newRating: newRating)
-                            }
+    private var headerSection: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 20) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Discover Your Next Trip")
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .fontDesign(.rounded)
+                        .foregroundStyle(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.purple, Color.blue, Color.teal]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
-                    } label: {
-                        CityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.avgRating, flagEmoji: emoji)
+                }
+//                Spacer()
+//                filterToolbarSection
+            }
+            .padding(20)
+
+            SearchBar(placeholder: "Search cities or countries...", searchText: $vm.userSearch)
+                .padding(.horizontal, 17)
+                .padding(.bottom, 10)
+        }
+    }
+
+    private var citiesGridSection: some View {
+        LazyVStack(spacing: 24) {
+            ForEach(groupedCities.keys.sorted(), id: \.self) { country in
+                if let cities = groupedCities[country] {
+                    countrySection(country: country, cities: cities)
+                }
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+    }
+
+    private func countrySection(country: String, cities: [City]) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Country header
+            HStack {
+                Text(CountryEmoji.emoji(for: country))
+                    .font(.title2)
+
+                Text(country)
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .fontDesign(.rounded)
+                    .foregroundColor(.primary)
+
+                Spacer()
+
+                Text("\(cities.count) cit\(cities.count == 1 ? "y" : "ies")")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .fontDesign(.rounded)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(.systemGray6))
+                    .clipShape(Capsule())
+            }
+
+            // Cities in this country
+//                LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 16) {
+            ScrollView(.horizontal) {
+                HStack {
+                    ForEach(cities) { city in
+                        let emoji = CountryEmoji.emoji(for: city.country)
+                        NavigationLink {
+                            RecommendationsView(
+                                cityId: city.id,
+                                cityName: city.name,
+                                imageUrl: city.imageUrl ?? "",
+                                userRating: city.userRating,
+                                isBucketList: city.isBucketList,
+                                onRatingUpdated: { newRating in
+                                    vm.updateCityRating(cityId: city.id, newRating: newRating)
+                                }
+                            )
+                        } label: {
+                            CityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.avgRating, flagEmoji: emoji)
+                        }
                     }
                 }
             }
@@ -99,84 +174,5 @@ struct CitiesView: View {
                 Text("No cities")
             }
         }
-    }
-}
-
-// #Preview("With Cities") {
-//    let vm = CityListViewModel()
-//    vm.cities = MockData.sampleCities
-//    return CitiesView(vm: vm)
-// }
-//
-// #Preview("Loading State") {
-//    let vm = CityListViewModel()
-//    vm.isLoading = true
-//    return CitiesView(vm: vm)
-// }
-
-// MARK: - Preview Helper View
-
-private struct PreviewCitiesView: View {
-    let isLoading: Bool
-    let cities: [City]
-
-    var body: some View {
-        NavigationStack {
-            VStack {
-                SearchBar(placeholder: "Search for a city or country", searchText: .constant(""))
-                    .padding(.bottom, 10)
-
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
-                        ForEach(cities) { city in
-                            let emoji = CountryEmoji.emoji(for: city.country)
-                            NavigationLink {
-                                Text("Recommendations for \(city.name)")
-                            } label: {
-                                CityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.avgRating, flagEmoji: emoji)
-                            }
-                        }
-                    }
-                }
-            }
-            .navigationBarTitle("Where to next?")
-        }
-        .overlay {
-            if isLoading {
-                ProgressView("Loading Cities...")
-            } else if cities.isEmpty {
-                Text("No cities")
-            }
-        }
-    }
-}
-
-// MARK: - SearchBar
-
-struct SearchBar: View {
-    let placeholder: String
-    @Binding var searchText: String
-    var body: some View {
-        TextField(placeholder, text: $searchText)
-            .padding(10)
-            .padding(.horizontal, 25)
-            .background(Color(.systemGray6))
-            .cornerRadius(10)
-            .overlay(
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.gray)
-                        .padding(.leading, 8)
-                    Spacer()
-                    Button {
-                        searchText = ""
-                    } label: {
-                        Image(systemName: "x.circle")
-                            .foregroundStyle(.gray)
-                            .padding(.trailing, 8)
-                    }
-                }
-            )
-            .padding(.horizontal)
     }
 }

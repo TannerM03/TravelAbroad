@@ -80,7 +80,7 @@ struct ProfileView: View {
                         {
                             Image(systemName: "pencil.circle.fill")
                                 .symbolRenderingMode(.multicolor)
-                                .font(.system(size: 30))
+                                .font(.title)
                                 .foregroundStyle(Color.accentColor)
                         }.buttonStyle(.borderless)
                     }

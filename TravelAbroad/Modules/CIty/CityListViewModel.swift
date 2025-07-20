@@ -12,7 +12,7 @@ class CityListViewModel: ObservableObject {
     @Published var cities: [City] = []
     @Published var isLoading = false
     @Published var userSearch = ""
-    @Published var filter: CityFilter = .none
+    @Published var filter: CityFilter = .best
 
     // what will be shown to the user, includes the text the user is searching for and searches for the city name and the country it's in
     var filteredCities: [City] {
