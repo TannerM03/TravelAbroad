@@ -19,6 +19,8 @@ struct Recommendation: Codable, Identifiable {
     let imageUrl: String?
     let location: String?
     let avgRating: Double
+    var aiSummary: String?
+    var summaryUpdatedAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -30,6 +32,37 @@ struct Recommendation: Codable, Identifiable {
         case imageUrl = "image_url"
         case location
         case avgRating = "avg_rating"
+        case aiSummary = "ai_summary"
+        case summaryUpdatedAt = "summary_updated_at"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        id = try container.decode(String.self, forKey: .id)
+        userId = try container.decode(String.self, forKey: .userId)
+        cityId = try container.decode(String.self, forKey: .cityId)
+        category = try container.decode(CategoryType.self, forKey: .category)
+        name = try container.decode(String.self, forKey: .name)
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        imageUrl = try container.decodeIfPresent(String.self, forKey: .imageUrl)
+        location = try container.decodeIfPresent(String.self, forKey: .location)
+        avgRating = try container.decode(Double.self, forKey: .avgRating)
+        aiSummary = try container.decodeIfPresent(String.self, forKey: .aiSummary)
+
+        // Handle date parsing from string
+        if let dateString = try container.decodeIfPresent(String.self, forKey: .summaryUpdatedAt) {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            summaryUpdatedAt = formatter.date(from: dateString) ?? {
+                // Fallback for date-only format like "2025-07-21"
+                let dateOnlyFormatter = DateFormatter()
+                dateOnlyFormatter.dateFormat = "yyyy-MM-dd"
+                return dateOnlyFormatter.date(from: dateString)
+            }()
+        } else {
+            summaryUpdatedAt = nil
+        }
     }
 }
 

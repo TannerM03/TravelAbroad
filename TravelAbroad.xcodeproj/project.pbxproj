@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		E34EE78E2DED0B33002B09DD /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = E34EE78D2DED0B33002B09DD /* Supabase */; };
+		E38598692E2E0926009F868D /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = E38598682E2E0926009F868D /* OpenAI */; };
 		E3A5F2F02E12592C00BA61CE /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = E3A5F2EF2E12592C00BA61CE /* Kingfisher */; };
 		E3A5F2F32E12596200BA61CE /* GooglePlaces in Frameworks */ = {isa = PBXBuildFile; productRef = E3A5F2F22E12596200BA61CE /* GooglePlaces */; };
 		E3A5F2F52E12596200BA61CE /* GooglePlacesSwift in Frameworks */ = {isa = PBXBuildFile; productRef = E3A5F2F42E12596200BA61CE /* GooglePlacesSwift */; };
@@ -30,6 +31,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E38598692E2E0926009F868D /* OpenAI in Frameworks */,
 				E3A5F2F32E12596200BA61CE /* GooglePlaces in Frameworks */,
 				E3A5F2F02E12592C00BA61CE /* Kingfisher in Frameworks */,
 				E34EE78E2DED0B33002B09DD /* Supabase in Frameworks */,
@@ -80,6 +82,7 @@
 				E3A5F2EF2E12592C00BA61CE /* Kingfisher */,
 				E3A5F2F22E12596200BA61CE /* GooglePlaces */,
 				E3A5F2F42E12596200BA61CE /* GooglePlacesSwift */,
+				E38598682E2E0926009F868D /* OpenAI */,
 			);
 			productName = TravelAbroad;
 			productReference = E34EE77E2DDBD5CA002B09DD /* TravelAbroad.app */;
@@ -113,6 +116,7 @@
 				E34EE78C2DED0B33002B09DD /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				E3A5F2EE2E12592C00BA61CE /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				E3A5F2F12E12596200BA61CE /* XCRemoteSwiftPackageReference "ios-places-sdk" */,
+				E38598672E2E0926009F868D /* XCRemoteSwiftPackageReference "OpenAI" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E34EE77F2DDBD5CA002B09DD /* Products */;
@@ -354,6 +358,14 @@
 				minimumVersion = 2.5.1;
 			};
 		};
+		E38598672E2E0926009F868D /* XCRemoteSwiftPackageReference "OpenAI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/MacPaw/OpenAI";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.4.5;
+			};
+		};
 		E3A5F2EE2E12592C00BA61CE /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/onevcat/Kingfisher";
@@ -377,6 +389,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E34EE78C2DED0B33002B09DD /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		E38598682E2E0926009F868D /* OpenAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E38598672E2E0926009F868D /* XCRemoteSwiftPackageReference "OpenAI" */;
+			productName = OpenAI;
 		};
 		E3A5F2EF2E12592C00BA61CE /* Kingfisher */ = {
 			isa = XCSwiftPackageProductDependency;

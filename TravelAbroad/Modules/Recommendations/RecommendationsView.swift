@@ -7,6 +7,7 @@
 
 import Kingfisher
 import SwiftUI
+import UIKit
 
 struct RecommendationsView: View {
     @StateObject var vm = RecommendationsViewModel()

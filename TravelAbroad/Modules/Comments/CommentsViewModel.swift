@@ -14,6 +14,7 @@ class CommentsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var userRating: Double? = nil
     @Published var recommendation: Recommendation?
+    @Published var isGeneratingSummary: Bool = false
 
     private let supabaseManager = SupabaseManager.shared
 
@@ -54,6 +55,25 @@ class CommentsViewModel: ObservableObject {
         } catch {
             print("Error submitting comment: \(error)")
         }
+    }
+
+    func generateSummary(for recommendation: Recommendation, comments: [Comment]) async {
+        print(recommendation.summaryUpdatedAt)
+        isGeneratingSummary = true
+
+        do {
+            let summary = try await ConfigManager.shared.summaryService.generateSummary(for: comments, recommendationName: recommendation.name)
+
+            var updatedRecommendation = recommendation
+            updatedRecommendation.aiSummary = summary
+            self.recommendation = updatedRecommendation
+
+            try await SupabaseManager.shared.saveSummaryToDatabase(recommendationId: recommendation.id, summary: summary)
+
+        } catch {
+            print("Failed to generate summary: \(error)")
+        }
+        isGeneratingSummary = false
     }
 
     func fetchUserRating(for recommendationId: String) async {

@@ -72,6 +72,18 @@ struct CommentsView: View {
             vm.recommendation = recommendation
             await vm.fetchComments(for: recommendation.id)
             await vm.fetchUserRating(for: recommendation.id)
+
+            if let rec = vm.recommendation {
+                let shouldUpdate = rec.summaryUpdatedAt == nil ||
+                                  (rec.summaryUpdatedAt != nil &&
+                                   Calendar.current.dateComponents([.day], from: rec.summaryUpdatedAt!, to: Date()).day ?? 0 >= 1)
+                
+                if shouldUpdate {
+                    await vm.generateSummary(for: rec, comments: vm.comments)
+                }
+            } else {
+                print("not updating summary")
+            }
         }
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker(image: $selectedImage)
@@ -114,13 +126,67 @@ struct CommentsView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                // commenting out until i have actual descriptions not just the first comments
-//                if let description = recommendation.description, !description.isEmpty {
-//                    Text(description)
-//                        .font(.body)
-//                        .foregroundColor(.primary)
-//                        .padding(.top, 4)
-//                }
+
+                if vm.isGeneratingSummary || (vm.recommendation?.aiSummary != nil && !vm.recommendation!.aiSummary!.isEmpty) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 6) {
+                            if vm.isGeneratingSummary {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                                    .progressViewStyle(CircularProgressViewStyle(tint: Color.purple))
+                            } else {
+                                Image(systemName: "sparkles")
+                                    .font(.caption)
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                            }
+                            Text(vm.isGeneratingSummary ? "Generating AI Summary..." : "AI Reviews Summary")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                        }
+
+                        if vm.isGeneratingSummary {
+                            HStack {
+                                Text("Analyzing reviews to create a personalized summary...")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.leading)
+                                Spacer()
+                            }
+                        } else if let summary = vm.recommendation?.aiSummary {
+                            Text(summary)
+                                .font(.body)
+                                .foregroundColor(.primary)
+                        }
+                    }
+                    .padding(12)
+                    .background(Color(.systemBackground))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                ),
+                                lineWidth: 2
+                            )
+                    )
+                    .cornerRadius(12)
+                    .padding(.top, 4)
+                }
             }
         }
         .padding()
@@ -495,18 +561,4 @@ struct ImagePicker: UIViewControllerRepresentable {
             picker.dismiss(animated: true)
         }
     }
-}
-
-#Preview {
-    CommentsView(recommendation: Recommendation(
-        id: "1",
-        userId: "user1",
-        cityId: "city1",
-        category: .restaurants,
-        name: "Amazing Local Restaurant",
-        description: "This place serves the most incredible traditional dishes with a modern twist. The atmosphere is cozy and the staff is incredibly friendly.",
-        imageUrl: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0",
-        location: "123 Main St",
-        avgRating: 4.8
-    ))
 }

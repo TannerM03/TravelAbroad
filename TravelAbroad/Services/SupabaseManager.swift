@@ -89,13 +89,26 @@ class SupabaseManager {
     // fetches the recommended place (restaurants, hostels, bars, etc.) for whichever city is specified in with the cityId parameter. Also has avg rating
     func fetchRecommendations(cityId: UUID) async throws -> [Recommendation] {
         let recs: [Recommendation] = try await supabase
-            .from("recommendations_with_avg_rating")
+            .from("rec_with_avg_rating")
             .select()
             .eq("city_id", value: cityId)
             .order("avg_rating", ascending: false)
             .execute()
             .value
+        print("recs: \(recs)")
+
         return recs
+    }
+
+    func saveSummaryToDatabase(recommendationId: String, summary: String) async throws {
+        try await supabase
+            .from("recommendations")
+            .update([
+                "ai_summary": summary,
+                "summary_updated_at": ISO8601DateFormatter().string(from: Date()),
+            ])
+            .eq("id", value: recommendationId)
+            .execute()
     }
 
     // MARK: - CommentsView Functions
@@ -423,13 +436,11 @@ class SupabaseManager {
     }
 
     func fetchNumCitiesVisited(userId: UUID) async throws -> Int {
-        print("userId: \(userId)")
         let response = try await supabase.from("city_reviews")
             .select("id", count: .exact)
             .eq("user_id", value: userId)
             .execute()
 
-        print("cities visited: \(response)")
         return response.count ?? 0
     }
 
@@ -438,7 +449,6 @@ class SupabaseManager {
             .select("id", count: .exact)
             .eq("user_id", value: userId)
             .execute()
-        print("recs submitted: \(num)")
         return num.count ?? 0
     }
 
