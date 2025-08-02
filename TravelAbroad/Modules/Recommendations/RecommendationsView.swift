@@ -12,6 +12,7 @@ import UIKit
 struct RecommendationsView: View {
     @StateObject var vm = RecommendationsViewModel()
     @Environment(\.dismiss) private var dismiss
+    @State private var showingAddRecommendation = false
     let cityId: String
     let cityName: String
     let imageUrl: String
@@ -24,9 +25,29 @@ struct RecommendationsView: View {
             VStack(alignment: .leading) {
                 cityImageSection
                 categoryFilterSection
-                SearchBar(placeholder: "Search for a recommendation", searchText: $vm.userSearch)
-                    .padding(.bottom, 10)
-                    .padding(.horizontal, 18)
+                HStack(spacing: 12) {
+                    SearchBar(placeholder: "Search recommendations", searchText: $vm.userSearch)
+                    Button {
+                        showingAddRecommendation = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .padding(12)
+                            .background(.ultraThinMaterial)
+//                                LinearGradient(
+//                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
+//                                    startPoint: .leading,
+//                                    endPoint: .trailing
+//                                )
+//                            )
+                            .clipShape(Circle())
+//                            .shadow(color: .purple.opacity(0.3), radius: 4, x: 0, y: 2)
+                    }
+                }
+                .padding(.bottom, 10)
+                .padding(.horizontal, 18)
                 recommendationsListSection
             }
             .scrollDismissesKeyboard(.interactively)
@@ -50,6 +71,21 @@ struct RecommendationsView: View {
             vm.initializeCity(cityId: cityId, cityName: cityName, imageUrl: imageUrl, userRating: userRating, isBucketList: isBucketList, onRatingUpdated: onRatingUpdated)
             await vm.getRecs(cityId: UUID(uuidString: cityId)!)
             await vm.fetchUser()
+            await vm.getCoordinates(cityId: UUID(uuidString: cityId)!)
+        }
+        .sheet(isPresented: $showingAddRecommendation) {
+            AddRecommendationView(
+                cityId: cityId, 
+                cityName: cityName, 
+                selectedCategory: vm.selectedCategory ?? CategoryType.activities,
+                cityCoordinates: (vm.latitude, vm.longitude)
+            )
+            .onDisappear {
+                // Refresh recommendations when returning from add view
+                Task {
+                    await vm.getRecs(cityId: UUID(uuidString: cityId)!)
+                }
+            }
         }
     }
 

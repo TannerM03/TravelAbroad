@@ -14,6 +14,8 @@ struct City: Codable, Identifiable {
     let country: String
     let imageUrl: String?
     let avgRating: Double?
+    let latitude: Double
+    let longitude: Double
     var userRating: Double?
     var isBucketList: Bool = false
 
@@ -23,6 +25,8 @@ struct City: Codable, Identifiable {
         case country
         case imageUrl = "image_url"
         case avgRating = "avg_rating"
+        case latitude
+        case longitude
         case userRating = "user_rating"
         case isBucketList = "is_bucket_list"
     }

@@ -24,6 +24,8 @@ class RecommendationsViewModel: ObservableObject {
     @Published var cityName: String = ""
     @Published var imageUrl: String = ""
     @Published var isBucketList: Bool = false
+    @Published var latitude: Double = 0.0
+    @Published var longitude: Double = 0.0
 
     var onRatingUpdated: ((Double) -> Void)?
 
@@ -72,6 +74,17 @@ class RecommendationsViewModel: ObservableObject {
         } catch {
             print("Error getting cities in vm: \(error)")
         }
+    }
+    
+    func getCoordinates(cityId: UUID) async {
+        var coordinates: (Double, Double) = (0, 0)
+        do {
+            coordinates = try await SupabaseManager.shared.fetchCityCoordinates(cityId: cityId)
+        } catch {
+            print("Error fetching coordinates: \(error)")
+        }
+        latitude = coordinates.0
+        longitude = coordinates.1
     }
 
     func updateCityReview(userId: UUID, cityId: UUID, rating: Double) async {
