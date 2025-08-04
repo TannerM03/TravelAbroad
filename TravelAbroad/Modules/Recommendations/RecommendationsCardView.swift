@@ -34,8 +34,14 @@ struct RecommendationsCardView: View {
                     Text(rec.name)
                         .font(.headline)
                         .padding(.top, 5)
+                    Spacer()
+                    Text(rec.category.rawValue.capitalized)
+                        .font(.subheadline)
+                        .padding(6)
+                        .background(rec.category.pillColor)
+                        .cornerRadius(12)
                 }
-                .padding(.bottom, 8)
+                .padding(.vertical, 8)
                 HStack(spacing: 6) {
                     Image(systemName: "star.fill")
                         .foregroundColor(.yellow)
@@ -45,8 +51,8 @@ struct RecommendationsCardView: View {
                         .foregroundColor(.secondary)
                 }
 //                }
-                // these descriptions are the same as comments, don't want to show for now until i can make it a summary
-//            if let desc = rec.description, !desc.isEmpty {
+//                 these descriptions are the same as comments, don't want to show for now until i can make it a summary
+//            if let desc = rec.aiSummary, !desc.isEmpty {
 //                Text(desc)
 //                    .font(.body)
 //                    .foregroundColor(.secondary)
@@ -54,7 +60,8 @@ struct RecommendationsCardView: View {
 //            }
             }
             .padding()
-            .background(rec.category.pillColor.opacity(0.5))
+//            .background(rec.category.pillColor.opacity(0.5))
+            .background(Color(.tertiarySystemGroupedBackground))
             .cornerRadius(14)
             .shadow(color: Color(Color.secondary).opacity(0.07), radius: 5, x: 0, y: 3)
             .padding(.horizontal, 16)
@@ -64,16 +71,16 @@ struct RecommendationsCardView: View {
     }
 }
 
-#Preview {
-    RecommendationsCardView(rec: Recommendation(
-        id: "1",
-        userId: "example_user",
-        cityId: "city_1",
-        category: .restaurants,
-        name: "Test Restaurant",
-        description: "A great local spot for amazing food.",
-        imageUrl: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0",
-        location: "123 Main St",
-        avgRating: 5
-    ))
-}
+// #Preview {
+//    RecommendationsCardView(rec: Recommendation(
+//        id: "1",
+//        userId: "example_user",
+//        cityId: "city_1",
+//        category: .restaurants,
+//        name: "Test Restaurant",
+//        description: "A great local spot for amazing food.",
+//        imageUrl: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0",
+//        location: "123 Main St",
+//        avgRating: 5
+//    ))
+// }

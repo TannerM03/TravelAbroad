@@ -12,6 +12,8 @@ class ConfigManager {
 
     private var config: [String: Any] = [:]
 
+    lazy var summaryService = OpenAIService(apiKey: openAIKey)
+
     private init() {
         loadConfig()
     }
@@ -42,5 +44,9 @@ class ConfigManager {
 
     var googlePlacesAPIKey: String {
         return getValue(for: "GooglePlacesAPIKey")
+    }
+
+    var openAIKey: String {
+        return getValue(for: "OpenAIKey")
     }
 }

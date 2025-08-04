@@ -40,6 +40,8 @@ class SupabaseManager {
             let country: String
             let imageUrl: String?
             let avgRating: Double?
+            let latitude: Double
+            let longitude: Double
             let cityReviews: [UserReview]?
             let userBucketList: [BucketListEntry]?
 
@@ -49,6 +51,8 @@ class SupabaseManager {
                 case country
                 case imageUrl = "image_url"
                 case avgRating = "avg_rating"
+                case latitude
+                case longitude
                 case cityReviews = "city_reviews"
                 case userBucketList = "user_bucket_list"
             }
@@ -80,8 +84,34 @@ class SupabaseManager {
 
         return response.map { cityData in
             let isBucketList = cityData.userBucketList?.first?.cityId != nil
-            return City(id: cityData.id, name: cityData.name, country: cityData.country, imageUrl: cityData.imageUrl, avgRating: cityData.avgRating, userRating: cityData.cityReviews?.first?.overallRating, isBucketList: isBucketList)
+            return City(id: cityData.id, name: cityData.name, country: cityData.country, imageUrl: cityData.imageUrl, avgRating: cityData.avgRating, latitude: cityData.latitude, longitude: cityData.longitude, userRating: cityData.cityReviews?.first?.overallRating, isBucketList: isBucketList)
         }
+    }
+
+    func fetchCityCoordinates(cityId: UUID) async throws -> (Double, Double) {
+        struct CityCoordinates: Codable {
+            let latitude: Double
+            let longitude: Double
+        }
+
+        let response: [CityCoordinates] = try await supabase
+            .from("cities")
+            .select("latitude, longitude")
+            .eq("id", value: cityId)
+            .execute()
+            .value
+
+        guard let cityData = response.first else {
+            print("❌ SupabaseManager: City not found for ID: \(cityId)")
+            throw NSError(domain: "SupabaseManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "City not found"])
+        }
+
+        let latitude = cityData.latitude ?? 0.0
+        let longitude = cityData.longitude ?? 0.0
+
+        print("SupabaseManager: Fetched coordinates for city \(cityId): (\(latitude), \(longitude))")
+
+        return (latitude, longitude)
     }
 
     // MARK: - RecommendationsView Functions
@@ -89,13 +119,129 @@ class SupabaseManager {
     // fetches the recommended place (restaurants, hostels, bars, etc.) for whichever city is specified in with the cityId parameter. Also has avg rating
     func fetchRecommendations(cityId: UUID) async throws -> [Recommendation] {
         let recs: [Recommendation] = try await supabase
-            .from("recommendations_with_avg_rating")
+            .from("rec_with_avg_rating")
             .select()
             .eq("city_id", value: cityId)
             .order("avg_rating", ascending: false)
             .execute()
             .value
+
         return recs
+    }
+
+    func saveSummaryToDatabase(recommendationId: String, summary: String) async throws {
+        try await supabase
+            .from("recommendations")
+            .update([
+                "ai_summary": summary,
+                "summary_updated_at": ISO8601DateFormatter().string(from: Date()),
+            ])
+            .eq("id", value: recommendationId)
+            .execute()
+    }
+
+    func createRecommendation(
+        cityId: String,
+        name: String,
+        description: String?,
+        category: CategoryType,
+        location: String?,
+        imageUrl: String?,
+        googlePlaceId: String? = nil
+    ) async throws -> Recommendation {
+        print("Supabase: Creating recommendation - Name: '\(name)', Category: \(category.rawValue), City: \(cityId)")
+
+        guard let userId = supabase.auth.currentUser?.id else {
+            print("❌ Supabase: No authenticated user found for recommendation creation")
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
+        }
+
+        print("✅ Supabase: User authenticated - ID: \(userId.uuidString)")
+
+        struct RecommendationInsert: Codable {
+            let user_id: String
+            let city_id: String
+            let name: String
+            let description: String?
+            let category: String
+            let location: String?
+            let image_url: String?
+            let google_place_id: String?
+        }
+
+        let recommendationData = RecommendationInsert(
+            user_id: userId.uuidString,
+            city_id: cityId,
+            name: name,
+            description: description,
+            category: category.rawValue,
+            location: location,
+            image_url: imageUrl,
+            google_place_id: googlePlaceId
+        )
+
+        print("Supabase: Prepared recommendation data - Image URL: \(imageUrl ?? "none"), Google Place ID: \(googlePlaceId ?? "none")")
+
+        struct RecommendationResponse: Codable {
+            let id: String
+            let user_id: String
+            let city_id: String
+            let name: String
+            let description: String?
+            let category: String
+            let location: String?
+            let image_url: String?
+            let google_place_id: String?
+        }
+
+        do {
+            let response: RecommendationResponse = try await supabase
+                .from("recommendations")
+                .insert(recommendationData)
+                .select()
+                .single()
+                .execute()
+                .value
+
+            print("✅ Supabase: Successfully created recommendation with ID: \(response.id)")
+
+            // Convert the response to a Recommendation object
+            let recommendation = Recommendation(
+                id: response.id,
+                userId: response.user_id,
+                cityId: response.city_id,
+                category: CategoryType(rawValue: response.category) ?? .other,
+                name: response.name,
+                description: response.description,
+                imageUrl: response.image_url,
+                location: response.location,
+                avgRating: 0.0, // New recommendations start with 0 rating
+                aiSummary: nil,
+                summaryUpdatedAt: nil,
+                googlePlaceId: response.google_place_id
+            )
+
+            return recommendation
+
+        } catch {
+            print("❌ Supabase: Failed to create recommendation - Error: \(error.localizedDescription)")
+            throw error
+        }
+    }
+
+    func getPlaceIdWithGooglePlaceId(id: String) async throws -> String? {
+        struct RecommendationId: Decodable {
+            let id: String
+        }
+
+        let response: [RecommendationId] = try await supabase
+            .from("recommendations")
+            .select("id")
+            .eq("google_place_id", value: id)
+            .execute()
+            .value
+
+        return response.first?.id
     }
 
     // MARK: - CommentsView Functions
@@ -423,13 +569,11 @@ class SupabaseManager {
     }
 
     func fetchNumCitiesVisited(userId: UUID) async throws -> Int {
-        print("userId: \(userId)")
         let response = try await supabase.from("city_reviews")
             .select("id", count: .exact)
             .eq("user_id", value: userId)
             .execute()
 
-        print("cities visited: \(response)")
         return response.count ?? 0
     }
 
@@ -438,7 +582,6 @@ class SupabaseManager {
             .select("id", count: .exact)
             .eq("user_id", value: userId)
             .execute()
-        print("recs submitted: \(num)")
         return num.count ?? 0
     }
 
