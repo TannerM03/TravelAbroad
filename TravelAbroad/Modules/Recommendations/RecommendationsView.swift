@@ -75,8 +75,8 @@ struct RecommendationsView: View {
         }
         .sheet(isPresented: $showingAddRecommendation) {
             AddRecommendationView(
-                cityId: cityId, 
-                cityName: cityName, 
+                cityId: cityId,
+                cityName: cityName,
                 selectedCategory: vm.selectedCategory ?? CategoryType.activities,
                 cityCoordinates: (vm.latitude, vm.longitude)
             )

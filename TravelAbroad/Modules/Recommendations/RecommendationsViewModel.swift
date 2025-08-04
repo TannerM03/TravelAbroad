@@ -75,7 +75,7 @@ class RecommendationsViewModel: ObservableObject {
             print("Error getting cities in vm: \(error)")
         }
     }
-    
+
     func getCoordinates(cityId: UUID) async {
         var coordinates: (Double, Double) = (0, 0)
         do {

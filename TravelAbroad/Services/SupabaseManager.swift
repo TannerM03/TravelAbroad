@@ -87,30 +87,30 @@ class SupabaseManager {
             return City(id: cityData.id, name: cityData.name, country: cityData.country, imageUrl: cityData.imageUrl, avgRating: cityData.avgRating, latitude: cityData.latitude, longitude: cityData.longitude, userRating: cityData.cityReviews?.first?.overallRating, isBucketList: isBucketList)
         }
     }
-    
+
     func fetchCityCoordinates(cityId: UUID) async throws -> (Double, Double) {
         struct CityCoordinates: Codable {
             let latitude: Double
             let longitude: Double
         }
-        
+
         let response: [CityCoordinates] = try await supabase
             .from("cities")
             .select("latitude, longitude")
             .eq("id", value: cityId)
             .execute()
             .value
-        
+
         guard let cityData = response.first else {
             print("❌ SupabaseManager: City not found for ID: \(cityId)")
             throw NSError(domain: "SupabaseManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "City not found"])
         }
-        
+
         let latitude = cityData.latitude ?? 0.0
         let longitude = cityData.longitude ?? 0.0
-        
+
         print("SupabaseManager: Fetched coordinates for city \(cityId): (\(latitude), \(longitude))")
-        
+
         return (latitude, longitude)
     }
 
@@ -139,7 +139,7 @@ class SupabaseManager {
             .eq("id", value: recommendationId)
             .execute()
     }
-    
+
     func createRecommendation(
         cityId: String,
         name: String,
@@ -150,14 +150,14 @@ class SupabaseManager {
         googlePlaceId: String? = nil
     ) async throws -> Recommendation {
         print("Supabase: Creating recommendation - Name: '\(name)', Category: \(category.rawValue), City: \(cityId)")
-        
+
         guard let userId = supabase.auth.currentUser?.id else {
             print("❌ Supabase: No authenticated user found for recommendation creation")
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
-        
+
         print("✅ Supabase: User authenticated - ID: \(userId.uuidString)")
-        
+
         struct RecommendationInsert: Codable {
             let user_id: String
             let city_id: String
@@ -168,7 +168,7 @@ class SupabaseManager {
             let image_url: String?
             let google_place_id: String?
         }
-        
+
         let recommendationData = RecommendationInsert(
             user_id: userId.uuidString,
             city_id: cityId,
@@ -179,9 +179,9 @@ class SupabaseManager {
             image_url: imageUrl,
             google_place_id: googlePlaceId
         )
-        
+
         print("Supabase: Prepared recommendation data - Image URL: \(imageUrl ?? "none"), Google Place ID: \(googlePlaceId ?? "none")")
-        
+
         struct RecommendationResponse: Codable {
             let id: String
             let user_id: String
@@ -193,7 +193,7 @@ class SupabaseManager {
             let image_url: String?
             let google_place_id: String?
         }
-        
+
         do {
             let response: RecommendationResponse = try await supabase
                 .from("recommendations")
@@ -202,9 +202,9 @@ class SupabaseManager {
                 .single()
                 .execute()
                 .value
-            
+
             print("✅ Supabase: Successfully created recommendation with ID: \(response.id)")
-            
+
             // Convert the response to a Recommendation object
             let recommendation = Recommendation(
                 id: response.id,
@@ -220,13 +220,28 @@ class SupabaseManager {
                 summaryUpdatedAt: nil,
                 googlePlaceId: response.google_place_id
             )
-            
+
             return recommendation
-            
+
         } catch {
             print("❌ Supabase: Failed to create recommendation - Error: \(error.localizedDescription)")
             throw error
         }
+    }
+
+    func getPlaceIdWithGooglePlaceId(id: String) async throws -> String? {
+        struct RecommendationId: Decodable {
+            let id: String
+        }
+
+        let response: [RecommendationId] = try await supabase
+            .from("recommendations")
+            .select("id")
+            .eq("google_place_id", value: id)
+            .execute()
+            .value
+
+        return response.first?.id
     }
 
     // MARK: - CommentsView Functions
