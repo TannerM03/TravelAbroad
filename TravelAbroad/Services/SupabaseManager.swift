@@ -722,7 +722,7 @@ class SupabaseManager {
             .value
         return items
     }
-    
+
     // fetches all recommendations that a user has reviewed/rated
     func fetchUserReviewedSpots(userId: UUID) async throws -> [ReviewedSpot] {
         struct ReviewedSpotResponse: Codable {
@@ -731,15 +731,15 @@ class SupabaseManager {
             let comment: String
             let created_at: Date
             let rec_with_avg_rating: RecommendationWithCityName
-            
+
             var cityName: String {
                 return rec_with_avg_rating.cities.name
             }
-            
+
             var country: String {
                 return rec_with_avg_rating.cities.country
             }
-            
+
             enum CodingKeys: String, CodingKey {
                 case rec_id
                 case rating
@@ -748,7 +748,7 @@ class SupabaseManager {
                 case rec_with_avg_rating
             }
         }
-        
+
         struct RecommendationWithCityName: Codable {
             let id: String
             let name: String
@@ -757,7 +757,7 @@ class SupabaseManager {
             let location: String?
             let avgRating: Double
             let cities: CityNameOnly
-            
+
             enum CodingKeys: String, CodingKey {
                 case id
                 case name
@@ -768,12 +768,12 @@ class SupabaseManager {
                 case cities
             }
         }
-        
+
         struct CityNameOnly: Codable {
             let name: String
             let country: String
         }
-        
+
         let response: [ReviewedSpotResponse] = try await supabase
             .from("comments")
             .select("rec_id, rating, comment, created_at, rec_with_avg_rating!inner(*, cities!inner(name, country))")
@@ -781,12 +781,12 @@ class SupabaseManager {
             .order("created_at", ascending: false)
             .execute()
             .value
-        
+
         return response.map { item in
             let recommendation = Recommendation(
                 id: item.rec_with_avg_rating.id,
                 userId: "", // Not needed for display
-                cityId: "", // Not needed for display  
+                cityId: "", // Not needed for display
                 category: item.rec_with_avg_rating.category,
                 name: item.rec_with_avg_rating.name,
                 description: nil, // Not available in this query

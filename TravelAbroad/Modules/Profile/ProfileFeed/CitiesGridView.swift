@@ -19,14 +19,14 @@ struct CitiesGridView: View {
         .task {
             if vm.userId == nil {
                 await vm.fetchUser()
-                if let userId = vm.userId, vm.cities.count == 0  {
+                if let userId = vm.userId, vm.cities.count == 0 {
                     await vm.getCities(userId: userId, showLoading: true)
                 }
             }
         }
         .onAppear {
             // Refresh data when view appears to catch rating updates
-            if let userId = vm.userId, vm.cities.count == 0  {
+            if let userId = vm.userId, vm.cities.count == 0 {
                 Task {
                     await vm.getCities(userId: userId, showLoading: false)
                 }

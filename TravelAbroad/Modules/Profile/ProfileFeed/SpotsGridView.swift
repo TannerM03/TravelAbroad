@@ -5,8 +5,8 @@
 //  Created by Tanner Macpherson on 8/4/25.
 //
 
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 struct ReviewedSpot: Identifiable, Codable {
     let id = UUID()
@@ -16,7 +16,7 @@ struct ReviewedSpot: Identifiable, Codable {
     let cityName: String
     let country: String
     let createdAt: Date
-    
+
     enum CodingKeys: String, CodingKey {
         case recommendation
         case comment
@@ -29,7 +29,7 @@ struct ReviewedSpot: Identifiable, Codable {
 
 struct SpotsGridView: View {
     @ObservedObject var vm: SpotsViewModel
-    
+
     var body: some View {
         VStack {
             spotsListSection
@@ -53,7 +53,7 @@ struct SpotsGridView: View {
             overlayContentSection
         }
     }
-    
+
     private var spotsListSection: some View {
         LazyVStack(spacing: 12) {
             ForEach(vm.spots) { spot in
@@ -62,7 +62,7 @@ struct SpotsGridView: View {
         }
         .padding(.horizontal, 16)
     }
-    
+
     private var overlayContentSection: some View {
         Group {
             if vm.isLoading {
@@ -76,11 +76,11 @@ struct SpotsGridView: View {
 
 struct SpotCard: View {
     let spot: ReviewedSpot
-    
+
     private func timeString(from date: Date) -> String {
         let now = Date()
         let timeInterval = now.timeIntervalSince(date)
-        
+
         if timeInterval < 60 {
             return "Just now"
         } else if timeInterval < 3600 {
@@ -94,7 +94,7 @@ struct SpotCard: View {
             return "\(days)d"
         }
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header with city name and flag
@@ -102,9 +102,9 @@ struct SpotCard: View {
                 Text(spot.recommendation.name)
                     .font(.headline)
                     .foregroundColor(.primary)
-                
+
                 Spacer()
-                
+
                 HStack(spacing: 4) {
                     Text(CountryEmoji.emoji(for: spot.country))
                         .font(.subheadline)
@@ -114,7 +114,7 @@ struct SpotCard: View {
                 }
             }
             .padding(.bottom, 12)
-            
+
             // Main content
             HStack(spacing: 12) {
                 // Image
@@ -133,7 +133,7 @@ struct SpotCard: View {
                         .clipped()
                         .cornerRadius(12)
                 }
-                
+
                 // Details
                 VStack(alignment: .leading, spacing: 8) {
                     // Category pill
@@ -146,10 +146,10 @@ struct SpotCard: View {
                             .cornerRadius(8)
                         Spacer()
                     }
-                    
+
                     // User rating (stars only)
                     HStack(spacing: 2) {
-                        ForEach(1...5, id: \.self) { star in
+                        ForEach(1 ... 5, id: \.self) { star in
                             Image(systemName: star <= Int(spot.userRating) ? "star.fill" : "star")
                                 .foregroundColor(.yellow)
                                 .font(.caption)
@@ -159,13 +159,13 @@ struct SpotCard: View {
                             .foregroundColor(.secondary)
                             .padding(.leading, 4)
                     }
-                    
+
                     Spacer()
                 }
-                
+
                 Spacer()
             }
-            
+
             // Comment and timestamp
             HStack(alignment: .bottom) {
                 if !spot.comment.isEmpty {
@@ -174,9 +174,9 @@ struct SpotCard: View {
                         .foregroundStyle(.primary)
                         .lineLimit(2)
                 }
-                
+
                 Spacer()
-                
+
                 Text(timeString(from: spot.createdAt))
                     .font(.caption2)
                     .foregroundColor(.secondary)
@@ -189,7 +189,8 @@ struct SpotCard: View {
         .shadow(color: Color.secondary.opacity(0.07), radius: 5, x: 0, y: 3)
     }
 }
+
 //
-//#Preview {
+// #Preview {
 //    SpotsGridView()
-//}
+// }

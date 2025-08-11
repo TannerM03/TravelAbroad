@@ -14,7 +14,7 @@ class SpotsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var userId: UUID?
     @Published var user: User?
-    
+
     func fetchUser() async {
         do {
             user = try await SupabaseManager.shared.supabase.auth.user()
@@ -23,18 +23,18 @@ class SpotsViewModel: ObservableObject {
             print("Failed to fetch user: \(error)")
         }
     }
-    
+
     func getReviewedSpots(userId: UUID, showLoading: Bool) async {
         if showLoading {
             isLoading = true
         }
-        
+
         do {
             spots = try await SupabaseManager.shared.fetchUserReviewedSpots(userId: userId)
         } catch {
             print("Failed to fetch reviewed spots: \(error)")
         }
-        
+
         if showLoading {
             isLoading = false
         }
