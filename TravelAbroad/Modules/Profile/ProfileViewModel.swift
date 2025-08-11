@@ -18,7 +18,8 @@ class ProfileViewModel: ObservableObject {
     @Published var userId: UUID? = nil
     @Published var imageState: ImageState = .empty
     @Published var citiesVisited: Int = 0
-    @Published var recsSubmitted: Int = 0
+    @Published var spotsReviewed: Int = 0
+    @Published var countriesVisited: Int = 0
     @Published var imageSelection: PhotosPickerItem? = nil {
         didSet {
             if let imageSelection {
@@ -48,8 +49,14 @@ class ProfileViewModel: ObservableObject {
                 if let urlString = profileImageURL, let url = URL(string: urlString) {
                     await loadImageFromURL(url)
                 }
-                citiesVisited = try await SupabaseManager.shared.fetchNumCitiesVisited(userId: userId)
-                recsSubmitted = try await SupabaseManager.shared.fetchNumRecsSubmitted(userId: userId)
+
+                let travelStats = try await SupabaseManager.shared.fetchTravelStats(userId: userId)
+                countriesVisited = travelStats.countriesVisited
+                citiesVisited = travelStats.citiesVisited
+                spotsReviewed = travelStats.spotsVisited
+//                countriesVisited = try await SupabaseManager.shared.fetchNumCountriesVisited(userId: userId)
+//                citiesVisited = try await SupabaseManager.shared.fetchNumCitiesVisited(userId: userId)
+//                recsSubmitted = try await SupabaseManager.shared.fetchNumRecsSubmitted(userId: userId)
 
             } else {
                 print("userId didn't work yet")

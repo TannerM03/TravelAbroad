@@ -26,6 +26,8 @@ class RecommendationsViewModel: ObservableObject {
     @Published var isBucketList: Bool = false
     @Published var latitude: Double = 0.0
     @Published var longitude: Double = 0.0
+    @Published var avgRating: Double = 0.0
+    @Published var showSubmittedAlert: Bool = false
 
     var onRatingUpdated: ((Double) -> Void)?
 
@@ -55,12 +57,13 @@ class RecommendationsViewModel: ObservableObject {
         userRating = rating
     }
 
-    func initializeCity(cityId: String, cityName: String, imageUrl: String, userRating: Double?, isBucketList: Bool, onRatingUpdated: ((Double) -> Void)?) {
+    func initializeCity(cityId: String, cityName: String, imageUrl: String, userRating: Double?, avgRating: Double, isBucketList: Bool, onRatingUpdated: ((Double) -> Void)?) {
         self.cityId = cityId
         self.cityName = cityName
         self.imageUrl = imageUrl
         self.userRating = userRating
-        tempRating = userRating
+        self.avgRating = avgRating
+//        tempRating = userRating
         self.isBucketList = isBucketList
         isFavoriteCity = isBucketList
         self.onRatingUpdated = onRatingUpdated

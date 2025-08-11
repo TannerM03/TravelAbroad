@@ -125,7 +125,7 @@ struct CitiesView: View {
                                 isBucketList: city.isBucketList,
                                 onRatingUpdated: { newRating in
                                     vm.updateCityRating(cityId: city.id, newRating: newRating)
-                                }
+                                }, cityRating: city.avgRating ?? 0.0
                             )
                         } label: {
                             CityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.avgRating, flagEmoji: emoji)

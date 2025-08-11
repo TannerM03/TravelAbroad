@@ -61,10 +61,10 @@ struct TravelHistoryView: View {
                             isBucketList: false,
                             onRatingUpdated: { newRating in
                                 vm.updateCityRating(cityId: city.id.uuidString, newRating: newRating)
-                            }
+                            }, cityRating: city.userRating ?? 0.0
                         )
                     } label: {
-                        TravelHistoryCityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.userRating, flagEmoji: emoji)
+                        ProfileCityCard(cityName: city.name, imageUrl: city.imageUrl, rating: city.userRating, flagEmoji: emoji)
                     }
                 }
             }

@@ -1,0 +1,136 @@
+//
+//  SettingsView.swift
+//  TravelAbroad
+//
+//  Created by Tanner Macpherson on 8/4/25.
+//
+
+import SwiftUI
+
+struct SettingsView: View {
+    @Binding var isAuthenticated: Bool
+    @State private var showLogoutDialog = false
+    @StateObject var vm = ProfileViewModel()
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Account") {
+                    HStack {
+                        Image(systemName: "person.circle")
+                            .foregroundColor(.blue)
+                            .frame(width: 24)
+                        Text("Profile")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
+
+                    HStack {
+                        Image(systemName: "heart.circle")
+                            .foregroundColor(.red)
+                            .frame(width: 24)
+                        Text("Travel History")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
+
+                    HStack {
+                        Image(systemName: "list.bullet.circle")
+                            .foregroundColor(.orange)
+                            .frame(width: 24)
+                        Text("Bucket List")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
+                }
+
+                Section("Preferences") {
+                    HStack {
+                        Image(systemName: "bell.circle")
+                            .foregroundColor(.purple)
+                            .frame(width: 24)
+                        Text("Notifications")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
+
+                    HStack {
+                        Image(systemName: "lock.circle")
+                            .foregroundColor(.gray)
+                            .frame(width: 24)
+                        Text("Privacy")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
+                }
+
+                Section("Support") {
+                    HStack {
+                        Image(systemName: "questionmark.circle")
+                            .foregroundColor(.blue)
+                            .frame(width: 24)
+                        Text("Help & FAQ")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
+
+                    HStack {
+                        Image(systemName: "envelope.circle")
+                            .foregroundColor(.green)
+                            .frame(width: 24)
+                        Text("Contact Us")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
+                }
+
+                Section {
+                    logoutSection
+                }
+            }
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
+    private var logoutSection: some View {
+        Button(action: {
+            showLogoutDialog = true
+        }) {
+            HStack {
+                Image(systemName: "rectangle.portrait.and.arrow.right")
+                    .foregroundColor(.red)
+                    .frame(width: 24)
+                Text("Log Out")
+                    .foregroundColor(.red)
+                Spacer()
+            }
+        }
+        .confirmationDialog("Are you sure you want to log out?", isPresented: $showLogoutDialog, titleVisibility: .visible) {
+            Button("Log Out", role: .destructive) {
+                Task {
+                    try await vm.logOut()
+                    isAuthenticated = false
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+}
+
+// #Preview {
+//    SettingsView(isAuthenticated: true)
+// }

@@ -1,36 +1,34 @@
 //
-//  BucketListView.swift
+//  CitiesGridView.swift
 //  TravelAbroad
 //
-//  Created by Tanner Macpherson on 7/1/25.
+//  Created by Tanner Macpherson on 8/4/25.
 //
 
 import SwiftUI
 
-struct BucketListView: View {
-    @ObservedObject var vm: BucketListViewModel
+struct CitiesGridView: View {
+    @ObservedObject var vm: TravelHistoryViewModel
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
     var body: some View {
-        NavigationStack {
-            VStack {
-                SearchBar(placeholder: "Search for a city or country", searchText: $vm.userSearch)
-                    .padding(.bottom, 10)
-
-                citiesGridSection
-            }
-            .navigationBarTitle("Bucket List")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    filterToolbarSection
-                }
-            }
+        VStack {
+            citiesGridSection
         }
+
         .task {
             if vm.userId == nil {
                 await vm.fetchUser()
-                if let userId = vm.userId {
-                    await vm.getCities(userId: userId)
+                if let userId = vm.userId, vm.cities.count == 0  {
+                    await vm.getCities(userId: userId, showLoading: true)
+                }
+            }
+        }
+        .onAppear {
+            // Refresh data when view appears to catch rating updates
+            if let userId = vm.userId, vm.cities.count == 0  {
+                Task {
+                    await vm.getCities(userId: userId, showLoading: false)
                 }
             }
         }
@@ -40,18 +38,29 @@ struct BucketListView: View {
     }
 
     private var citiesGridSection: some View {
-        ScrollView {
-            LazyVGrid(columns: columns, spacing: 20) {
-                ForEach(vm.sortedCities) { city in
-                    let emoji = CountryEmoji.emoji(for: city.country)
-                    NavigationLink {
-                        RecommendationsView(cityId: city.id, cityName: city.name, imageUrl: city.imageUrl ?? "", userRating: nil, isBucketList: city.isBucketList, onRatingUpdated: nil, cityRating: city.avgRating ?? 0.0)
-                    } label: {
-                        CityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.avgRating, flagEmoji: emoji)
-                    }
-                }
+//        ScrollView {
+        LazyVGrid(columns: columns, spacing: 20) {
+            ForEach(vm.sortedCities) { city in
+                let emoji = CountryEmoji.emoji(for: city.country)
+                ProfileCityCard(cityName: city.name, imageUrl: city.imageUrl, rating: city.userRating, flagEmoji: emoji)
+
+//                    NavigationLink {
+//                        RecommendationsView(
+//                            cityId: city.id.uuidString,
+//                            cityName: city.name,
+//                            imageUrl: city.imageUrl ?? "",
+//                            userRating: city.userRating,
+//                            isBucketList: false,
+//                            onRatingUpdated: { newRating in
+//                                vm.updateCityRating(cityId: city.id.uuidString, newRating: newRating)
+//                            }, cityRating: city.userRating ?? 0.0
+//                        )
+//                    } label: {
+//                        TravelHistoryCityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.userRating, flagEmoji: emoji)
+//                    }
             }
         }
+//        }
     }
 
     private var filterToolbarSection: some View {
@@ -93,8 +102,4 @@ struct BucketListView: View {
             }
         }
     }
-}
-
-#Preview {
-    BucketListView(vm: BucketListViewModel())
 }
