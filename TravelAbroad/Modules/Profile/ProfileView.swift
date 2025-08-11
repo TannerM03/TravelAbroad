@@ -14,32 +14,55 @@ struct ProfileView: View {
     @ObservedObject var vm: ProfileViewModel
     @StateObject private var bucketListViewModel = BucketListViewModel()
     @StateObject private var travelHistoryViewModel = TravelHistoryViewModel()
+    @StateObject private var spotsViewModel = SpotsViewModel()
     @State private var profileImage: Image? = nil
     @State private var selectedUIImage: UIImage? = nil
-    @State private var showLogoutDialog = false
     @State private var fromProfile = true
+    @State private var selectedSegment = 0
 
     var body: some View {
         ZStack {
-            LinearGradient(gradient: Gradient(colors: [Color(.systemTeal).opacity(0.18), Color(.systemIndigo).opacity(0.14)]), startPoint: .top, endPoint: .bottom)
-                .ignoresSafeArea()
+//            LinearGradient(
+//                gradient: Gradient(colors: [Color.purple.opacity(0.1), Color.blue.opacity(0.1), Color.clear]),
+//                startPoint: .topLeading,
+//                endPoint: .bottomTrailing
+//            )
+//            .ignoresSafeArea()
             NavigationStack {
-                Form {
-                    Section {
-                        profileImageSection
-                    }
-                    Section {
-                        travelHistorySection
-                    }
-                    Section {
-                        bucketListSection
-                    }
-                    Section {
-                        logoutSection
+                ScrollView {
+                    VStack(spacing: 0) {
+                        Section {
+                            profileImageSection
+                        }
+                        .padding(.top, 10)
+
+                        pickerSection
+                            .padding(.top, 15)
+                            .padding(.bottom, 25)
+
+                        gridSection
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
-                .navigationTitle("Profile")
+                .navigationTitle("\(vm.username)")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        NavigationLink {
+                            SettingsView(isAuthenticated: $isAuthenticated)
+                        } label: {
+                            Image(systemName: "gear")
+                                .foregroundColor(.primary)
+                        }
+                    }
+                }
+                .background(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.purple.opacity(0.1), Color.blue.opacity(0.1), Color.clear]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
             }
         }
         .task {
@@ -66,11 +89,11 @@ struct ProfileView: View {
         HStack(alignment: .center) {
             Spacer()
             VStack(alignment: .center, spacing: 12) {
-                Text("@\(vm.username)")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.primary)
-                    .padding(.bottom, 4)
+//                Text("@\(vm.username)")
+//                    .font(.title2)
+//                    .fontWeight(.semibold)
+//                    .foregroundColor(.primary)
+//                    .padding(.bottom, 4)
 
                 CircularProfileImage(imageState: vm.imageState)
                     .overlay(alignment: .bottomTrailing) {
@@ -85,13 +108,13 @@ struct ProfileView: View {
                         }.buttonStyle(.borderless)
                     }
 
-                HStack(spacing: 40) {
+                HStack {
                     VStack(spacing: 4) {
-                        Text("\(vm.citiesVisited)")
+                        Text("\(vm.countriesVisited)")
                             .font(.title3)
                             .fontWeight(.bold)
                             .foregroundColor(.primary)
-                        Text("Cities Visited")
+                        Text("Countries")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .fontWeight(.medium)
@@ -103,11 +126,27 @@ struct ProfileView: View {
                         .frame(width: 1, height: 40)
 
                     VStack(spacing: 4) {
-                        Text("\(vm.recsSubmitted)")
+                        Text("\(vm.citiesVisited)")
                             .font(.title3)
                             .fontWeight(.bold)
                             .foregroundColor(.primary)
-                        Text("Reviews")
+                        Text("Cities")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fontWeight(.medium)
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    Rectangle()
+                        .fill(Color.secondary.opacity(0.3))
+                        .frame(width: 1, height: 40)
+
+                    VStack(spacing: 4) {
+                        Text("\(vm.spotsReviewed)")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                        Text("Spots")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .fontWeight(.medium)
@@ -118,40 +157,25 @@ struct ProfileView: View {
             }
             Spacer()
         }
-        .padding(.vertical, 8)
+//        .padding(.vertical, 8)
     }
 
-    private var travelHistorySection: some View {
-        NavigationLink {
-            TravelHistoryView(vm: travelHistoryViewModel)
-        } label: {
-            Text("Travel History")
+    private var pickerSection: some View {
+        Picker("Content", selection: $selectedSegment) {
+            Text("Cities").tag(0)
+            Text("Spots").tag(1)
         }
+        .pickerStyle(.segmented)
+        .padding(.horizontal)
+        .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
     }
 
-    private var bucketListSection: some View {
-        NavigationLink {
-            BucketListView(vm: bucketListViewModel)
-        } label: {
-            Text("Bucket List")
-        }
-    }
-
-    private var logoutSection: some View {
-        Button(action: {
-            showLogoutDialog = true
-        }) {
-            Text("Log Out")
-                .foregroundColor(.red)
-        }
-        .confirmationDialog("Are you sure you want to log out?", isPresented: $showLogoutDialog, titleVisibility: .visible) {
-            Button("Log Out", role: .destructive) {
-                Task {
-                    try await vm.logOut()
-                    isAuthenticated = false
-                }
-            }
-            Button("Cancel", role: .cancel) {}
+    @ViewBuilder
+    private var gridSection: some View {
+        if selectedSegment == 0 {
+            CitiesGridView(vm: travelHistoryViewModel)
+        } else {
+            SpotsGridView(vm: spotsViewModel)
         }
     }
 }

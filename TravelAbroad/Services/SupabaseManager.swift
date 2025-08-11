@@ -568,6 +568,31 @@ class SupabaseManager {
         return cities
     }
 
+    func fetchTravelStats(userId: UUID) async throws -> TravelStats {
+        let stats: [TravelStats] = try await supabase
+            .from("user_travel_stats")
+            .select("*")
+            .eq("user_id", value: userId)
+            .execute()
+            .value
+
+        return stats.first ?? TravelStats(userId: userId.uuidString, countriesVisited: 0, citiesVisited: 0, spotsVisited: 0)
+    }
+
+    struct TravelStats: Codable {
+        let userId: String
+        let countriesVisited: Int
+        let citiesVisited: Int
+        let spotsVisited: Int
+
+        enum CodingKeys: String, CodingKey {
+            case userId = "user_id"
+            case countriesVisited = "countries_visited"
+            case citiesVisited = "cities_visited"
+            case spotsVisited = "spots_visited"
+        }
+    }
+
     func fetchNumCitiesVisited(userId: UUID) async throws -> Int {
         let response = try await supabase.from("city_reviews")
             .select("id", count: .exact)
@@ -696,5 +721,81 @@ class SupabaseManager {
             .execute()
             .value
         return items
+    }
+
+    // fetches all recommendations that a user has reviewed/rated
+    func fetchUserReviewedSpots(userId: UUID) async throws -> [ReviewedSpot] {
+        struct ReviewedSpotResponse: Codable {
+            let rec_id: String
+            let rating: Int
+            let comment: String
+            let created_at: Date
+            let rec_with_avg_rating: RecommendationWithCityName
+
+            var cityName: String {
+                return rec_with_avg_rating.cities.name
+            }
+
+            var country: String {
+                return rec_with_avg_rating.cities.country
+            }
+
+            enum CodingKeys: String, CodingKey {
+                case rec_id
+                case rating
+                case comment
+                case created_at
+                case rec_with_avg_rating
+            }
+        }
+
+        struct RecommendationWithCityName: Codable {
+            let id: String
+            let name: String
+            let category: CategoryType
+            let imageUrl: String?
+            let location: String?
+            let avgRating: Double
+            let cities: CityNameOnly
+
+            enum CodingKeys: String, CodingKey {
+                case id
+                case name
+                case category
+                case imageUrl = "image_url"
+                case location
+                case avgRating = "avg_rating"
+                case cities
+            }
+        }
+
+        struct CityNameOnly: Codable {
+            let name: String
+            let country: String
+        }
+
+        let response: [ReviewedSpotResponse] = try await supabase
+            .from("comments")
+            .select("rec_id, rating, comment, created_at, rec_with_avg_rating!inner(*, cities!inner(name, country))")
+            .eq("user_id", value: userId)
+            .order("created_at", ascending: false)
+            .execute()
+            .value
+
+        return response.map { item in
+            let recommendation = Recommendation(
+                id: item.rec_with_avg_rating.id,
+                userId: "", // Not needed for display
+                cityId: "", // Not needed for display
+                category: item.rec_with_avg_rating.category,
+                name: item.rec_with_avg_rating.name,
+                description: nil, // Not available in this query
+                imageUrl: item.rec_with_avg_rating.imageUrl,
+                location: item.rec_with_avg_rating.location,
+                avgRating: item.rec_with_avg_rating.avgRating,
+                aiSummary: nil
+            )
+            return ReviewedSpot(recommendation: recommendation, comment: item.comment, userRating: Double(item.rating), cityName: item.cityName, country: item.country, createdAt: item.created_at)
+        }
     }
 }

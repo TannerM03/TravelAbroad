@@ -51,13 +51,6 @@ struct CommentsView: View {
                                 selectedImage = nil
                             }
                         }
-
-                    VStack {
-                        recommendationHeader
-                            .padding()
-                        Spacer()
-                    }
-                    .allowsHitTesting(false)
                 }
             }
             .safeAreaInset(edge: .bottom) {

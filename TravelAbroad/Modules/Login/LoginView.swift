@@ -52,7 +52,7 @@ struct LoginView: View {
             HStack {
                 Image(systemName: "envelope")
                     .foregroundColor(.accentColor)
-                TextField(vm.isSignUp ? "Email" : "Email or username (case sensitive)", text: $vm.loginCredential)
+                TextField(vm.isSignUp ? "Email" : "Email or username", text: $vm.loginCredential)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .keyboardType(.emailAddress)

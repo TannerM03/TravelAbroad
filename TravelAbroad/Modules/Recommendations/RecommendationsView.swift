@@ -19,6 +19,7 @@ struct RecommendationsView: View {
     let userRating: Double?
     let isBucketList: Bool
     let onRatingUpdated: ((Double) -> Void)?
+    let cityRating: Double
 
     var body: some View {
         ScrollView {
@@ -36,14 +37,7 @@ struct RecommendationsView: View {
                             .foregroundColor(.white)
                             .padding(12)
                             .background(.ultraThinMaterial)
-//                                LinearGradient(
-//                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
-//                                    startPoint: .leading,
-//                                    endPoint: .trailing
-//                                )
-//                            )
                             .clipShape(Circle())
-//                            .shadow(color: .purple.opacity(0.3), radius: 4, x: 0, y: 2)
                     }
                 }
                 .padding(.bottom, 10)
@@ -68,10 +62,15 @@ struct RecommendationsView: View {
             }
         }
         .task {
-            vm.initializeCity(cityId: cityId, cityName: cityName, imageUrl: imageUrl, userRating: userRating, isBucketList: isBucketList, onRatingUpdated: onRatingUpdated)
+            vm.initializeCity(cityId: cityId, cityName: cityName, imageUrl: imageUrl, userRating: userRating, avgRating: cityRating, isBucketList: isBucketList, onRatingUpdated: onRatingUpdated)
             await vm.getRecs(cityId: UUID(uuidString: cityId)!)
             await vm.fetchUser()
             await vm.getCoordinates(cityId: UUID(uuidString: cityId)!)
+        }
+        .alert("Rating Submitted!", isPresented: $vm.showSubmittedAlert) {
+            Button("OK", role: .cancel) {
+                // Just dismiss the alert
+            }
         }
         .sheet(isPresented: $showingAddRecommendation) {
             AddRecommendationView(
@@ -169,22 +168,9 @@ struct RecommendationsView: View {
     private var ratingButton: some View {
         Button(action: { vm.showRatingOverlay() }) {
             HStack(spacing: 6) {
-                if let rating = vm.userRating, rating > 0.0 {
-                    Image(systemName: "star.fill")
-                        .foregroundColor(.yellow)
-                    Text(String(format: "%.1f", rating))
-                        .foregroundColor(.white)
-                } else if let rating = userRating, rating > 0.0 {
-                    Image(systemName: "star.fill")
-                        .foregroundColor(.yellow)
-                    Text(String(format: "%.1f", rating))
-                        .foregroundColor(.white)
-                } else {
-                    Image(systemName: "star")
-                        .foregroundColor(.white)
-                    Text("Rate City")
-                        .foregroundColor(.white)
-                }
+                Image(systemName: "star.fill")
+                    .foregroundStyle(.yellow)
+                Text(String(format: "%.1f", vm.avgRating))
             }
             .font(.subheadline)
             .fontWeight(.semibold)
@@ -317,6 +303,7 @@ struct RecommendationsView: View {
                         Task {
                             await vm.updateCityReview(userId: vm.userId, cityId: UUID(uuidString: vm.cityId)!, rating: vm.tempRating ?? 5.0)
                         }
+                        vm.showSubmittedAlert = true
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                             vm.hideRatingOverlay()
                         }
