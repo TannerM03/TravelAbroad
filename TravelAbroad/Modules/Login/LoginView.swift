@@ -10,6 +10,7 @@ struct LoginView: View {
     @StateObject private var vm = LoginViewModel()
     @StateObject private var profileVm = ProfileViewModel()
     @Binding var isAuthenticated: Bool
+    @Binding var shouldShowOnboarding: Bool
 
     var body: some View {
         ZStack {
@@ -98,7 +99,14 @@ struct LoginView: View {
     private var actionButtonSection: some View {
         Button {
             Task {
+                let wasSignUp = vm.isSignUp
                 isAuthenticated = await vm.authAction()
+                
+                // Only trigger onboarding for new sign-ups
+                if wasSignUp && isAuthenticated {
+                    shouldShowOnboarding = true
+                }
+                
                 await profileVm.fetchUser()
             }
         } label: {
@@ -129,5 +137,5 @@ struct LoginView: View {
 }
 
 #Preview("Login Mode") {
-    LoginView(isAuthenticated: .constant(false))
+    LoginView(isAuthenticated: .constant(false), shouldShowOnboarding: .constant(false))
 }

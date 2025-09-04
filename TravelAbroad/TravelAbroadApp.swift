@@ -12,6 +12,7 @@ import SwiftUI
 @main
 struct TravelAbroadApp: App {
     @AppStorage("isAuthenticated") private var isAuthenticated = false
+    @AppStorage("shouldShowOnboarding") private var shouldShowOnboarding = false
 //    @State private var isAuthenticated = false
 
     init() {
@@ -27,11 +28,23 @@ struct TravelAbroadApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // Shows main app interface if authenticated, otherwise show login screen
             if isAuthenticated {
-                TabBarView(isAuthenticated: $isAuthenticated)
+                if shouldShowOnboarding {
+                    // Show onboarding flow for users who just signed up
+                    OnboardingFlowView(shouldShowOnboarding: $shouldShowOnboarding)
+                } else {
+                    // Show main app for authenticated users
+                    TabBarView(isAuthenticated: $isAuthenticated)
+                }
             } else {
-                LoginView(isAuthenticated: $isAuthenticated)
+                // Show login screen for unauthenticated users
+                LoginView(isAuthenticated: $isAuthenticated, shouldShowOnboarding: $shouldShowOnboarding)
+                    .onChange(of: isAuthenticated) { oldValue, newValue in
+                        // Reset onboarding flag when user logs out
+                        if !newValue {
+                            shouldShowOnboarding = false
+                        }
+                    }
             }
         }
     }

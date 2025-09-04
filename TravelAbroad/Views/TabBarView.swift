@@ -14,9 +14,17 @@ struct TabBarView: View {
 
     var body: some View {
         TabView {
+            Text("Friends Coming Soon!")
+                .tabItem {
+                    Label("Social", systemImage: "magnifyingglass.circle.fill")
+                }
             CitiesView(vm: cityListViewModel)
                 .tabItem {
                     Label("Cities", systemImage: "building.2.crop.circle")
+                }
+            Text("Itinerary Builder Coming Soon!")
+                .tabItem {
+                    Label("Itinerary", systemImage: "airplane.circle.fill")
                 }
             ProfileView(isAuthenticated: $isAuthenticated, vm: profileViewModel)
                 .tabItem {
