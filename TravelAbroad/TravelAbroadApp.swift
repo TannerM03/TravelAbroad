@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import GooglePlacesSwift
 import SwiftUI
 
 @main
@@ -15,14 +14,7 @@ struct TravelAbroadApp: App {
 //    @State private var isAuthenticated = false
 
     init() {
-        if let path = Bundle.main.path(forResource: "Secrets", ofType: "plist"),
-           let dict = NSDictionary(contentsOfFile: path),
-           let apiKey = dict["GooglePlacesAPIKey"] as? String
-        {
-            PlacesClient.provideAPIKey(apiKey)
-        } else {
-            print("⚠️ Failed to load Google Places API Key")
-        }
+        // App initialization
     }
 
     var body: some Scene {
@@ -37,4 +29,3 @@ struct TravelAbroadApp: App {
     }
 }
 
-// Google places API should be good for getting images of the places the user wants to add a rec for

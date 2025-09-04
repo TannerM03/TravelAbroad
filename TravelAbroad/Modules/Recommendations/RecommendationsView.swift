@@ -76,8 +76,7 @@ struct RecommendationsView: View {
             AddRecommendationView(
                 cityId: cityId,
                 cityName: cityName,
-                selectedCategory: vm.selectedCategory ?? CategoryType.activities,
-                cityCoordinates: (vm.latitude, vm.longitude)
+                selectedCategory: vm.selectedCategory ?? CategoryType.activities
             )
             .onDisappear {
                 // Refresh recommendations when returning from add view

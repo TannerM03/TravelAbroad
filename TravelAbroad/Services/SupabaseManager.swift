@@ -229,20 +229,6 @@ class SupabaseManager {
         }
     }
 
-    func getPlaceIdWithGooglePlaceId(id: String) async throws -> String? {
-        struct RecommendationId: Decodable {
-            let id: String
-        }
-
-        let response: [RecommendationId] = try await supabase
-            .from("recommendations")
-            .select("id")
-            .eq("google_place_id", value: id)
-            .execute()
-            .value
-
-        return response.first?.id
-    }
 
     // MARK: - CommentsView Functions
 
@@ -324,6 +310,20 @@ class SupabaseManager {
         }
 
         let fileName = "comment_\(UUID().uuidString).jpg"
+
+        let bucket = supabase.storage.from("comment-images")
+        try await bucket.upload(fileName, data: imageData, options: FileOptions(contentType: "image/jpeg"))
+
+        let imageUrl = try bucket.getPublicURL(path: fileName).absoluteString
+        return imageUrl
+    }
+    
+    func uploadRecommendationImage(_ image: UIImage) async throws -> String {
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            throw NSError(domain: "ImageError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image to JPEG"])
+        }
+
+        let fileName = "rec_\(UUID().uuidString).jpg"
 
         let bucket = supabase.storage.from("comment-images")
         try await bucket.upload(fileName, data: imageData, options: FileOptions(contentType: "image/jpeg"))
