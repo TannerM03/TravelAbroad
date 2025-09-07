@@ -42,9 +42,6 @@ class ConfigManager {
         return getValue(for: "SupabaseKey")
     }
 
-    var googlePlacesAPIKey: String {
-        return getValue(for: "GooglePlacesAPIKey")
-    }
 
     var openAIKey: String {
         return getValue(for: "OpenAIKey")
