@@ -66,8 +66,10 @@ class TravelHistoryViewModel: ObservableObject {
         do {
             cities = try await SupabaseManager.shared.fetchUserTravelHistory(userId: userId)
         } catch {
+            isLoading = false
             print("Error getting cities in vm: \(error)")
         }
+        isLoading = false
     }
 
     func updateCityRating(cityId: String, newRating: Double) {
