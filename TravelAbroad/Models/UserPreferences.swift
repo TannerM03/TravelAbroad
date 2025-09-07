@@ -255,7 +255,6 @@ struct AdditionalPreferences: Codable {
     var planningStyle: PlanningStyle = .structured
     var riskTolerance: RiskTolerance = .moderate
     var culturalImmersion: CulturalImmersion = .moderate
-    var weatherSensitivity: WeatherSensitivity = .moderate
     var crowdTolerance: CrowdTolerance = .moderate
     
     enum PlanningStyle: String, CaseIterable, Codable {
@@ -296,20 +295,6 @@ struct AdditionalPreferences: Codable {
             case .minimal: return "Tourist Highlights"
             case .moderate: return "Mix of Both"
             case .deep: return "Local Experiences"
-            }
-        }
-    }
-    
-    enum WeatherSensitivity: String, CaseIterable, Codable {
-        case low = "low"
-        case moderate = "moderate"
-        case high = "high"
-        
-        var displayName: String {
-            switch self {
-            case .low: return "Weather Doesn't Matter"
-            case .moderate: return "Some Weather Preference"
-            case .high: return "Weather Dependent"
             }
         }
     }

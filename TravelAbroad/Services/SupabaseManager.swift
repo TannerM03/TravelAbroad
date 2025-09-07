@@ -689,19 +689,159 @@ class SupabaseManager {
             .execute()
     }
 
+    // MARK: - User Preferences Functions
+
+    func saveUserPreferences(_ preferences: UserPreferences) async throws {
+        guard let userId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
+        }
+        
+        struct UserPreferencesInsert: Codable {
+            let user_id: String
+            let energy_level: String
+            let social_preference: String
+            let time_preference: String
+            let budget_range: String
+            let activity_preferences: [String: String]
+            let max_walking_distance: String
+            let transportation_preference: String
+            let accommodation_style: String
+            let planning_style: String
+            let risk_tolerance: String
+            let cultural_immersion: String
+            let crowd_tolerance: String
+        }
+        
+        // Convert activity preferences to dictionary
+        var activityPrefsDict: [String: String] = [:]
+        for (activity, level) in preferences.activityPreferences.preferences {
+            activityPrefsDict[activity.rawValue] = level.rawValue
+        }
+        
+        let preferencesData = UserPreferencesInsert(
+            user_id: userId.uuidString,
+            energy_level: preferences.travelStyle.energyLevel.rawValue,
+            social_preference: preferences.travelStyle.socialPreference.rawValue,
+            time_preference: preferences.travelStyle.timePreference.rawValue,
+            budget_range: preferences.travelStyle.budgetRange.rawValue,
+            activity_preferences: activityPrefsDict,
+            max_walking_distance: preferences.practicalPreferences.maxWalkingDistance.rawValue,
+            transportation_preference: preferences.practicalPreferences.transportationPreference.rawValue,
+            accommodation_style: preferences.practicalPreferences.accommodationStyle.rawValue,
+            planning_style: preferences.additionalPreferences.planningStyle.rawValue,
+            risk_tolerance: preferences.additionalPreferences.riskTolerance.rawValue,
+            cultural_immersion: preferences.additionalPreferences.culturalImmersion.rawValue,
+            crowd_tolerance: preferences.additionalPreferences.crowdTolerance.rawValue
+        )
+        
+        do {
+            // Try to insert new preferences
+            try await supabase
+                .from("user_preferences")
+                .insert(preferencesData)
+                .execute()
+            
+            print("✅ User preferences saved successfully")
+            
+        } catch {
+            // If insert fails (user already has preferences), update existing record
+            let activityPrefsJsonData = try JSONSerialization.data(withJSONObject: preferencesData.activity_preferences)
+            let activityPrefsJsonString = String(data: activityPrefsJsonData, encoding: .utf8) ?? "{}"
+            
+            try await supabase
+                .from("user_preferences")
+                .update([
+                    "energy_level": preferencesData.energy_level,
+                    "social_preference": preferencesData.social_preference,
+                    "time_preference": preferencesData.time_preference,
+                    "budget_range": preferencesData.budget_range,
+                    "activity_preferences": activityPrefsJsonString,
+                    "max_walking_distance": preferencesData.max_walking_distance,
+                    "transportation_preference": preferencesData.transportation_preference,
+                    "accommodation_style": preferencesData.accommodation_style,
+                    "planning_style": preferencesData.planning_style,
+                    "risk_tolerance": preferencesData.risk_tolerance,
+                    "cultural_immersion": preferencesData.cultural_immersion,
+                    "crowd_tolerance": preferencesData.crowd_tolerance,
+                    "updated_at": ISO8601DateFormatter().string(from: Date())
+                ])
+                .eq("user_id", value: userId.uuidString)
+                .execute()
+            
+            print("User preferences updated successfully")
+        }
+    }
+
+    func fetchUserPreferences() async throws -> UserPreferences? {
+        guard let userId = supabase.auth.currentUser?.id else {
+            return nil
+        }
+        
+        struct UserPreferencesResponse: Codable {
+            let id: String
+            let user_id: String
+            let energy_level: String
+            let social_preference: String
+            let time_preference: String
+            let budget_range: String
+            let activity_preferences: [String: String]
+            let max_walking_distance: String
+            let transportation_preference: String
+            let accommodation_style: String
+            let planning_style: String
+            let risk_tolerance: String
+            let cultural_immersion: String
+            let crowd_tolerance: String
+            let created_at: String
+            let updated_at: String
+        }
+        
+        let response: [UserPreferencesResponse] = try await supabase
+            .from("user_preferences")
+            .select()
+            .eq("user_id", value: userId.uuidString)
+            .limit(1)
+            .execute()
+            .value
+        
+        guard let prefsData = response.first else {
+            return nil
+        }
+        
+        // Convert response to UserPreferences model
+        var preferences = UserPreferences(userId: userId)
+        preferences.travelStyle.energyLevel = TravelStylePreferences.EnergyLevel(rawValue: prefsData.energy_level) ?? .balanced
+        preferences.travelStyle.socialPreference = TravelStylePreferences.SocialPreference(rawValue: prefsData.social_preference) ?? .flexible
+        preferences.travelStyle.timePreference = TravelStylePreferences.TimePreference(rawValue: prefsData.time_preference) ?? .flexible
+        preferences.travelStyle.budgetRange = TravelStylePreferences.BudgetRange(rawValue: prefsData.budget_range) ?? .moderate
+        
+        // Convert activity preferences back from dictionary
+        for (activityKey, levelValue) in prefsData.activity_preferences {
+            if let activity = ActivityPreferences.ActivityType(rawValue: activityKey),
+               let level = ActivityPreferences.PreferenceLevel(rawValue: levelValue) {
+                preferences.activityPreferences.preferences[activity] = level
+            }
+        }
+        
+        preferences.practicalPreferences.maxWalkingDistance = PracticalPreferences.WalkingDistance(rawValue: prefsData.max_walking_distance) ?? .moderate
+        preferences.practicalPreferences.transportationPreference = PracticalPreferences.TransportationPreference(rawValue: prefsData.transportation_preference) ?? .flexible
+        preferences.practicalPreferences.accommodationStyle = PracticalPreferences.AccommodationStyle(rawValue: prefsData.accommodation_style) ?? .flexible
+        
+        preferences.additionalPreferences.planningStyle = AdditionalPreferences.PlanningStyle(rawValue: prefsData.planning_style) ?? .structured
+        preferences.additionalPreferences.riskTolerance = AdditionalPreferences.RiskTolerance(rawValue: prefsData.risk_tolerance) ?? .moderate
+        preferences.additionalPreferences.culturalImmersion = AdditionalPreferences.CulturalImmersion(rawValue: prefsData.cultural_immersion) ?? .moderate
+        preferences.additionalPreferences.crowdTolerance = AdditionalPreferences.CrowdTolerance(rawValue: prefsData.crowd_tolerance) ?? .moderate
+        
+        // Set timestamps
+        let dateFormatter = ISO8601DateFormatter()
+        preferences.updatedAt = dateFormatter.date(from: prefsData.updated_at) ?? Date()
+        
+        return preferences
+    }
+
     // MARK: - Future Features (Untested)
 
     // EVERYTHING UNDERNEATH THIS COMMENT HAS NOT BEEN TESTED YET, I HAVE NO CLUE IF THEY WORK (but i feel like they mostly should)
-
-    // fetches all of the reviews of a specific recommended place (this is how i will calculate the avg rating for a restaurant, etc.)
-    func fetchRecReviews(recId: UUID) async throws -> [Comment] {
-        let reviews: [Comment] = try await supabase.from("comments")
-            .select()
-            .eq("rec_id", value: recId.uuidString)
-            .execute()
-            .value
-        return reviews
-    }
 
     // fetches the itineraries for a given city
     func fetchItineraries(cityId: UUID) async throws -> [Itinerary] {

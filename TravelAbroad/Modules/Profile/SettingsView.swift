@@ -25,75 +25,14 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                             .font(.caption)
                     }
-
-                    HStack {
-                        Image(systemName: "heart.circle")
-                            .foregroundColor(.red)
-                            .frame(width: 24)
-                        Text("Travel History")
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
-                    }
-
-                    HStack {
-                        Image(systemName: "list.bullet.circle")
-                            .foregroundColor(.orange)
-                            .frame(width: 24)
-                        Text("Bucket List")
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
-                    }
-                }
-
-                Section("Preferences") {
-                    HStack {
-                        Image(systemName: "bell.circle")
-                            .foregroundColor(.purple)
-                            .frame(width: 24)
-                        Text("Notifications")
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
-                    }
-
-                    HStack {
-                        Image(systemName: "lock.circle")
-                            .foregroundColor(.gray)
-                            .frame(width: 24)
-                        Text("Privacy")
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
-                    }
-                }
-
-                Section("Support") {
-                    HStack {
-                        Image(systemName: "questionmark.circle")
-                            .foregroundColor(.blue)
-                            .frame(width: 24)
-                        Text("Help & FAQ")
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
-                    }
-
-                    HStack {
-                        Image(systemName: "envelope.circle")
-                            .foregroundColor(.green)
-                            .frame(width: 24)
-                        Text("Contact Us")
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
+                    
+                    NavigationLink(destination: PreferencesEditView()) {
+                        HStack {
+                            Image(systemName: "slider.horizontal.3")
+                                .foregroundColor(.blue)
+                                .frame(width: 24)
+                            Text("Travel Preferences")
+                        }
                     }
                 }
 

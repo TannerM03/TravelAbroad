@@ -180,10 +180,6 @@ class OnboardingViewModel: ObservableObject {
         preferences.additionalPreferences.culturalImmersion = cultural
     }
     
-    func updateWeatherSensitivity(_ weather: AdditionalPreferences.WeatherSensitivity) {
-        preferences.additionalPreferences.weatherSensitivity = weather
-    }
-    
     func updateCrowdTolerance(_ crowd: AdditionalPreferences.CrowdTolerance) {
         preferences.additionalPreferences.crowdTolerance = crowd
     }
@@ -194,24 +190,10 @@ class OnboardingViewModel: ObservableObject {
         isLoading = true
         
         do {
-            // TODO: Implement backend integration
             // Save preferences to Supabase database
-            // Example:
-            // try await SupabaseManager.shared.saveUserPreferences(preferences)
+            try await SupabaseManager.shared.saveUserPreferences(preferences)
             
-            // Simulate network delay for now
-            try await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
-            
-            print("✅ User preferences saved successfully")
-            print("🎯 Energy Level: \\(preferences.travelStyle.energyLevel.displayName)")
-            print("👥 Social: \\(preferences.travelStyle.socialPreference.displayName)")
-            print("⏰ Time: \\(preferences.travelStyle.timePreference.displayName)")
-            print("💰 Budget: \\(preferences.travelStyle.budgetRange.displayName)")
-            print("🚶 Walking: \\(preferences.practicalPreferences.maxWalkingDistance.displayName)")
-            
-            for (activity, level) in preferences.activityPreferences.preferences {
-                print("\(activity.displayName): \(level.displayName)")
-            }
+            print("✅ Onboarding completed - preferences saved")
             
         } catch {
             showError = true

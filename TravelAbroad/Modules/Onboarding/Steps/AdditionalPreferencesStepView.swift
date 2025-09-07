@@ -16,7 +16,6 @@ struct AdditionalPreferencesStepView: View {
                 riskToleranceSection
                 culturalImmersionSection
                 crowdToleranceSection
-                weatherSensitivitySection
                 Spacer(minLength: 20)
             }
             .padding(.horizontal, 24)
@@ -82,18 +81,6 @@ struct AdditionalPreferencesStepView: View {
             optionDisplayName: { $0.displayName }
         ) { option in
             vm.updateCrowdTolerance(option)
-        }
-    }
-    
-    private var weatherSensitivitySection: some View {
-        CompactPreferenceSection(
-            title: "Weather Dependency",
-            icon: "cloud.sun",
-            options: AdditionalPreferences.WeatherSensitivity.allCases,
-            selectedOption: vm.preferences.additionalPreferences.weatherSensitivity,
-            optionDisplayName: { $0.displayName }
-        ) { option in
-            vm.updateWeatherSensitivity(option)
         }
     }
 }
