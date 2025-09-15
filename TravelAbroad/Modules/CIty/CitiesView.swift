@@ -9,7 +9,7 @@ import SwiftUI
 
 // This view will be the home page where users can select between cities to see reviews for
 struct CitiesView: View {
-    @ObservedObject var vm: CityListViewModel
+    @Bindable var vm: CityListViewModel
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
     private var groupedCities: [String: [City]] {
         Dictionary(grouping: vm.sortedCities) { city in

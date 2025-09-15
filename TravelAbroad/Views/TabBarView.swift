@@ -9,8 +9,8 @@ import SwiftUI
 
 struct TabBarView: View {
     @Binding var isAuthenticated: Bool
-    @StateObject private var cityListViewModel = CityListViewModel()
-    @StateObject private var profileViewModel = ProfileViewModel()
+    @State private var cityListViewModel = CityListViewModel()
+    @State private var profileViewModel = ProfileViewModel()
 
     var body: some View {
         TabView {

@@ -10,7 +10,7 @@ import SwiftUI
 struct SettingsView: View {
     @Binding var isAuthenticated: Bool
     @State private var showLogoutDialog = false
-    @StateObject var vm = ProfileViewModel()
+    @State var vm = ProfileViewModel()
     var body: some View {
         NavigationStack {
             Form {

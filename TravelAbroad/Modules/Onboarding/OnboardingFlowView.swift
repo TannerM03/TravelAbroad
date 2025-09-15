@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct OnboardingFlowView: View {
-    @StateObject private var vm = OnboardingViewModel()
+    @State private var vm = OnboardingViewModel()
     @Binding var shouldShowOnboarding: Bool
     
     var body: some View {

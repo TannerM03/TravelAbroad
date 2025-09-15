@@ -6,7 +6,7 @@
 import SwiftUI
 
 struct ActivityPreferencesStepView: View {
-    @ObservedObject var vm: OnboardingViewModel
+    @Bindable var vm: OnboardingViewModel
     
     var body: some View {
         VStack(spacing: 0) {
@@ -97,7 +97,7 @@ struct DropZone: View {
     let color: Color
     let activities: [ActivityPreferences.ActivityType]
     let preferenceLevel: ActivityPreferences.PreferenceLevel
-    @ObservedObject var vm: OnboardingViewModel
+    @Bindable var vm: OnboardingViewModel
     
     @State private var isTargeted = false
     
@@ -189,7 +189,7 @@ struct DropZone: View {
 
 struct ActivityCard: View {
     let activity: ActivityPreferences.ActivityType
-    @ObservedObject var vm: OnboardingViewModel
+    @Bindable var vm: OnboardingViewModel
     @State private var dragOffset = CGSize.zero
     
     var body: some View {
@@ -232,7 +232,7 @@ struct ActivityCard: View {
 struct SmallActivityCard: View {
     let activity: ActivityPreferences.ActivityType
     let color: Color
-    @ObservedObject var vm: OnboardingViewModel
+    @Bindable var vm: OnboardingViewModel
     
     var body: some View {
         HStack(spacing: 8) {

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PreferencesEditView: View {
-    @StateObject private var viewModel = PreferencesEditViewModel()
+    @State private var viewModel = PreferencesEditViewModel()
     
     var body: some View {
         NavigationView {

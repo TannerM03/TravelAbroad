@@ -9,18 +9,20 @@ import Foundation
 import PhotosUI
 import Supabase
 import SwiftUI
+import Observation
 
 @MainActor
-class ProfileViewModel: ObservableObject {
-    @Published var username: String = ""
-    @Published var user: User?
-    @Published var profileImageURL: String?
-    @Published var userId: UUID? = nil
-    @Published var imageState: ImageState = .empty
-    @Published var citiesVisited: Int = 0
-    @Published var spotsReviewed: Int = 0
-    @Published var countriesVisited: Int = 0
-    @Published var imageSelection: PhotosPickerItem? = nil {
+@Observable
+class ProfileViewModel {
+    var username: String = ""
+    var user: User?
+    var profileImageURL: String?
+    var userId: UUID? = nil
+    var imageState: ImageState = .empty
+    var citiesVisited: Int = 0
+    var spotsReviewed: Int = 0
+    var countriesVisited: Int = 0
+    var imageSelection: PhotosPickerItem? = nil {
         didSet {
             if let imageSelection {
                 let progress = loadTransferable(from: imageSelection)

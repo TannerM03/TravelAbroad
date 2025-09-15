@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct CitiesGridView: View {
-    @ObservedObject var vm: TravelHistoryViewModel
+    @Bindable var vm: TravelHistoryViewModel
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
     var body: some View {

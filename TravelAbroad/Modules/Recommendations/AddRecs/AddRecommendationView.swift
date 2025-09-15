@@ -12,14 +12,14 @@ struct AddRecommendationView: View {
     let cityName: String
     let selectedCategory: CategoryType
 
-    @StateObject private var viewModel: AddRecommendationViewModel
+    @State private var viewModel: AddRecommendationViewModel
     @Environment(\.dismiss) private var dismiss
 
     init(cityId: String, cityName: String, selectedCategory: CategoryType) {
         self.cityId = cityId
         self.cityName = cityName
         self.selectedCategory = selectedCategory
-        _viewModel = StateObject(wrappedValue: AddRecommendationViewModel(
+        _viewModel = State(wrappedValue: AddRecommendationViewModel(
             cityId: cityId,
             cityName: cityName,
             selectedCategory: selectedCategory
