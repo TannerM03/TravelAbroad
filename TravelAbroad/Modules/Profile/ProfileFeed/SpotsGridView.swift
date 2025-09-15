@@ -28,7 +28,7 @@ struct ReviewedSpot: Identifiable, Codable {
 }
 
 struct SpotsGridView: View {
-    @ObservedObject var vm: SpotsViewModel
+    @Bindable var vm: SpotsViewModel
 
     var body: some View {
         VStack {

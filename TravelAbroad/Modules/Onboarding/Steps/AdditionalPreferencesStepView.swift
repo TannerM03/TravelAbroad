@@ -6,7 +6,7 @@
 import SwiftUI
 
 struct AdditionalPreferencesStepView: View {
-    @ObservedObject var vm: OnboardingViewModel
+    @Bindable var vm: OnboardingViewModel
     
     var body: some View {
         ScrollView {

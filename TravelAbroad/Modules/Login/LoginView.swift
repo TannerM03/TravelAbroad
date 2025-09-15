@@ -7,8 +7,8 @@ import Foundation
 import SwiftUI
 
 struct LoginView: View {
-    @StateObject private var vm = LoginViewModel()
-    @StateObject private var profileVm = ProfileViewModel()
+    @State private var vm = LoginViewModel()
+    @State private var profileVm = ProfileViewModel()
     @Binding var isAuthenticated: Bool
     @Binding var shouldShowOnboarding: Bool
 

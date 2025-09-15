@@ -7,14 +7,16 @@
 
 import Foundation
 import UIKit
+import Observation
 
 @MainActor
-class CommentsViewModel: ObservableObject {
-    @Published var comments: [Comment] = []
-    @Published var isLoading = false
-    @Published var userRating: Double? = nil
-    @Published var recommendation: Recommendation?
-    @Published var isGeneratingSummary: Bool = false
+@Observable
+class CommentsViewModel {
+    var comments: [Comment] = []
+    var isLoading = false
+    var userRating: Double? = nil
+    var recommendation: Recommendation?
+    var isGeneratingSummary: Bool = false
 
     private let supabaseManager = SupabaseManager.shared
 

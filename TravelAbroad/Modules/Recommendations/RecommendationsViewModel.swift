@@ -7,27 +7,29 @@
 
 import Foundation
 import Supabase
+import Observation
 
 @MainActor
-class RecommendationsViewModel: ObservableObject {
-    @Published var recommendations: [Recommendation] = []
-    @Published var isLoading = false
-    @Published var userId: UUID = .init()
-    @Published var user: User?
-    @Published var userRating: Double? = nil
-    @Published var selectedCategory: CategoryType? = .activities
-    @Published var isFavoriteCity: Bool = false
-    @Published var tempRating: Double? = nil
-    @Published var userSearch: String = ""
-    @Published var isRatingOverlay = false
-    @Published var cityId: String = ""
-    @Published var cityName: String = ""
-    @Published var imageUrl: String = ""
-    @Published var isBucketList: Bool = false
-    @Published var latitude: Double = 0.0
-    @Published var longitude: Double = 0.0
-    @Published var avgRating: Double = 0.0
-    @Published var showSubmittedAlert: Bool = false
+@Observable
+class RecommendationsViewModel {
+    var recommendations: [Recommendation] = []
+    var isLoading = false
+    var userId: UUID = .init()
+    var user: User?
+    var userRating: Double? = nil
+    var selectedCategory: CategoryType? = .activities
+    var isFavoriteCity: Bool = false
+    var tempRating: Double? = nil
+    var userSearch: String = ""
+    var isRatingOverlay = false
+    var cityId: String = ""
+    var cityName: String = ""
+    var imageUrl: String = ""
+    var isBucketList: Bool = false
+    var latitude: Double = 0.0
+    var longitude: Double = 0.0
+    var avgRating: Double = 0.0
+    var showSubmittedAlert: Bool = false
 
     var onRatingUpdated: ((Double) -> Void)?
 

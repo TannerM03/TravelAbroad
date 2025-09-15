@@ -10,7 +10,7 @@ import SwiftUI
 import UIKit
 
 struct RecommendationsView: View {
-    @StateObject var vm = RecommendationsViewModel()
+    @State var vm = RecommendationsViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var showingAddRecommendation = false
     let cityId: String

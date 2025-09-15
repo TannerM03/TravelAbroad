@@ -7,20 +7,22 @@
 
 import Foundation
 import SwiftUI
+import Observation
 
 @MainActor
-class OnboardingViewModel: ObservableObject {
-    @Published var currentStep: OnboardingStep = .welcome
-    @Published var preferences: UserPreferences
-    @Published var isLoading = false
-    @Published var showError = false
-    @Published var errorMessage = ""
+@Observable
+class OnboardingViewModel {
+    var currentStep: OnboardingStep = .welcome
+    var preferences: UserPreferences
+    var isLoading = false
+    var showError = false
+    var errorMessage = ""
     
     // Activity drag & drop state
-    @Published var draggedActivity: ActivityPreferences.ActivityType?
-    @Published var loveItActivities: [ActivityPreferences.ActivityType] = []
-    @Published var likeItActivities: [ActivityPreferences.ActivityType] = []
-    @Published var notMyFavActivities: [ActivityPreferences.ActivityType] = []
+    var draggedActivity: ActivityPreferences.ActivityType?
+    var loveItActivities: [ActivityPreferences.ActivityType] = []
+    var likeItActivities: [ActivityPreferences.ActivityType] = []
+    var notMyFavActivities: [ActivityPreferences.ActivityType] = []
     
     init() {
         // Initialize with placeholder - will be updated when user is loaded

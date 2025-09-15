@@ -7,15 +7,17 @@
 
 import Foundation
 import Supabase
+import Observation
 
 @MainActor
-class LoginViewModel: ObservableObject {
-    @Published var loginCredential: String = ""
-    @Published var password: String = ""
-    @Published var isSignUp: Bool = false
-    @Published var errorMessage: String?
-    @Published var isLoading: Bool = false
-    @Published var username: String = ""
+@Observable
+class LoginViewModel {
+    var loginCredential: String = ""
+    var password: String = ""
+    var isSignUp: Bool = false
+    var errorMessage: String?
+    var isLoading: Bool = false
+    var username: String = ""
     private var email: String? = nil
 
     func authAction() async -> Bool {

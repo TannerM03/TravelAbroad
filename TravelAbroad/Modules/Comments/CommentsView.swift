@@ -10,7 +10,7 @@ import SwiftUI
 
 struct CommentsView: View {
     let recommendation: Recommendation
-    @StateObject private var vm = CommentsViewModel()
+    @State private var vm = CommentsViewModel()
     @State private var newCommentText = ""
     @State private var showingImagePicker = false
     @State private var selectedImage: UIImage?

@@ -7,13 +7,15 @@
 
 import Foundation
 import Supabase
+import Observation
 
 @MainActor
-class SpotsViewModel: ObservableObject {
-    @Published var spots: [ReviewedSpot] = []
-    @Published var isLoading = false
-    @Published var userId: UUID?
-    @Published var user: User?
+@Observable
+class SpotsViewModel {
+    var spots: [ReviewedSpot] = []
+    var isLoading = false
+    var userId: UUID?
+    var user: User?
 
     func fetchUser() async {
         do {

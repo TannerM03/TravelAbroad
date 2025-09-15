@@ -11,10 +11,10 @@ import SwiftUI
 
 struct ProfileView: View {
     @Binding var isAuthenticated: Bool
-    @ObservedObject var vm: ProfileViewModel
+    @Bindable var vm: ProfileViewModel
     @StateObject private var bucketListViewModel = BucketListViewModel()
-    @StateObject private var travelHistoryViewModel = TravelHistoryViewModel()
-    @StateObject private var spotsViewModel = SpotsViewModel()
+    @State private var travelHistoryViewModel = TravelHistoryViewModel()
+    @State private var spotsViewModel = SpotsViewModel()
     @State private var profileImage: Image? = nil
     @State private var selectedUIImage: UIImage? = nil
     @State private var fromProfile = true

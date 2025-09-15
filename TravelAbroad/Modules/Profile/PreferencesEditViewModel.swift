@@ -6,14 +6,16 @@
 //
 
 import Foundation
+import Observation
 
 @MainActor
-class PreferencesEditViewModel: ObservableObject {
-    @Published var preferences: UserPreferences?
-    @Published var isLoading = false
-    @Published var isSaving = false
-    @Published var showError = false
-    @Published var errorMessage = ""
+@Observable
+class PreferencesEditViewModel {
+    var preferences: UserPreferences?
+    var isLoading = false
+    var isSaving = false
+    var showError = false
+    var errorMessage = ""
     
     func loadPreferences() async {
         isLoading = true
