@@ -99,11 +99,11 @@ struct Recommendation: Codable, Identifiable {
 }
 
 enum CategoryType: String, Codable, CaseIterable {
-    case activities = "activity"
-    case nightlife
-    case restaurants = "restaurant"
-    case hostels = "hostel"
     case sights = "sight"
+    case restaurants = "restaurant"
+    case nightlife
+    case activities = "activity"
+    case hostels = "hostel"
     case other
 }
 

@@ -76,7 +76,7 @@ struct RecommendationsView: View {
             AddRecommendationView(
                 cityId: cityId,
                 cityName: cityName,
-                selectedCategory: vm.selectedCategory ?? CategoryType.activities
+                selectedCategory: vm.selectedCategory ?? CategoryType.sights
             )
             .onDisappear {
                 // Refresh recommendations when returning from add view
@@ -129,21 +129,22 @@ struct RecommendationsView: View {
                     Spacer()
 
                     ratingButton
-
-                    Button {
-                        Task {
-                            await vm.addOrRemoveFavorite(cityId: UUID(uuidString: vm.cityId) ?? UUID())
-                        }
-                    } label: {
-                        Image(systemName: vm.isFavoriteCity ? "bookmark.fill" : "bookmark")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .padding(12)
-                            .background(.ultraThinMaterial)
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
-                    }
+                    
+/// Bookmark button - might use this later if i want to have a bucket list somewhere
+//                    Button {
+//                        Task {
+//                            await vm.addOrRemoveFavorite(cityId: UUID(uuidString: vm.cityId) ?? UUID())
+//                        }
+//                    } label: {
+//                        Image(systemName: vm.isFavoriteCity ? "bookmark.fill" : "bookmark")
+//                            .font(.title3)
+//                            .fontWeight(.semibold)
+//                            .foregroundColor(.white)
+//                            .padding(12)
+//                            .background(.ultraThinMaterial)
+//                            .clipShape(Circle())
+//                            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+//                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 60)

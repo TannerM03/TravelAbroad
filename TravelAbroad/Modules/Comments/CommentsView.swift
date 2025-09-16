@@ -469,10 +469,19 @@ struct CommentCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 5) {
-                Text(comment.username ?? "Anonymous")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .padding(.trailing, 5)
+                Button(action: {
+                    // Switch to Social tab and pass the user ID
+                    NotificationCenter.default.post(
+                        name: Notification.Name("SwitchToSocialTab"),
+                        object: comment.userId
+                    )
+                }) {
+                    Text(comment.username ?? "Anonymous")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.blue)
+                }
+                .padding(.trailing, 5)
 
                 Spacer()
 

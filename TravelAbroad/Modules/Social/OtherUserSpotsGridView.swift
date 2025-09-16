@@ -2,33 +2,14 @@
 //  SpotsGridView.swift
 //  TravelAbroad
 //
-//  Created by Tanner Macpherson on 8/4/25.
+//  Created by Tanner Macpherson on 9/16/25.
 //
 
 import Kingfisher
 import SwiftUI
 
-struct ReviewedSpot: Identifiable, Codable {
-    let id = UUID()
-    let recommendation: Recommendation
-    let comment: String?
-    let userRating: Double
-    let cityName: String
-    let country: String
-    let createdAt: Date
-
-    enum CodingKeys: String, CodingKey {
-        case recommendation
-        case comment
-        case userRating = "rating"
-        case cityName
-        case country
-        case createdAt = "created_at"
-    }
-}
-
-struct SpotsGridView: View {
-    @Bindable var vm: SpotsViewModel
+struct OtherUserSpotsGridView: View {
+    @Bindable var vm: OtherUserSpotsViewModel
 
     var body: some View {
         VStack {
@@ -36,16 +17,15 @@ struct SpotsGridView: View {
         }
         .task {
             if vm.userId == nil {
-                await vm.fetchUser()
                 if let userId = vm.userId, vm.spots.isEmpty {
-                    await vm.getReviewedSpots(userId: userId, showLoading: true)
+                    await vm.getReviewedSpots(showLoading: true)
                 }
             }
         }
         .onAppear {
             if let userId = vm.userId, vm.spots.isEmpty {
                 Task {
-                    await vm.getReviewedSpots(userId: userId, showLoading: false)
+                    await vm.getReviewedSpots(showLoading: false)
                 }
             }
         }
@@ -57,7 +37,7 @@ struct SpotsGridView: View {
     private var spotsListSection: some View {
         LazyVStack(spacing: 12) {
             ForEach(vm.spots) { spot in
-                SpotCard(spot: spot)
+                OtherSpotCard(spot: spot)
             }
         }
         .padding(.horizontal, 16)
@@ -68,13 +48,13 @@ struct SpotsGridView: View {
             if vm.isLoading {
                 ProgressView("Loading Spots...")
             } else if vm.spots.isEmpty {
-                Text("Review your first spot to see them here!")
+                Text("This user hasn't reviewed any spots yet.")
             }
         }
     }
 }
 
-struct SpotCard: View {
+struct OtherSpotCard: View {
     let spot: ReviewedSpot
     
     private var categoryIcon: String {
@@ -167,7 +147,7 @@ struct SpotCard: View {
                                 .foregroundColor(.yellow)
                                 .font(.caption)
                         }
-                        Text("Your Rating")
+                        Text("User Rating")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                             .padding(.leading, 4)
