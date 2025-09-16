@@ -10,6 +10,17 @@ import SwiftUI
 
 struct RecommendationsCardView: View {
     let rec: Recommendation
+    
+    private var categoryIcon: String {
+        switch rec.category {
+        case .activities: return "figure.hiking"
+        case .nightlife: return "music.note"
+        case .restaurants: return "fork.knife"
+        case .hostels: return "bed.double"
+        case .sights: return "camera"
+        case .other: return "location"
+        }
+    }
 
     var body: some View {
         NavigationLink(destination: CommentsView(recommendation: rec)) {
@@ -22,12 +33,14 @@ struct RecommendationsCardView: View {
                         .clipped()
                         .cornerRadius(15)
                 } else {
-                    KFImage(URL(string: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0"))
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 170)
-                        .clipped()
-                        .cornerRadius(15)
+                    ZStack {
+                        rec.category.pillColor.opacity(0.3)
+                        Image(systemName: categoryIcon)
+                            .font(.system(size: 40))
+                            .foregroundColor(rec.category.pillColor)
+                    }
+                    .frame(height: 170)
+                    .cornerRadius(15)
                 }
 
                 HStack(alignment: .center, spacing: 8) {

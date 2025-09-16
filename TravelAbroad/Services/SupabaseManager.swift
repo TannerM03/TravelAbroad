@@ -569,12 +569,14 @@ class SupabaseManager {
     }
 
     func fetchTravelStats(userId: UUID) async throws -> TravelStats {
+        print("running stats in supapasbe")
         let stats: [TravelStats] = try await supabase
             .from("user_travel_stats")
             .select("*")
             .eq("user_id", value: userId)
             .execute()
             .value
+        print("stats: \(stats)")
 
         return stats.first ?? TravelStats(userId: userId.uuidString, countriesVisited: 0, citiesVisited: 0, spotsVisited: 0)
     }
@@ -868,7 +870,7 @@ class SupabaseManager {
         struct ReviewedSpotResponse: Codable {
             let rec_id: String
             let rating: Int
-            let comment: String
+            let comment: String?
             let created_at: Date
             let rec_with_avg_rating: RecommendationWithCityName
 

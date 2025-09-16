@@ -17,7 +17,7 @@ class RecommendationsViewModel {
     var userId: UUID = .init()
     var user: User?
     var userRating: Double? = nil
-    var selectedCategory: CategoryType? = .activities
+    var selectedCategory: CategoryType? = .sights
     var isFavoriteCity: Bool = false
     var tempRating: Double? = nil
     var userSearch: String = ""
