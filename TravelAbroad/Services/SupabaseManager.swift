@@ -300,8 +300,38 @@ class SupabaseManager {
             imageUrl: response.imageUrl,
             username: response.profiles?.username,
         )
+        
+        // If comment has an image, check if recommendation needs an image
+        if let commentImageUrl = imageUrl {
+            try await updateRecommendationImageIfNeeded(recommendationId: recommendationId, imageUrl: commentImageUrl)
+        }
 
         return newComment
+    }
+    
+    // Helper method to update recommendation image if it doesn't have one
+    private func updateRecommendationImageIfNeeded(recommendationId: String, imageUrl: String) async throws {
+        // First check if the recommendation already has an image
+        struct RecommendationImage: Codable {
+            let image_url: String?
+        }
+        
+        let currentRec: RecommendationImage = try await supabase
+            .from("recommendations")
+            .select("image_url")
+            .eq("id", value: recommendationId)
+            .single()
+            .execute()
+            .value
+        
+        // If recommendation doesn't have an image, update it with the comment's image
+        if currentRec.image_url == nil || currentRec.image_url?.isEmpty == true {
+            try await supabase
+                .from("recommendations")
+                .update(["image_url": imageUrl])
+                .eq("id", value: recommendationId)
+                .execute()
+        }
     }
 
     func uploadCommentImage(_ image: UIImage) async throws -> String {
@@ -384,6 +414,151 @@ class SupabaseManager {
                 .eq("user_id", value: userId.uuidString)
                 .eq("rec_id", value: recommendationId)
                 .execute()
+        }
+    }
+
+    // MARK: - Comment Voting Functions
+    
+    // Vote on a comment (upvote or downvote)
+    func voteOnComment(commentId: String, voteType: VoteType) async throws {
+        guard let userId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
+        }
+        
+        print("voting on comment in server")
+        
+        // First, remove any existing vote by this user on this comment
+        try await supabase
+            .from("comment_votes")
+            .delete()
+            .eq("user_id", value: userId.uuidString)
+            .eq("comment_id", value: commentId)
+            .execute()
+        
+        // Then insert the new vote
+        struct VoteInsert: Codable {
+            let user_id: String
+            let comment_id: String
+            let vote_type: String
+        }
+        
+        let voteData = VoteInsert(
+            user_id: userId.uuidString,
+            comment_id: commentId,
+            vote_type: voteType.rawValue
+        )
+        
+        try await supabase
+            .from("comment_votes")
+            .insert(voteData)
+            .execute()
+    }
+    
+    // Remove vote from a comment
+    func removeVoteFromComment(commentId: String) async throws {
+        guard let userId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
+        }
+        
+        print("removing vote in server layer")
+        
+        try await supabase
+            .from("comment_votes")
+            .delete()
+            .eq("user_id", value: userId.uuidString)
+            .eq("comment_id", value: commentId)
+            .execute()
+    }
+    
+    // Fetch comments with vote counts and user's vote status
+    func fetchCommentsWithVotes(for recommendationId: String, sortBy: CommentSortOption) async throws -> [Comment] {
+        guard let userId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
+        }
+        
+        // Query your comments_with_votes view and join with user's votes
+        struct CommentWithVotes: Codable {
+            let id: String
+            let user_id: String
+            let rec_id: String
+            let rating: Int
+            let comment: String?
+            let created_at: Date
+            let image_url: String?
+            let username: String?
+            let upvote_count: Int?
+            let downvote_count: Int?
+            let net_votes: Int?
+            
+            // User's vote will come from separate query
+        }
+        
+        // First get comments with vote counts - build query based on sort option
+        let commentsResponse: [CommentWithVotes]
+        
+        switch sortBy {
+        case .upvotes:
+            commentsResponse = try await supabase
+                .from("comments_with_votes")
+                .select("*")
+                .eq("rec_id", value: recommendationId)
+                .order("upvote_count", ascending: false)
+                .order("created_at", ascending: false)
+                .execute()
+                .value
+        case .recent:
+            commentsResponse = try await supabase
+                .from("comments_with_votes")
+                .select("*")
+                .eq("rec_id", value: recommendationId)
+                .order("created_at", ascending: false)
+                .execute()
+                .value
+        case .downvotes:
+            commentsResponse = try await supabase
+                .from("comments_with_votes")
+                .select("*")
+                .eq("rec_id", value: recommendationId)
+                .order("downvote_count", ascending: false)
+                .order("created_at", ascending: false)
+                .execute()
+                .value
+        }
+        
+        // Then get user's votes for these comments
+        let commentIds = commentsResponse.map { $0.id }
+        
+        struct UserVote: Codable {
+            let comment_id: String
+            let vote_type: String
+        }
+        
+        let userVotes: [UserVote] = try await supabase
+            .from("comment_votes")
+            .select("comment_id, vote_type")
+            .eq("user_id", value: userId.uuidString)
+            .in("comment_id", values: commentIds)
+            .execute()
+            .value
+        
+        // Create a lookup dictionary for user votes
+        let userVotesDict = Dictionary(uniqueKeysWithValues: userVotes.map { ($0.comment_id, $0.vote_type) })
+        
+        return commentsResponse.map { commentData in
+            Comment(
+                id: commentData.id,
+                userId: commentData.user_id,
+                recId: commentData.rec_id,
+                rating: commentData.rating,
+                comment: commentData.comment,
+                createdAt: commentData.created_at,
+                imageUrl: commentData.image_url,
+                username: commentData.username,
+                upvoteCount: commentData.upvote_count ?? 0,
+                downvoteCount: commentData.downvote_count ?? 0,
+                netVotes: commentData.net_votes ?? 0,
+                userVote: userVotesDict[commentData.id].flatMap { VoteType(rawValue: $0) }
+            )
         }
     }
 
@@ -610,6 +785,18 @@ class SupabaseManager {
             .eq("user_id", value: userId)
             .execute()
         return num.count ?? 0
+    }
+    
+    func deleteSpotComment(userId: UUID, spotId: UUID) async throws {
+        do {
+            try await supabase.from("comments")
+                .delete()
+                .eq("user_id", value: userId)
+                .eq("rec_id", value: spotId)
+                .execute()
+        } catch {
+            print("supabase delete spot error: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - CityDetailView Functions
@@ -881,7 +1068,7 @@ class SupabaseManager {
             var country: String {
                 return rec_with_avg_rating.cities.country
             }
-
+    
             enum CodingKeys: String, CodingKey {
                 case rec_id
                 case rating

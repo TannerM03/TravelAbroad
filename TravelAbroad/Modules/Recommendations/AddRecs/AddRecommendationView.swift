@@ -68,7 +68,6 @@ struct AddRecommendationView: View {
             }
             .alert("Rating Required", isPresented: $viewModel.showNoRatingAlert) {
                 Button("OK", role: .cancel) {
-                    // Just dismiss the alert
                 }
             } message: {
                 Text("Please select a star rating before submitting your recommendation.")

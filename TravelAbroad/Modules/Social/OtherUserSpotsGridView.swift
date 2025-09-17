@@ -17,13 +17,13 @@ struct OtherUserSpotsGridView: View {
         }
         .task {
             if vm.userId == nil {
-                if let userId = vm.userId, vm.spots.isEmpty {
+                if let _ = vm.userId, vm.spots.isEmpty {
                     await vm.getReviewedSpots(showLoading: true)
                 }
             }
         }
         .onAppear {
-            if let userId = vm.userId, vm.spots.isEmpty {
+            if let _ = vm.userId, vm.spots.isEmpty {
                 Task {
                     await vm.getReviewedSpots(showLoading: false)
                 }
@@ -163,9 +163,8 @@ struct OtherSpotCard: View {
             HStack(alignment: .bottom) {
                 if let comment = spot.comment {
                     Text(comment)
-                        .font(.caption)
+                        .font(.footnote)
                         .foregroundStyle(.primary)
-                        .lineLimit(2)
                 }
 
                 Spacer()
