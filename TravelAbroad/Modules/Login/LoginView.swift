@@ -101,12 +101,12 @@ struct LoginView: View {
             Task {
                 let wasSignUp = vm.isSignUp
                 isAuthenticated = await vm.authAction()
-                
+
                 // Only trigger onboarding for new sign-ups
                 if wasSignUp && isAuthenticated {
                     shouldShowOnboarding = true
                 }
-                
+
                 await profileVm.fetchUser()
             }
         } label: {

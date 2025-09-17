@@ -7,7 +7,7 @@ import SwiftUI
 
 struct AdditionalPreferencesStepView: View {
     @Bindable var vm: OnboardingViewModel
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 28) {
@@ -21,13 +21,13 @@ struct AdditionalPreferencesStepView: View {
             .padding(.horizontal, 24)
         }
     }
-    
+
     private var headerSection: some View {
         VStack(spacing: 12) {
             Text("Final Touches")
                 .font(.title)
                 .fontWeight(.bold)
-            
+
             Text("A few more details to perfect your itineraries")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -35,7 +35,7 @@ struct AdditionalPreferencesStepView: View {
         }
         .padding(.vertical, 20)
     }
-    
+
     private var planningStyleSection: some View {
         CompactPreferenceSection(
             title: "Planning Style",
@@ -47,7 +47,7 @@ struct AdditionalPreferencesStepView: View {
             vm.updatePlanningStyle(option)
         }
     }
-    
+
     private var riskToleranceSection: some View {
         CompactPreferenceSection(
             title: "Adventure Level",
@@ -59,7 +59,7 @@ struct AdditionalPreferencesStepView: View {
             vm.updateRiskTolerance(option)
         }
     }
-    
+
     private var culturalImmersionSection: some View {
         CompactPreferenceSection(
             title: "Cultural Experience",
@@ -71,7 +71,7 @@ struct AdditionalPreferencesStepView: View {
             vm.updateCulturalImmersion(option)
         }
     }
-    
+
     private var crowdToleranceSection: some View {
         CompactPreferenceSection(
             title: "Crowd Preference",
@@ -92,7 +92,7 @@ struct CompactPreferenceSection<T: Equatable>: View {
     let selectedOption: T
     let optionDisplayName: (T) -> String
     let onSelection: (T) -> Void
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
@@ -100,12 +100,12 @@ struct CompactPreferenceSection<T: Equatable>: View {
                     .font(.title3)
                     .foregroundColor(.accentColor)
                     .frame(width: 24)
-                
+
                 Text(title)
                     .font(.headline)
                     .fontWeight(.semibold)
             }
-            
+
             HStack(spacing: 8) {
                 ForEach(Array(options.enumerated()), id: \.offset) { index, option in
                     CompactOptionButton(
@@ -129,7 +129,7 @@ struct CompactOptionButton: View {
     let isFirst: Bool
     let isLast: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Text(title)
@@ -158,7 +158,7 @@ struct SegmentedPreferenceSection<T: Equatable & CaseIterable>: View where T.All
     let selectedOption: T
     let optionDisplayName: (T) -> String
     let onSelection: (T) -> Void
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 12) {
@@ -166,15 +166,15 @@ struct SegmentedPreferenceSection<T: Equatable & CaseIterable>: View where T.All
                     .font(.title3)
                     .foregroundColor(.accentColor)
                     .frame(width: 24)
-                
+
                 Text(title)
                     .font(.headline)
                     .fontWeight(.semibold)
             }
-            
+
             // Custom segmented control
             HStack(spacing: 0) {
-                ForEach(Array(T.allCases.enumerated()), id: \.offset) { index, option in
+                ForEach(Array(T.allCases.enumerated()), id: \.offset) { _, option in
                     Button(action: { onSelection(option) }) {
                         Text(optionDisplayName(option))
                             .font(.subheadline)

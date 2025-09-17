@@ -19,7 +19,7 @@ struct TabBarView: View {
             get: { selectedTab },
             set: { newValue in
                 // If user taps Social tab while already on Social tab with a user selected, reset to default
-                if selectedTab == 1 && newValue == 1 && selectedUserId != nil {
+                if selectedTab == 1, newValue == 1, selectedUserId != nil {
                     selectedUserId = nil
                 } else {
                     selectedTab = newValue
@@ -27,7 +27,7 @@ struct TabBarView: View {
             }
         )
     }
-    
+
     var body: some View {
         TabView(selection: tabSelection) {
             CitiesView(vm: cityListViewModel)

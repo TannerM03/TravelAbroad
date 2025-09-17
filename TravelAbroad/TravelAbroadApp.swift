@@ -31,7 +31,7 @@ struct TravelAbroadApp: App {
             } else {
                 // Show login screen for unauthenticated users
                 LoginView(isAuthenticated: $isAuthenticated, shouldShowOnboarding: $shouldShowOnboarding)
-                    .onChange(of: isAuthenticated) { oldValue, newValue in
+                    .onChange(of: isAuthenticated) { _, newValue in
                         // Reset onboarding flag when user logs out
                         if !newValue {
                             shouldShowOnboarding = false
@@ -41,4 +41,3 @@ struct TravelAbroadApp: App {
         }
     }
 }
-

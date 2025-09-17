@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import Supabase
 import Observation
+import Supabase
 
 @MainActor
 @Observable
@@ -16,10 +16,10 @@ class RecommendationsViewModel {
     var isLoading = false
     var userId: UUID = .init()
     var user: User?
-    var userRating: Double? = nil
+    var userRating: Double?
     var selectedCategory: CategoryType? = .sights
     var isFavoriteCity: Bool = false
-    var tempRating: Double? = nil
+    var tempRating: Double?
     var userSearch: String = ""
     var isRatingOverlay = false
     var cityId: String = ""

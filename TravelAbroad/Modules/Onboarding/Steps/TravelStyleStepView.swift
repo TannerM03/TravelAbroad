@@ -7,7 +7,7 @@ import SwiftUI
 
 struct TravelStyleStepView: View {
     @Bindable var vm: OnboardingViewModel
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 32) {
@@ -21,13 +21,13 @@ struct TravelStyleStepView: View {
             .padding(.horizontal, 24)
         }
     }
-    
+
     private var headerSection: some View {
         VStack(spacing: 12) {
             Text("Your Travel Style")
                 .font(.title)
                 .fontWeight(.bold)
-            
+
             Text("Help us understand how you like to explore")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -35,7 +35,7 @@ struct TravelStyleStepView: View {
         }
         .padding(.vertical, 20)
     }
-    
+
     private var energyLevelSection: some View {
         PreferenceSection(
             title: "Energy Level",
@@ -55,7 +55,7 @@ struct TravelStyleStepView: View {
             }
         }
     }
-    
+
     private var socialPreferenceSection: some View {
         PreferenceSection(
             title: "Group Size",
@@ -75,7 +75,7 @@ struct TravelStyleStepView: View {
             }
         }
     }
-    
+
     private var timePreferenceSection: some View {
         PreferenceSection(
             title: "Daily Schedule",
@@ -95,7 +95,7 @@ struct TravelStyleStepView: View {
             }
         }
     }
-    
+
     private var budgetRangeSection: some View {
         PreferenceSection(
             title: "Budget Range",
@@ -123,27 +123,27 @@ struct PreferenceSection<Content: View>: View {
     let subtitle: String
     let icon: String
     @ViewBuilder let content: Content
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 12) {
                 Image(systemName: icon)
                     .font(.title2)
                     .foregroundColor(.accentColor)
-                
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.headline)
                         .fontWeight(.semibold)
-                    
+
                     Text(subtitle)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
             }
-            
+
             content
         }
         .padding(.vertical, 8)
@@ -156,7 +156,7 @@ struct SelectionCard: View {
     let isSelected: Bool
     let accentColor: Color
     let action: () -> Void
-    
+
     init(
         title: String,
         subtitle: String? = nil,
@@ -170,7 +170,7 @@ struct SelectionCard: View {
         self.accentColor = accentColor
         self.action = action
     }
-    
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 16) {
@@ -179,7 +179,7 @@ struct SelectionCard: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
-                    
+
                     if let subtitle = subtitle {
                         Text(subtitle)
                             .font(.caption)
@@ -187,9 +187,9 @@ struct SelectionCard: View {
                             .multilineTextAlignment(.leading)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
                     .foregroundColor(isSelected ? accentColor : .secondary)

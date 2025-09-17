@@ -38,7 +38,7 @@ struct AddRecommendationView: View {
                     starRatingSection
                     descriptionSection
                     submitSection
-                    
+
                     Spacer(minLength: 100)
                 }
                 .padding(.horizontal, 20)
@@ -67,8 +67,7 @@ struct AddRecommendationView: View {
                 viewModel.dismiss = { dismiss() }
             }
             .alert("Rating Required", isPresented: $viewModel.showNoRatingAlert) {
-                Button("OK", role: .cancel) {
-                }
+                Button("OK", role: .cancel) {}
             } message: {
                 Text("Please select a star rating before submitting your recommendation.")
             }
@@ -122,13 +121,13 @@ struct AddRecommendationView: View {
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
-    
+
     private var imageSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Photo")
                 .font(.headline)
                 .fontWeight(.semibold)
-            
+
             Button {
                 showingImagePicker = true
             } label: {
@@ -171,7 +170,6 @@ struct AddRecommendationView: View {
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 
-
     private var starRatingSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Rating")
@@ -184,6 +182,7 @@ struct AddRecommendationView: View {
                 ForEach(1 ... 5, id: \.self) { i in
                     Button(action: {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            print("userRating: \(i)")
                             viewModel.userRating = i
                         }
                     }) {

@@ -42,7 +42,6 @@ class ConfigManager {
         return getValue(for: "SupabaseKey")
     }
 
-
     var openAIKey: String {
         return getValue(for: "OpenAIKey")
     }

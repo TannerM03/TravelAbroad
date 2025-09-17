@@ -6,15 +6,15 @@
 //
 
 import Foundation
-import UIKit
 import Observation
+import UIKit
 
 @MainActor
 @Observable
 class CommentsViewModel {
     var comments: [Comment] = []
     var isLoading = false
-    var userRating: Double? = nil
+    var userRating: Double?
     var recommendation: Recommendation?
     var isGeneratingSummary: Bool = false
     var sortOption: CommentSortOption = .recent
@@ -45,7 +45,7 @@ class CommentsViewModel {
 
         isLoading = false
     }
-    
+
     private func applySorting() {
         switch sortOption {
         case .upvotes:
@@ -59,7 +59,7 @@ class CommentsViewModel {
 
     func submitComment(recommendationId: String, text: String?, image: UIImage?, rating: Int) async {
         do {
-            var imageUrl: String? = nil
+            var imageUrl: String?
 
             if let image = image {
                 imageUrl = try await supabaseManager.uploadCommentImage(image)
@@ -125,17 +125,17 @@ class CommentsViewModel {
             print("Error refreshing recommendation data: \(error)")
         }
     }
-    
+
     func toggleVote(commentId: String, voteType: VoteType) async {
         guard let commentIndex = comments.firstIndex(where: { $0.id == commentId }) else { return }
         var comment = comments[commentIndex]
-        
+
         do {
             if comment.userVote == voteType {
                 // Remove vote if same type clicked
                 try await supabaseManager.removeVoteFromComment(commentId: commentId)
                 comment.userVote = nil
-                
+
                 // Update local counts
                 if voteType == .upvote {
                     comment.upvoteCount = max(0, comment.upvoteCount - 1)
@@ -145,7 +145,7 @@ class CommentsViewModel {
             } else {
                 // Add/change vote
                 try await supabaseManager.voteOnComment(commentId: commentId, voteType: voteType)
-                
+
                 // Remove previous vote if exists
                 if let previousVote = comment.userVote {
                     if previousVote == .upvote {
@@ -154,10 +154,10 @@ class CommentsViewModel {
                         comment.downvoteCount = max(0, comment.downvoteCount - 1)
                     }
                 }
-                
+
                 // Add new vote
                 comment.userVote = voteType
-                
+
                 // Update local counts
                 if voteType == .upvote {
                     comment.upvoteCount += 1
@@ -165,24 +165,24 @@ class CommentsViewModel {
                     comment.downvoteCount += 1
                 }
             }
-            
+
             // Update net votes
             comment.netVotes = comment.upvoteCount - comment.downvoteCount
-            
+
             // Update the comment in array
             comments[commentIndex] = comment
-            
+
             // Re-apply sorting
             applySorting()
-            
+
         } catch {
             print("Error toggling vote: \(error)")
         }
     }
-    
+
     func updateSortOption(_ newOption: CommentSortOption) {
         sortOption = newOption
-        
+
         // Re-fetch comments with new sorting from backend
         if let recId = recommendation?.id {
             Task {

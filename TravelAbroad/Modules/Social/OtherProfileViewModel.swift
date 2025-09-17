@@ -6,10 +6,10 @@
 //
 
 import Foundation
+import Observation
 import PhotosUI
 import Supabase
 import SwiftUI
-import Observation
 
 @MainActor
 @Observable
@@ -24,7 +24,7 @@ class OtherProfileViewModel {
     var countriesVisited: Int = 0
 
     private var imageCache: [String: Image] = [:]
-    
+
     init(userId: String) {
         self.userId = UUID(uuidString: userId) ?? nil
     }

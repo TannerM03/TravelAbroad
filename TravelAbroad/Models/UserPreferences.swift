@@ -18,16 +18,16 @@ struct UserPreferences: Codable {
     var additionalPreferences: AdditionalPreferences
     let createdAt: Date
     var updatedAt: Date
-    
+
     init(userId: UUID) {
-        self.id = UUID()
+        id = UUID()
         self.userId = userId
-        self.travelStyle = TravelStylePreferences()
-        self.activityPreferences = ActivityPreferences()
-        self.practicalPreferences = PracticalPreferences()
-        self.additionalPreferences = AdditionalPreferences()
-        self.createdAt = Date()
-        self.updatedAt = Date()
+        travelStyle = TravelStylePreferences()
+        activityPreferences = ActivityPreferences()
+        practicalPreferences = PracticalPreferences()
+        additionalPreferences = AdditionalPreferences()
+        createdAt = Date()
+        updatedAt = Date()
     }
 }
 
@@ -38,12 +38,12 @@ struct TravelStylePreferences: Codable {
     var socialPreference: SocialPreference = .flexible
     var timePreference: TimePreference = .flexible
     var budgetRange: BudgetRange = .moderate
-    
+
     enum EnergyLevel: String, CaseIterable, Codable {
-        case relaxed = "relaxed"
-        case balanced = "balanced" 
-        case packed = "packed"
-        
+        case relaxed
+        case balanced
+        case packed
+
         var displayName: String {
             switch self {
             case .relaxed: return "Relaxed Explorer"
@@ -51,7 +51,7 @@ struct TravelStylePreferences: Codable {
             case .packed: return "Adventure Seeker"
             }
         }
-        
+
         var description: String {
             switch self {
             case .relaxed: return "2-3 activities per day, plenty of downtime"
@@ -60,13 +60,13 @@ struct TravelStylePreferences: Codable {
             }
         }
     }
-    
+
     enum SocialPreference: String, CaseIterable, Codable {
-        case solo = "solo"
+        case solo
         case smallGroup = "small_group"
         case largeGroup = "large_group"
-        case flexible = "flexible"
-        
+        case flexible
+
         var displayName: String {
             switch self {
             case .solo: return "Solo Explorer"
@@ -76,12 +76,12 @@ struct TravelStylePreferences: Codable {
             }
         }
     }
-    
+
     enum TimePreference: String, CaseIterable, Codable {
         case earlyBird = "early_bird"
         case nightOwl = "night_owl"
-        case flexible = "flexible"
-        
+        case flexible
+
         var displayName: String {
             switch self {
             case .earlyBird: return "Early Bird (6AM-8PM)"
@@ -90,13 +90,13 @@ struct TravelStylePreferences: Codable {
             }
         }
     }
-    
+
     enum BudgetRange: String, CaseIterable, Codable {
-        case budget = "budget"
-        case moderate = "moderate"
-        case comfortable = "comfortable"
-        case luxury = "luxury"
-        
+        case budget
+        case moderate
+        case comfortable
+        case luxury
+
         var displayName: String {
             switch self {
             case .budget: return "Student Budget ($0-30/day)"
@@ -112,23 +112,23 @@ struct TravelStylePreferences: Codable {
 
 struct ActivityPreferences: Codable {
     var preferences: [ActivityType: PreferenceLevel] = [:]
-    
+
     // Initialize with all activity types set to neutral
     init() {
         for activityType in ActivityType.allCases {
             preferences[activityType] = .likeIt
         }
     }
-    
+
     enum ActivityType: String, CaseIterable, Codable {
-        case cultural = "cultural"
+        case cultural
         case foodDining = "food_dining"
-        case nightlife = "nightlife"
-        case outdoor = "outdoor"
-        case shopping = "shopping"
-        case photography = "photography"
+        case nightlife
+        case outdoor
+        case shopping
+        case photography
         case localEvents = "local_events"
-        
+
         var displayName: String {
             switch self {
             case .cultural: return "Museums & Historical Sites"
@@ -140,7 +140,7 @@ struct ActivityPreferences: Codable {
             case .localEvents: return "Local Events & Festivals"
             }
         }
-        
+
         var icon: String {
             switch self {
             case .cultural: return "building.columns"
@@ -153,12 +153,12 @@ struct ActivityPreferences: Codable {
             }
         }
     }
-    
+
     enum PreferenceLevel: String, CaseIterable, Codable {
         case loveIt = "love_it"
         case likeIt = "like_it"
         case notMyFav = "not_my_fav"
-        
+
         var displayName: String {
             switch self {
             case .loveIt: return "Love it!"
@@ -166,7 +166,7 @@ struct ActivityPreferences: Codable {
             case .notMyFav: return "Not my fav"
             }
         }
-        
+
         var color: String {
             switch self {
             case .loveIt: return "green"
@@ -174,7 +174,7 @@ struct ActivityPreferences: Codable {
             case .notMyFav: return "gray"
             }
         }
-        
+
         var weight: Double {
             switch self {
             case .loveIt: return 1.0
@@ -191,12 +191,12 @@ struct PracticalPreferences: Codable {
     var maxWalkingDistance: WalkingDistance = .moderate
     var transportationPreference: TransportationPreference = .flexible
     var accommodationStyle: AccommodationStyle = .flexible
-    
+
     enum WalkingDistance: String, CaseIterable, Codable {
-        case short = "short"          // 0-1 miles
-        case moderate = "moderate"    // 1-2 miles
-        case long = "long"           // 2+ miles
-        
+        case short // 0-1 miles
+        case moderate // 1-2 miles
+        case long // 2+ miles
+
         var displayName: String {
             switch self {
             case .short: return "Short (0-1 miles)"
@@ -204,7 +204,7 @@ struct PracticalPreferences: Codable {
             case .long: return "Long (2+ miles)"
             }
         }
-        
+
         var maxDistanceInMiles: Double {
             switch self {
             case .short: return 1.0
@@ -213,14 +213,14 @@ struct PracticalPreferences: Codable {
             }
         }
     }
-    
+
     enum TransportationPreference: String, CaseIterable, Codable {
-        case walking = "walking"
+        case walking
         case publicTransport = "public_transport"
-        case rideshare = "rideshare"
-        case rental = "rental"
-        case flexible = "flexible"
-        
+        case rideshare
+        case rental
+        case flexible
+
         var displayName: String {
             switch self {
             case .walking: return "Prefer Walking"
@@ -231,13 +231,13 @@ struct PracticalPreferences: Codable {
             }
         }
     }
-    
+
     enum AccommodationStyle: String, CaseIterable, Codable {
-        case hostel = "hostel"
-        case hotel = "hotel"
-        case airbnb = "airbnb"
-        case flexible = "flexible"
-        
+        case hostel
+        case hotel
+        case airbnb
+        case flexible
+
         var displayName: String {
             switch self {
             case .hostel: return "Hostels (Social)"
@@ -256,12 +256,12 @@ struct AdditionalPreferences: Codable {
     var riskTolerance: RiskTolerance = .moderate
     var culturalImmersion: CulturalImmersion = .moderate
     var crowdTolerance: CrowdTolerance = .moderate
-    
+
     enum PlanningStyle: String, CaseIterable, Codable {
-        case loose = "loose"
-        case structured = "structured"
-        case detailed = "detailed"
-        
+        case loose
+        case structured
+        case detailed
+
         var displayName: String {
             switch self {
             case .loose: return "Loose Structure"
@@ -270,12 +270,12 @@ struct AdditionalPreferences: Codable {
             }
         }
     }
-    
+
     enum RiskTolerance: String, CaseIterable, Codable {
-        case low = "low"
-        case moderate = "moderate"
-        case high = "high"
-        
+        case low
+        case moderate
+        case high
+
         var displayName: String {
             switch self {
             case .low: return "Safe & Familiar"
@@ -284,12 +284,12 @@ struct AdditionalPreferences: Codable {
             }
         }
     }
-    
+
     enum CulturalImmersion: String, CaseIterable, Codable {
-        case minimal = "minimal"
-        case moderate = "moderate"
-        case deep = "deep"
-        
+        case minimal
+        case moderate
+        case deep
+
         var displayName: String {
             switch self {
             case .minimal: return "Tourist Highlights"
@@ -298,12 +298,12 @@ struct AdditionalPreferences: Codable {
             }
         }
     }
-    
+
     enum CrowdTolerance: String, CaseIterable, Codable {
-        case low = "low"
-        case moderate = "moderate"
-        case high = "high"
-        
+        case low
+        case moderate
+        case high
+
         var displayName: String {
             switch self {
             case .low: return "Prefer Quiet Spots"
@@ -323,7 +323,7 @@ enum OnboardingStep: Int, CaseIterable {
     case walkingDistance = 3
     case additionalPreferences = 4
     case summary = 5
-    
+
     var title: String {
         switch self {
         case .welcome: return "Welcome to TravelAbroad!"
@@ -334,7 +334,7 @@ enum OnboardingStep: Int, CaseIterable {
         case .summary: return "All Set!"
         }
     }
-    
+
     var subtitle: String {
         switch self {
         case .welcome: return "Let's personalize your travel experience"
@@ -345,8 +345,8 @@ enum OnboardingStep: Int, CaseIterable {
         case .summary: return "Your preferences are saved. Let's explore!"
         }
     }
-    
+
     var progress: Double {
-        return Double(self.rawValue) / Double(OnboardingStep.allCases.count - 1)
+        return Double(rawValue) / Double(OnboardingStep.allCases.count - 1)
     }
 }

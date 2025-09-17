@@ -6,13 +6,13 @@
 //
 
 import Foundation
-import Supabase
 import Observation
+import Supabase
 
 @MainActor
 @Observable
 class SpotsViewModel {
-    var spots: [ReviewedSpot] = []
+    var reviews: [ReviewedSpot] = []
     var isLoading = false
     var userId: UUID?
     var user: User?
@@ -32,7 +32,7 @@ class SpotsViewModel {
         }
 
         do {
-            spots = try await SupabaseManager.shared.fetchUserReviewedSpots(userId: userId)
+            reviews = try await SupabaseManager.shared.fetchUserReviewedSpots(userId: userId)
         } catch {
             print("Failed to fetch reviewed spots: \(error)")
         }
@@ -41,13 +41,11 @@ class SpotsViewModel {
             isLoading = false
         }
     }
-    
+
     func deleteSpot(spot: ReviewedSpot) async {
         do {
-            if let userId = userId {
-                try await SupabaseManager.shared.deleteSpotComment(userId: userId, spotId: UUID(uuidString: spot.recommendation.id)!)
-            }
-            spots.removeAll { $0.recommendation.id == spot.recommendation.id }
+            try await SupabaseManager.shared.deleteSpotComment(commentId: spot.id)
+            reviews.removeAll { $0.id == spot.id }
         } catch {
             print("Could not delete spot because of error: \(error.localizedDescription)")
         }

@@ -7,11 +7,11 @@ import SwiftUI
 
 struct ActivityPreferencesStepView: View {
     @Bindable var vm: OnboardingViewModel
-    
+
     var body: some View {
         VStack(spacing: 0) {
             headerSection
-            
+
             ScrollView {
                 VStack(spacing: 24) {
                     instructionsSection
@@ -22,13 +22,13 @@ struct ActivityPreferencesStepView: View {
             }
         }
     }
-    
+
     private var headerSection: some View {
         VStack(spacing: 12) {
             Text("Activity Preferences")
                 .font(.title)
                 .fontWeight(.bold)
-            
+
             Text("Drag activities into categories that match your interests")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -37,17 +37,17 @@ struct ActivityPreferencesStepView: View {
         .padding(.horizontal, 24)
         .padding(.vertical, 20)
     }
-    
+
     private var instructionsSection: some View {
         HStack(spacing: 12) {
             Image(systemName: "hand.tap")
                 .font(.title3)
                 .foregroundColor(.accentColor)
-            
+
             Text("Tap and hold to drag activities between categories")
                 .font(.caption)
                 .foregroundColor(.secondary)
-            
+
             Spacer()
         }
         .padding(.horizontal, 16)
@@ -57,7 +57,7 @@ struct ActivityPreferencesStepView: View {
                 .fill(.thinMaterial)
         )
     }
-    
+
     private var categoriesSection: some View {
         VStack(spacing: 16) {
             DropZone(
@@ -68,7 +68,7 @@ struct ActivityPreferencesStepView: View {
                 preferenceLevel: .loveIt,
                 vm: vm
             )
-            
+
             DropZone(
                 title: "Like it",
                 subtitle: "I enjoy these",
@@ -77,7 +77,7 @@ struct ActivityPreferencesStepView: View {
                 preferenceLevel: .likeIt,
                 vm: vm
             )
-            
+
             DropZone(
                 title: "Not my fav",
                 subtitle: "I'd rather skip",
@@ -88,7 +88,6 @@ struct ActivityPreferencesStepView: View {
             )
         }
     }
-    
 }
 
 struct DropZone: View {
@@ -98,9 +97,9 @@ struct DropZone: View {
     let activities: [ActivityPreferences.ActivityType]
     let preferenceLevel: ActivityPreferences.PreferenceLevel
     @Bindable var vm: OnboardingViewModel
-    
+
     @State private var isTargeted = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -109,14 +108,14 @@ struct DropZone: View {
                         .font(.headline)
                         .fontWeight(.semibold)
                         .foregroundColor(color)
-                    
+
                     Text(subtitle)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 Text("\(activities.count)")
                     .font(.caption)
                     .fontWeight(.medium)
@@ -128,7 +127,7 @@ struct DropZone: View {
                             .fill(color.opacity(0.2))
                     )
             }
-            
+
             // Activities container
             if activities.isEmpty {
                 RoundedRectangle(cornerRadius: 12)
@@ -146,7 +145,7 @@ struct DropZone: View {
             } else {
                 LazyVGrid(columns: [
                     GridItem(.flexible()),
-                    GridItem(.flexible())
+                    GridItem(.flexible()),
                 ], spacing: 8) {
                     ForEach(activities, id: \.self) { activity in
                         SmallActivityCard(
@@ -171,12 +170,12 @@ struct DropZone: View {
         )
         .onDrop(of: [.text], isTargeted: $isTargeted) { providers in
             guard let provider = providers.first else { return false }
-            
-            provider.loadItem(forTypeIdentifier: "public.text", options: nil) { data, error in
+
+            provider.loadItem(forTypeIdentifier: "public.text", options: nil) { data, _ in
                 if let data = data as? Data,
                    let activityName = String(data: data, encoding: .utf8),
-                   let activity = ActivityPreferences.ActivityType.allCases.first(where: { $0.rawValue == activityName }) {
-                    
+                   let activity = ActivityPreferences.ActivityType.allCases.first(where: { $0.rawValue == activityName })
+                {
                     DispatchQueue.main.async {
                         vm.moveActivity(activity, to: preferenceLevel)
                     }
@@ -191,13 +190,13 @@ struct ActivityCard: View {
     let activity: ActivityPreferences.ActivityType
     @Bindable var vm: OnboardingViewModel
     @State private var dragOffset = CGSize.zero
-    
+
     var body: some View {
         VStack(spacing: 8) {
             Image(systemName: activity.icon)
                 .font(.title2)
                 .foregroundColor(.accentColor)
-            
+
             Text(activity.displayName)
                 .font(.caption)
                 .fontWeight(.medium)
@@ -233,20 +232,20 @@ struct SmallActivityCard: View {
     let activity: ActivityPreferences.ActivityType
     let color: Color
     @Bindable var vm: OnboardingViewModel
-    
+
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: activity.icon)
                 .font(.caption)
                 .foregroundColor(color)
                 .frame(width: 16)
-            
+
             Text(activity.displayName)
                 .font(.caption2)
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
                 .lineLimit(2)
-            
+
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 8)

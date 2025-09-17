@@ -17,8 +17,8 @@ final class OtherUserTravelHistoryViewModel {
     var userSearch = ""
     var filter: CityFilter = .none
     var user: User?
-    var userId: UUID? = nil
-    
+    var userId: UUID?
+
     init(userId: String) {
         self.userId = UUID(uuidString: userId)
     }

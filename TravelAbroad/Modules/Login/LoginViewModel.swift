@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import Supabase
 import Observation
+import Supabase
 
 @MainActor
 @Observable
@@ -18,7 +18,7 @@ class LoginViewModel {
     var errorMessage: String?
     var isLoading: Bool = false
     var username: String = ""
-    private var email: String? = nil
+    private var email: String?
 
     func authAction() async -> Bool {
         errorMessage = nil
@@ -33,7 +33,7 @@ class LoginViewModel {
 
                 try await SupabaseManager.shared.supabase.auth.signUp(email: loginCredential, password: password)
                 try await SupabaseManager.shared.insertUsername(username: username)
-                
+
                 // Note: Onboarding flag will be set in LoginView when sign up is successful
             } else {
                 if loginCredential.contains("@") {
@@ -44,7 +44,7 @@ class LoginViewModel {
                         try await SupabaseManager.shared.supabase.auth.signIn(email: email, password: password)
                     }
                 }
-                
+
                 // TODO: For existing users, check if they have completed onboarding
                 // This could be done by checking if user preferences exist in the database
                 // Existing users don't need onboarding flow

@@ -6,18 +6,20 @@
 //
 
 import Foundation
+import Observation
 import UIKit
 
 @MainActor
-class AddRecommendationViewModel: ObservableObject {
-    @Published var isLoading = false
-    @Published var errorMessage: String?
-    @Published var placeName: String = ""
-    @Published var selectedImage: UIImage?
-    @Published var description = ""
-    @Published var isSubmitting = false
-    @Published var userRating: Int = 0
-    @Published var showNoRatingAlert = false
+@Observable
+class AddRecommendationViewModel {
+    var isLoading = false
+    var errorMessage: String?
+    var placeName: String = ""
+    var selectedImage: UIImage?
+    var description = ""
+    var isSubmitting = false
+    var userRating: Int = 0
+    var showNoRatingAlert = false
 
     // Properties from AddRecommendationView
     let cityId: String
@@ -32,7 +34,6 @@ class AddRecommendationViewModel: ObservableObject {
         self.cityName = cityName
         self.selectedCategory = selectedCategory
     }
-
 
     func submitRecommendation() {
         // Check if user has entered a place name
@@ -56,8 +57,8 @@ class AddRecommendationViewModel: ObservableObject {
 
         Task {
             do {
-                var imageUrl: String? = nil
-                
+                var imageUrl: String?
+
                 // Upload image if user selected one
                 if let image = selectedImage {
                     print("📷 AddRecommendation: Uploading user-selected image")
@@ -75,7 +76,7 @@ class AddRecommendationViewModel: ObservableObject {
                 )
 
                 // Add the user's rating and comment to the newly created recommendation
-                let _ = try await supabaseManager.submitComment(
+                _ = try await supabaseManager.submitComment(
                     recommendationId: recommendation.id,
                     text: description.isEmpty ? nil : description,
                     imageUrl: nil,
@@ -91,5 +92,4 @@ class AddRecommendationViewModel: ObservableObject {
             }
         }
     }
-
 }
