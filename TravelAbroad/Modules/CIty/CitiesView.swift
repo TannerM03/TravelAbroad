@@ -20,8 +20,9 @@ struct CitiesView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                headerSection
+                
                 ScrollView {
+                    headerSection
                     citiesGridSection
                 }
             }

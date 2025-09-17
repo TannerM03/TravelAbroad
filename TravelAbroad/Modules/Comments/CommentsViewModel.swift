@@ -17,6 +17,7 @@ class CommentsViewModel {
     var userRating: Double? = nil
     var recommendation: Recommendation?
     var isGeneratingSummary: Bool = false
+    var sortOption: CommentSortOption = .recent
 
     private let supabaseManager = SupabaseManager.shared
 
@@ -30,12 +31,30 @@ class CommentsViewModel {
         isLoading = true
 
         do {
-            comments = try await supabaseManager.fetchComments(for: recommendationId)
+            comments = try await supabaseManager.fetchCommentsWithVotes(for: recommendationId, sortBy: sortOption)
         } catch {
             print("Error fetching comments: \(error)")
+            // Fallback to original method if one above fails (from before i had voting)
+            do {
+                comments = try await supabaseManager.fetchComments(for: recommendationId)
+                applySorting()
+            } catch {
+                print("Error with fallback fetch: \(error)")
+            }
         }
 
         isLoading = false
+    }
+    
+    private func applySorting() {
+        switch sortOption {
+        case .upvotes:
+            comments.sort { $0.netVotes > $1.netVotes }
+        case .recent:
+            comments.sort { $0.createdAt > $1.createdAt }
+        case .downvotes:
+            comments.sort { $0.netVotes < $1.netVotes }
+        }
     }
 
     func submitComment(recommendationId: String, text: String?, image: UIImage?, rating: Int) async {
@@ -60,7 +79,6 @@ class CommentsViewModel {
     }
 
     func generateSummary(for recommendation: Recommendation, comments: [Comment]) async {
-        print(recommendation.summaryUpdatedAt)
         isGeneratingSummary = true
 
         do {
@@ -105,6 +123,74 @@ class CommentsViewModel {
             }
         } catch {
             print("Error refreshing recommendation data: \(error)")
+        }
+    }
+    
+    func toggleVote(commentId: String, voteType: VoteType) async {
+        guard let commentIndex = comments.firstIndex(where: { $0.id == commentId }) else { return }
+        var comment = comments[commentIndex]
+        
+        do {
+            if comment.userVote == voteType {
+                // Remove vote if same type clicked
+                try await supabaseManager.removeVoteFromComment(commentId: commentId)
+                comment.userVote = nil
+                
+                // Update local counts
+                if voteType == .upvote {
+                    comment.upvoteCount = max(0, comment.upvoteCount - 1)
+                } else {
+                    comment.downvoteCount = max(0, comment.downvoteCount - 1)
+                }
+            } else {
+                // Add/change vote
+                try await supabaseManager.voteOnComment(commentId: commentId, voteType: voteType)
+                
+                // Remove previous vote if exists
+                if let previousVote = comment.userVote {
+                    if previousVote == .upvote {
+                        comment.upvoteCount = max(0, comment.upvoteCount - 1)
+                    } else {
+                        comment.downvoteCount = max(0, comment.downvoteCount - 1)
+                    }
+                }
+                
+                // Add new vote
+                comment.userVote = voteType
+                
+                // Update local counts
+                if voteType == .upvote {
+                    comment.upvoteCount += 1
+                } else {
+                    comment.downvoteCount += 1
+                }
+            }
+            
+            // Update net votes
+            comment.netVotes = comment.upvoteCount - comment.downvoteCount
+            
+            // Update the comment in array
+            comments[commentIndex] = comment
+            
+            // Re-apply sorting
+            applySorting()
+            
+        } catch {
+            print("Error toggling vote: \(error)")
+        }
+    }
+    
+    func updateSortOption(_ newOption: CommentSortOption) {
+        sortOption = newOption
+        
+        // Re-fetch comments with new sorting from backend
+        if let recId = recommendation?.id {
+            Task {
+                await fetchComments(for: recId)
+            }
+        } else {
+            // Fallback to local sorting if no recommendation ID
+            applySorting()
         }
     }
 }

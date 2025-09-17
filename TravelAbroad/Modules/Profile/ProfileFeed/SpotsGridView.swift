@@ -43,7 +43,7 @@ struct SpotsGridView: View {
             }
         }
         .onAppear {
-            if let userId = vm.userId, vm.spots.isEmpty {
+            if let userId = vm.userId {
                 Task {
                     await vm.getReviewedSpots(userId: userId, showLoading: false)
                 }
@@ -57,7 +57,7 @@ struct SpotsGridView: View {
     private var spotsListSection: some View {
         LazyVStack(spacing: 12) {
             ForEach(vm.spots) { spot in
-                SpotCard(spot: spot)
+                SpotCard(spot: spot, vm: vm)
             }
         }
         .padding(.horizontal, 16)
@@ -76,6 +76,8 @@ struct SpotsGridView: View {
 
 struct SpotCard: View {
     let spot: ReviewedSpot
+    @Bindable var vm: SpotsViewModel
+    @State private var showDeleteCommentDialogue: Bool = false
     
     private var categoryIcon: String {
         switch spot.recommendation.category {
@@ -122,6 +124,14 @@ struct SpotCard: View {
                     Text(spot.cityName)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
+                    Button {
+                        showDeleteCommentDialogue = true
+                    } label: {
+                        Image(systemName: "trash")
+                            .font(.subheadline)
+                            .foregroundStyle(.red)
+                            .padding(.leading, 4)
+                    }
                 }
             }
             .padding(.bottom, 12)
@@ -200,6 +210,15 @@ struct SpotCard: View {
         .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(14)
         .shadow(color: Color.secondary.opacity(0.07), radius: 5, x: 0, y: 3)
+        .confirmationDialog("Delete Review", isPresented: $showDeleteCommentDialogue) {
+            Button("Delete Review", role: .destructive) {
+                Task {
+                    await vm.deleteSpot(spot: spot)
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete your review for \(spot.recommendation.name)?")
+        }
     }
 }
 

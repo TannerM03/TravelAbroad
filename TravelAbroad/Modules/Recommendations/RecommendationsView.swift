@@ -13,6 +13,7 @@ struct RecommendationsView: View {
     @State var vm = RecommendationsViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var showingAddRecommendation = false
+    @State private var showRatingTip = false
     let cityId: String
     let cityName: String
     let imageUrl: String
@@ -60,16 +61,19 @@ struct RecommendationsView: View {
             if vm.isRatingOverlay {
                 ratingPopoverContent
             }
+            if showRatingTip {
+                ratingTipOverlay
+            }
         }
         .task {
             vm.initializeCity(cityId: cityId, cityName: cityName, imageUrl: imageUrl, userRating: userRating, avgRating: cityRating, isBucketList: isBucketList, onRatingUpdated: onRatingUpdated)
             await vm.getRecs(cityId: UUID(uuidString: cityId)!)
             await vm.fetchUser()
             await vm.getCoordinates(cityId: UUID(uuidString: cityId)!)
+            checkAndShowRatingTip()
         }
         .alert("Rating Submitted!", isPresented: $vm.showSubmittedAlert) {
             Button("OK", role: .cancel) {
-                // Just dismiss the alert
             }
         }
         .sheet(isPresented: $showingAddRecommendation) {
@@ -166,7 +170,12 @@ struct RecommendationsView: View {
     }
 
     private var ratingButton: some View {
-        Button(action: { vm.showRatingOverlay() }) {
+        Button(action: { 
+            vm.showRatingOverlay()
+            if showRatingTip {
+                dismissRatingTip()
+            }
+        }) {
             HStack(spacing: 6) {
                 Image(systemName: "star.fill")
                     .foregroundStyle(.yellow)
@@ -330,6 +339,66 @@ struct RecommendationsView: View {
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10)
             .padding(.horizontal, 32)
+        }
+    }
+    
+    private var ratingTipOverlay: some View {
+        ZStack {
+            Color.clear
+                .ignoresSafeArea()
+                .onTapGesture {
+                    dismissRatingTip()
+                }
+            
+            VStack {
+                HStack {
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 20) {
+                        Image(systemName: "arrowtriangle.right.fill")
+                            .font(.caption)
+                            .foregroundColor(.black.opacity(0.8))
+                            .padding(.trailing, 80)
+
+                            Text("Tap to rate this city!")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(.black.opacity(0.8))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    .padding(.trailing, 35)
+                }
+                .padding(.top, 20)
+                
+                Spacer()
+            }
+        }
+    }
+    
+    private func checkAndShowRatingTip() {
+        let tipCount = UserDefaults.standard.integer(forKey: "ratingTipShownCount")
+        if tipCount < 42 {
+            print(tipCount)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    showRatingTip = true
+                }
+                UserDefaults.standard.set(tipCount + 1, forKey: "ratingTipShownCount")
+                
+                // Auto-dismiss after 3 seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    dismissRatingTip()
+                }
+            }
+        }
+    }
+    
+    private func dismissRatingTip() {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            showRatingTip = false
         }
     }
 }

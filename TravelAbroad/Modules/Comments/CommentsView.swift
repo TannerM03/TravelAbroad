@@ -17,6 +17,7 @@ struct CommentsView: View {
     @State private var showLeaveRating = false
     @State private var userRating: Double = 5.0
     @FocusState private var isTextFieldFocused: Bool
+    @State private var confirmReviewSubmitted: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -60,7 +61,10 @@ struct CommentsView: View {
                     leaveRatingButton
                 }
             }
-        }
+            .alert("Review Submitted!", isPresented: $confirmReviewSubmitted) {
+                Button("OK", role: .cancel) {
+                }
+            }        }
         .task {
             vm.recommendation = recommendation
             await vm.fetchComments(for: recommendation.id)
@@ -198,6 +202,11 @@ struct CommentsView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+            
+            // Sort picker
+            if !vm.comments.isEmpty {
+                sortPickerSection
+            }
 
             if vm.comments.filter({ $0.comment != nil && !$0.comment!.isEmpty }).isEmpty {
                 VStack(spacing: 12) {
@@ -217,11 +226,23 @@ struct CommentsView: View {
                 LazyVStack(spacing: 12) {
                     ForEach(vm.comments) { comment in
                         if comment.comment != nil || comment.imageUrl != nil {
-                            CommentCardView(comment: comment)
+                            CommentCardView(comment: comment, viewModel: vm)
                         }
                     }
                 }
             }
+        }
+    }
+    
+    private var sortPickerSection: some View {
+        Picker("Sort", selection: $vm.sortOption) {
+            ForEach(CommentSortOption.allCases) { option in
+                Text(option.rawValue).tag(option)
+            }
+        }
+        .pickerStyle(.segmented)
+        .onChange(of: vm.sortOption) { _, newValue in
+            vm.updateSortOption(newValue)
         }
     }
 
@@ -448,8 +469,8 @@ struct CommentsView: View {
             } else {
                 await vm.submitComment(recommendationId: recommendation.id, text: nil, image: selectedImage, rating: Int(userRating))
             }
+            confirmReviewSubmitted = true
 
-            // Optionally refresh the recommendation data in background
             await vm.refreshRecommendationData()
 
             await MainActor.run {
@@ -465,6 +486,7 @@ struct CommentsView: View {
 
 struct CommentCardView: View {
     let comment: Comment
+    let viewModel: CommentsViewModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -489,15 +511,18 @@ struct CommentCardView: View {
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
+            
             HStack {
+                // Star rating
                 ForEach(Array(0 ..< comment.rating), id: \.self) { _ in
                     Image(systemName: "star.fill")
                         .foregroundColor(.yellow)
                         .font(.caption)
                 }
             }
-            if let comment = comment.comment {
-                Text(comment)
+            
+            if let commentText = comment.comment {
+                Text(commentText)
                     .font(.body)
             }
 
@@ -508,10 +533,52 @@ struct CommentCardView: View {
                     .frame(maxHeight: 200)
                     .cornerRadius(8)
             }
+            HStack {
+                Spacer()
+                commentVoteButtons
+            }
         }
         .padding()
         .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(12)
+    }
+    
+    private var commentVoteButtons: some View {
+        HStack(spacing: 12) {
+            // Upvote button
+            Button {
+                Task {
+                    await viewModel.toggleVote(commentId: comment.id, voteType: .upvote)
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: comment.userVote == .upvote ? "arrowshape.up.fill" : "arrowshape.up")
+                        .foregroundColor(comment.userVote == .upvote ? .green : .secondary)
+                        .font(.subheadline)
+                    Text("\(comment.upvoteCount)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+            
+            // Downvote button
+            Button {
+                Task {
+                    await viewModel.toggleVote(commentId: comment.id, voteType: .downvote)
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: comment.userVote == .downvote ? "arrowshape.down.fill" : "arrowshape.down")
+                        .foregroundColor(comment.userVote == .downvote ? .red : .secondary)
+                        .font(.subheadline)
+                    Text("\(comment.downvoteCount)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+        }
     }
 
     private func timeAgoText(from date: Date) -> String {
