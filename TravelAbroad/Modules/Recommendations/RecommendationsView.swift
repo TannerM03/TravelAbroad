@@ -380,7 +380,7 @@ struct RecommendationsView: View {
     
     private func checkAndShowRatingTip() {
         let tipCount = UserDefaults.standard.integer(forKey: "ratingTipShownCount")
-        if tipCount < 42 {
+        if tipCount < 3 {
             print(tipCount)
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 withAnimation(.easeInOut(duration: 0.3)) {
