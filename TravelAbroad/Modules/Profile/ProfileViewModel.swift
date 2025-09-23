@@ -111,4 +111,16 @@ class ProfileViewModel {
             }
         }
     }
+    
+    func refreshTravelStats() async {
+        guard let userId = userId else { return }
+        do {
+            let travelStats = try await SupabaseManager.shared.fetchTravelStats(userId: userId)
+            countriesVisited = travelStats.countriesVisited
+            citiesVisited = travelStats.citiesVisited
+            spotsReviewed = travelStats.spotsVisited
+        } catch {
+            print("Failed to refresh travel stats: \(error)")
+        }
+    }
 }

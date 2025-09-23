@@ -83,6 +83,11 @@ struct ProfileView: View {
                 }
             }
         }
+        .onAppear {
+            Task {
+                await vm.refreshTravelStats()
+            }
+        }
     }
 
     private var profileImageSection: some View {

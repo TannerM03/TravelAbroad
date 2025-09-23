@@ -106,8 +106,8 @@ class SupabaseManager {
             throw NSError(domain: "SupabaseManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "City not found"])
         }
 
-        let latitude = cityData.latitude ?? 0.0
-        let longitude = cityData.longitude ?? 0.0
+        let latitude = cityData.latitude
+        let longitude = cityData.longitude
 
         print("SupabaseManager: Fetched coordinates for city \(cityId): (\(latitude), \(longitude))")
 
@@ -227,6 +227,20 @@ class SupabaseManager {
             print("❌ Supabase: Failed to create recommendation - Error: \(error.localizedDescription)")
             throw error
         }
+    }
+    
+    // MARK: - SocialView Functions
+    
+    func fetchUsers(userId: String) async throws -> [OtherProfile] {
+
+        let response: [OtherProfile] = try await supabase
+            .from("profiles")
+            .select("id, username, image_url")
+            .notEquals("id", value: userId)
+            .execute()
+            .value
+        return response
+            
     }
 
     // MARK: - CommentsView Functions
@@ -434,7 +448,7 @@ class SupabaseManager {
             .eq("comment_id", value: commentId)
             .execute()
 
-        // Then insert the new vote
+        // Then insert the new vote1
         struct VoteInsert: Codable {
             let user_id: String
             let comment_id: String
@@ -587,6 +601,21 @@ class SupabaseManager {
             .from("profiles")
             .select("username")
             .ilike("username", pattern: username.lowercased())
+            .execute()
+            .value
+
+        return profiles.isEmpty
+    }
+    
+    func isEmailAvailable(email: String) async throws -> Bool {
+        struct Profile: Codable {
+            let email: String?
+        }
+
+        let profiles: [Profile] = try await supabase
+            .from("profiles")
+            .select("email")
+            .ilike("email", pattern: email.lowercased())
             .execute()
             .value
 
