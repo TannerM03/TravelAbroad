@@ -145,7 +145,6 @@ class SupabaseManager {
         category: CategoryType,
         location: String?,
         imageUrl: String?,
-        googlePlaceId: String? = nil
     ) async throws -> Recommendation {
         print("Supabase: Creating recommendation - Name: '\(name)', Category: \(category.rawValue), City: \(cityId)")
 
@@ -164,7 +163,6 @@ class SupabaseManager {
             let category: String
             let location: String?
             let image_url: String?
-            let google_place_id: String?
         }
 
         let recommendationData = RecommendationInsert(
@@ -175,10 +173,9 @@ class SupabaseManager {
             category: category.rawValue,
             location: location,
             image_url: imageUrl,
-            google_place_id: googlePlaceId
         )
 
-        print("Supabase: Prepared recommendation data - Image URL: \(imageUrl ?? "none"), Google Place ID: \(googlePlaceId ?? "none")")
+        print("Supabase: Prepared recommendation data - Image URL: \(imageUrl ?? "none")")
 
         struct RecommendationResponse: Codable {
             let id: String
@@ -189,7 +186,6 @@ class SupabaseManager {
             let category: String
             let location: String?
             let image_url: String?
-            let google_place_id: String?
         }
 
         do {
@@ -216,7 +212,6 @@ class SupabaseManager {
                 avgRating: 0.0, // New recommendations start with 0 rating
                 aiSummary: nil,
                 summaryUpdatedAt: nil,
-                googlePlaceId: response.google_place_id
             )
 
             return recommendation

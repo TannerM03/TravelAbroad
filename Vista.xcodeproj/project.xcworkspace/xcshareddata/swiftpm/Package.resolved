@@ -1,15 +1,6 @@
 {
-  "originHash" : "6d932ee63db7145615cc88c3b04881cefbc0e1fea6c209b20e1aea61d0bf023b",
+  "originHash" : "a710e298897da84c84022f2749141c3a79eddfa1d70a5d0ad5d3b1b221e7353a",
   "pins" : [
-    {
-      "identity" : "ios-places-sdk",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/googlemaps/ios-places-sdk",
-      "state" : {
-        "revision" : "3b1b42f441ce4587472972fcd74f509a242a0fb7",
-        "version" : "10.0.0"
-      }
-    },
     {
       "identity" : "kingfisher",
       "kind" : "remoteSourceControl",

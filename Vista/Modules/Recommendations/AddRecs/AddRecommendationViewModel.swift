@@ -72,7 +72,6 @@ class AddRecommendationViewModel {
                     category: selectedCategory,
                     location: nil,
                     imageUrl: imageUrl,
-                    googlePlaceId: nil
                 )
 
                 // Add the user's rating and comment to the newly created recommendation

@@ -1,5 +1,5 @@
 //
-//  TravelAbroadApp.swift
+//  VistaApp.swift
 //  TravelAbroad
 //
 //  Created by Tanner Macpherson on 5/19/25.
@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 @main
-struct TravelAbroadApp: App {
+struct VistaApp: App {
     @AppStorage("isAuthenticated") private var isAuthenticated = false
     @AppStorage("shouldShowOnboarding") private var shouldShowOnboarding = false
     @AppStorage("justSignedUp") private var justSignedUp = false
@@ -52,7 +52,7 @@ struct TravelAbroadApp: App {
         print("url scheme: \(String(describing: url.scheme))")
         print("url host: \(String(describing: url.host))")
         print("url: \(url)")
-        if url.scheme == "travelabroad" && url.host == "auth" {
+        if url.scheme == "vista" && url.host == "auth" {
             Task {
                 do {
                     // Process the email confirmation

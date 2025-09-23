@@ -21,7 +21,6 @@ struct Recommendation: Codable, Identifiable {
     let avgRating: Double
     var aiSummary: String?
     var summaryUpdatedAt: Date?
-    let googlePlaceId: String?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -35,7 +34,6 @@ struct Recommendation: Codable, Identifiable {
         case avgRating = "avg_rating"
         case aiSummary = "ai_summary"
         case summaryUpdatedAt = "summary_updated_at"
-        case googlePlaceId = "google_place_id"
     }
 
     // Memberwise initializer
@@ -51,7 +49,6 @@ struct Recommendation: Codable, Identifiable {
         avgRating: Double,
         aiSummary: String? = nil,
         summaryUpdatedAt: Date? = nil,
-        googlePlaceId: String? = nil
     ) {
         self.id = id
         self.userId = userId
@@ -64,7 +61,6 @@ struct Recommendation: Codable, Identifiable {
         self.avgRating = avgRating
         self.aiSummary = aiSummary
         self.summaryUpdatedAt = summaryUpdatedAt
-        self.googlePlaceId = googlePlaceId
     }
 
     init(from decoder: Decoder) throws {
@@ -80,7 +76,6 @@ struct Recommendation: Codable, Identifiable {
         location = try container.decodeIfPresent(String.self, forKey: .location)
         avgRating = try container.decode(Double.self, forKey: .avgRating)
         aiSummary = try container.decodeIfPresent(String.self, forKey: .aiSummary)
-        googlePlaceId = try container.decodeIfPresent(String.self, forKey: .googlePlaceId)
 
         // Handle date parsing from string
         if let dateString = try container.decodeIfPresent(String.self, forKey: .summaryUpdatedAt) {

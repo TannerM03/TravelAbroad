@@ -17,7 +17,7 @@ struct WelcomeStepView: View {
                 .shadow(color: .accentColor.opacity(0.3), radius: 8, x: 0, y: 4)
 
             VStack(spacing: 16) {
-                Text("Welcome to TravelAbroad!")
+                Text("Welcome to Vista!")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .multilineTextAlignment(.center)

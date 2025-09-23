@@ -1,6 +1,7 @@
 {
   "images" : [
     {
+      "filename" : "VistaAppIconComposer.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"

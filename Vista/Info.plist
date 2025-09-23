@@ -8,10 +8,10 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.tannermacpherson.travelabroad.auth</string>
+			<string>com.tannermacpherson.vista.auth</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>travelabroad</string>
+				<string>vista</string>
 			</array>
 		</dict>
 	</array>
