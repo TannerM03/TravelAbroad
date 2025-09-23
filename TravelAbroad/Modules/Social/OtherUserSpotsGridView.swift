@@ -1,5 +1,5 @@
 //
-//  SpotsGridView.swift
+//  OtherUserSpotsGridView.swift
 //  TravelAbroad
 //
 //  Created by Tanner Macpherson on 9/16/25.
@@ -56,7 +56,7 @@ struct OtherUserSpotsGridView: View {
 
 struct OtherSpotCard: View {
     let spot: ReviewedSpot
-    
+
     private var categoryIcon: String {
         switch spot.recommendation.category {
         case .activities: return "figure.hiking"

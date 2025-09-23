@@ -10,7 +10,7 @@ import SwiftUI
 
 struct RecommendationsCardView: View {
     let rec: Recommendation
-    
+
     private var categoryIcon: String {
         switch rec.category {
         case .activities: return "figure.hiking"
@@ -45,10 +45,12 @@ struct RecommendationsCardView: View {
 
                 HStack(alignment: .center, spacing: 8) {
                     Text(rec.name)
+                        .foregroundColor(.primary)
                         .font(.headline)
                         .padding(.top, 5)
                     Spacer()
                     Text(rec.category.rawValue.capitalized)
+                        .foregroundColor(.primary)
                         .font(.subheadline)
                         .padding(6)
                         .background(rec.category.pillColor)
@@ -63,24 +65,14 @@ struct RecommendationsCardView: View {
                         .font(.footnote)
                         .foregroundColor(.secondary)
                 }
-//                }
-//                 these descriptions are the same as comments, don't want to show for now until i can make it a summary
-//            if let desc = rec.aiSummary, !desc.isEmpty {
-//                Text(desc)
-//                    .font(.body)
-//                    .foregroundColor(.secondary)
-//                    .padding(.top, 2)
-//            }
             }
             .padding()
-//            .background(rec.category.pillColor.opacity(0.5))
             .background(Color(.tertiarySystemGroupedBackground))
             .cornerRadius(14)
             .shadow(color: Color(Color.secondary).opacity(0.07), radius: 5, x: 0, y: 3)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 6)
         }
-        .buttonStyle(PlainButtonStyle())
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
     }
 }
 

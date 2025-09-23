@@ -62,9 +62,9 @@ struct CommentsView: View {
                 }
             }
             .alert("Review Submitted!", isPresented: $confirmReviewSubmitted) {
-                Button("OK", role: .cancel) {
-                }
-            }        }
+                Button("OK", role: .cancel) {}
+            }
+        }
         .task {
             vm.recommendation = recommendation
             await vm.fetchComments(for: recommendation.id)
@@ -202,7 +202,7 @@ struct CommentsView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             // Sort picker
             if !vm.comments.isEmpty {
                 sortPickerSection
@@ -233,7 +233,7 @@ struct CommentsView: View {
             }
         }
     }
-    
+
     private var sortPickerSection: some View {
         Picker("Sort", selection: $vm.sortOption) {
             ForEach(CommentSortOption.allCases) { option in
@@ -511,7 +511,7 @@ struct CommentCardView: View {
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
-            
+
             HStack {
                 // Star rating
                 ForEach(Array(0 ..< comment.rating), id: \.self) { _ in
@@ -520,7 +520,7 @@ struct CommentCardView: View {
                         .font(.caption)
                 }
             }
-            
+
             if let commentText = comment.comment {
                 Text(commentText)
                     .font(.body)
@@ -542,7 +542,7 @@ struct CommentCardView: View {
         .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(12)
     }
-    
+
     private var commentVoteButtons: some View {
         HStack(spacing: 12) {
             // Upvote button
@@ -561,7 +561,7 @@ struct CommentCardView: View {
                 }
             }
             .buttonStyle(.plain)
-            
+
             // Downvote button
             Button {
                 Task {

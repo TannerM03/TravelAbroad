@@ -1,36 +1,31 @@
 //
-//  OtherProfileViewModel.swift
+//  SocialViewModel.swift
 //  TravelAbroad
 //
-//  Created by Tanner Macpherson on 9/15/25.
+//  Created by Tanner Macpherson on 9/17/25.
 //
 
 import Foundation
 import Observation
-import PhotosUI
 import Supabase
 import SwiftUI
 
 @MainActor
 @Observable
-class OtherProfileViewModel {
-    var username: String = ""
-    var user: User?
-    var profileImageURL: String?
+class SocialViewModel {
+    var profiles: [OtherProfile] = []
     var userId: UUID?
+    var user: User?
+    var username: String = ""
+    var profileImageURL: String?
     var imageState: ImageState = .empty
-    var citiesVisited: Int = 0
-    var spotsReviewed: Int = 0
-    var countriesVisited: Int = 0
-
     private var imageCache: [String: Image] = [:]
-
-    init(userId: String) {
-        self.userId = UUID(uuidString: userId) ?? nil
-    }
 
     func fetchUser() async {
         do {
+            user = try await SupabaseManager.shared.supabase.auth.user()
+            userId = user?.id
+
             if let userId = userId {
                 username = try await SupabaseManager.shared.fetchUsername(userId: userId)
                 profileImageURL = try await SupabaseManager.shared.fetchProfilePic(userId: userId)
@@ -38,12 +33,6 @@ class OtherProfileViewModel {
                 if let urlString = profileImageURL, let url = URL(string: urlString) {
                     await loadImageFromURL(url)
                 }
-
-                let travelStats = try await SupabaseManager.shared.fetchTravelStats(userId: userId)
-                countriesVisited = travelStats.countriesVisited
-                citiesVisited = travelStats.citiesVisited
-                spotsReviewed = travelStats.spotsVisited
-                print("fetched other user travel stats: countriesvisited: \(countriesVisited)")
 
             } else {
                 print("userId didn't work yet")
@@ -72,6 +61,15 @@ class OtherProfileViewModel {
             }
         } catch {
             print("Failed to load image from URL: \(error)")
+        }
+    }
+
+    func fetchProfiles(userId: UUID) async {
+        let userIdString = userId.uuidString
+        do {
+            profiles = try await SupabaseManager.shared.fetchUsers(userId: userIdString)
+        } catch {
+            print("error fetching profiles in vm: \(error.localizedDescription)")
         }
     }
 }

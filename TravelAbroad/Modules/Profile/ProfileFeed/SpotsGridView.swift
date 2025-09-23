@@ -9,7 +9,7 @@ import Kingfisher
 import SwiftUI
 
 struct ReviewedSpot: Identifiable, Codable {
-    let id = UUID()
+    let id: String
     let recommendation: Recommendation
     let comment: String?
     let userRating: Double
@@ -17,7 +17,18 @@ struct ReviewedSpot: Identifiable, Codable {
     let country: String
     let createdAt: Date
 
+    init(commentId: String, recommendation: Recommendation, comment: String?, userRating: Double, cityName: String, country: String, createdAt: Date) {
+        id = commentId
+        self.recommendation = recommendation
+        self.comment = comment
+        self.userRating = userRating
+        self.cityName = cityName
+        self.country = country
+        self.createdAt = createdAt
+    }
+
     enum CodingKeys: String, CodingKey {
+        case id
         case recommendation
         case comment
         case userRating = "rating"
@@ -37,7 +48,7 @@ struct SpotsGridView: View {
         .task {
             if vm.userId == nil {
                 await vm.fetchUser()
-                if let userId = vm.userId, vm.spots.isEmpty {
+                if let userId = vm.userId, vm.reviews.isEmpty {
                     await vm.getReviewedSpots(userId: userId, showLoading: true)
                 }
             }
@@ -56,8 +67,8 @@ struct SpotsGridView: View {
 
     private var spotsListSection: some View {
         LazyVStack(spacing: 12) {
-            ForEach(vm.spots) { spot in
-                SpotCard(spot: spot, vm: vm)
+            ForEach(vm.reviews) { review in
+                ReviewCard(review: review, vm: vm)
             }
         }
         .padding(.horizontal, 16)
@@ -67,20 +78,20 @@ struct SpotsGridView: View {
         Group {
             if vm.isLoading {
                 ProgressView("Loading Spots...")
-            } else if vm.spots.isEmpty {
+            } else if vm.reviews.isEmpty {
                 Text("Review your first spot to see them here!")
             }
         }
     }
 }
 
-struct SpotCard: View {
-    let spot: ReviewedSpot
+struct ReviewCard: View {
+    let review: ReviewedSpot
     @Bindable var vm: SpotsViewModel
     @State private var showDeleteCommentDialogue: Bool = false
-    
+
     private var categoryIcon: String {
-        switch spot.recommendation.category {
+        switch review.recommendation.category {
         case .activities: return "figure.hiking"
         case .nightlife: return "music.note"
         case .restaurants: return "fork.knife"
@@ -112,16 +123,16 @@ struct SpotCard: View {
         VStack(alignment: .leading, spacing: 0) {
             // Header with city name and flag
             HStack {
-                Text(spot.recommendation.name)
+                Text(review.recommendation.name)
                     .font(.headline)
                     .foregroundColor(.primary)
 
                 Spacer()
 
                 HStack(spacing: 4) {
-                    Text(CountryEmoji.emoji(for: spot.country))
+                    Text(CountryEmoji.emoji(for: review.country))
                         .font(.subheadline)
-                    Text(spot.cityName)
+                    Text(review.cityName)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     Button {
@@ -139,7 +150,7 @@ struct SpotCard: View {
             // Main content
             HStack(spacing: 12) {
                 // Image
-                if let urlStr = spot.recommendation.imageUrl, let url = URL(string: urlStr) {
+                if let urlStr = review.recommendation.imageUrl, let url = URL(string: urlStr) {
                     KFImage(url)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -148,10 +159,10 @@ struct SpotCard: View {
                         .cornerRadius(12)
                 } else {
                     ZStack {
-                        spot.recommendation.category.pillColor.opacity(0.3)
+                        review.recommendation.category.pillColor.opacity(0.3)
                         Image(systemName: categoryIcon)
                             .font(.system(size: 24))
-                            .foregroundColor(spot.recommendation.category.pillColor)
+                            .foregroundColor(review.recommendation.category.pillColor)
                     }
                     .frame(width: 80, height: 80)
                     .cornerRadius(12)
@@ -161,11 +172,11 @@ struct SpotCard: View {
                 VStack(alignment: .leading, spacing: 8) {
                     // Category pill
                     HStack {
-                        Text(spot.recommendation.category.rawValue.capitalized)
+                        Text(review.recommendation.category.rawValue.capitalized)
                             .font(.subheadline)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(spot.recommendation.category.pillColor)
+                            .background(review.recommendation.category.pillColor)
                             .cornerRadius(8)
                         Spacer()
                     }
@@ -173,7 +184,7 @@ struct SpotCard: View {
                     // User rating (stars only)
                     HStack(spacing: 2) {
                         ForEach(1 ... 5, id: \.self) { star in
-                            Image(systemName: star <= Int(spot.userRating) ? "star.fill" : "star")
+                            Image(systemName: star <= Int(review.userRating) ? "star.fill" : "star")
                                 .foregroundColor(.yellow)
                                 .font(.caption)
                         }
@@ -191,7 +202,7 @@ struct SpotCard: View {
 
             // Comment and timestamp
             HStack(alignment: .bottom) {
-                if let comment = spot.comment {
+                if let comment = review.comment {
                     Text(comment)
                         .font(.caption)
                         .foregroundStyle(.primary)
@@ -200,7 +211,7 @@ struct SpotCard: View {
 
                 Spacer()
 
-                Text(timeString(from: spot.createdAt))
+                Text(timeString(from: review.createdAt))
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
@@ -213,11 +224,11 @@ struct SpotCard: View {
         .confirmationDialog("Delete Review", isPresented: $showDeleteCommentDialogue) {
             Button("Delete Review", role: .destructive) {
                 Task {
-                    await vm.deleteSpot(spot: spot)
+                    await vm.deleteSpot(spot: review)
                 }
             }
         } message: {
-            Text("Are you sure you want to delete your review for \(spot.recommendation.name)?")
+            Text("Are you sure you want to delete your review for \(review.recommendation.name)?")
         }
     }
 }

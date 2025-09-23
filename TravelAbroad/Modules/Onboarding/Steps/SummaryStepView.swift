@@ -7,7 +7,7 @@ import SwiftUI
 
 struct SummaryStepView: View {
     @Bindable var vm: OnboardingViewModel
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -20,18 +20,18 @@ struct SummaryStepView: View {
             .padding(.horizontal, 24)
         }
     }
-    
+
     private var headerSection: some View {
         VStack(spacing: 16) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 60))
                 .foregroundColor(.green)
-            
+
             VStack(spacing: 8) {
                 Text("All Set!")
                     .font(.title)
                     .fontWeight(.bold)
-                
+
                 Text("Your travel profile is ready")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
@@ -39,7 +39,7 @@ struct SummaryStepView: View {
         }
         .padding(.vertical, 20)
     }
-    
+
     private var preferenceSummarySection: some View {
         VStack(spacing: 16) {
             HStack {
@@ -48,32 +48,32 @@ struct SummaryStepView: View {
                     .fontWeight(.semibold)
                 Spacer()
             }
-            
+
             VStack(spacing: 12) {
                 SummaryRow(
                     icon: "bolt.circle.fill",
                     title: "Energy Level",
                     value: vm.preferences.travelStyle.energyLevel.displayName
                 )
-                
+
                 SummaryRow(
                     icon: "person.2.circle.fill",
                     title: "Group Size",
                     value: vm.preferences.travelStyle.socialPreference.displayName
                 )
-                
+
                 SummaryRow(
                     icon: "clock.circle.fill",
                     title: "Schedule",
                     value: vm.preferences.travelStyle.timePreference.displayName
                 )
-                
+
                 SummaryRow(
                     icon: "dollarsign.circle.fill",
                     title: "Budget",
                     value: vm.preferences.travelStyle.budgetRange.displayName
                 )
-                
+
                 SummaryRow(
                     icon: "figure.walk.circle.fill",
                     title: "Walking Distance",
@@ -87,7 +87,7 @@ struct SummaryStepView: View {
                 .fill(.thinMaterial)
         )
     }
-    
+
     private var activityPreferencesSection: some View {
         VStack(spacing: 16) {
             HStack {
@@ -96,7 +96,7 @@ struct SummaryStepView: View {
                     .fontWeight(.semibold)
                 Spacer()
             }
-            
+
             VStack(spacing: 16) {
                 if !vm.loveItActivities.isEmpty {
                     ActivitySummarySection(
@@ -105,7 +105,7 @@ struct SummaryStepView: View {
                         activities: vm.loveItActivities
                     )
                 }
-                
+
                 if !vm.likeItActivities.isEmpty {
                     ActivitySummarySection(
                         title: "Like it",
@@ -113,7 +113,7 @@ struct SummaryStepView: View {
                         activities: vm.likeItActivities
                     )
                 }
-                
+
                 if !vm.notMyFavActivities.isEmpty {
                     ActivitySummarySection(
                         title: "Not my fav",
@@ -129,7 +129,7 @@ struct SummaryStepView: View {
                 .fill(.thinMaterial)
         )
     }
-    
+
     private var callToActionSection: some View {
         VStack(spacing: 16) {
             Text("🎯 Perfect! We'll use these preferences to create amazing itineraries just for you.")
@@ -138,25 +138,25 @@ struct SummaryStepView: View {
                 .foregroundColor(.accentColor)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 16)
-            
+
             VStack(spacing: 8) {
                 Text("What happens next:")
                     .font(.subheadline)
                     .fontWeight(.semibold)
-                
+
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(alignment: .top, spacing: 8) {
                         Text("•")
                         Text("Your preferences will be saved securely")
                             .font(.caption)
                     }
-                    
+
                     HStack(alignment: .top, spacing: 8) {
                         Text("•")
                         Text("Our AI will learn your travel style")
                             .font(.caption)
                     }
-                    
+
                     HStack(alignment: .top, spacing: 8) {
                         Text("•")
                         Text("You'll get personalized itineraries for every destination")
@@ -178,20 +178,20 @@ struct SummaryRow: View {
     let icon: String
     let title: String
     let value: String
-    
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.title3)
                 .foregroundColor(.accentColor)
                 .frame(width: 24)
-            
+
             Text(title)
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-            
+
             Spacer()
-            
+
             Text(value)
                 .font(.subheadline)
                 .fontWeight(.medium)
@@ -203,7 +203,7 @@ struct ActivitySummarySection: View {
     let title: String
     let color: Color
     let activities: [ActivityPreferences.ActivityType]
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -211,9 +211,9 @@ struct ActivitySummarySection: View {
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(color)
-                
+
                 Spacer()
-                
+
                 Text("\(activities.count)")
                     .font(.caption)
                     .fontWeight(.medium)
@@ -225,10 +225,10 @@ struct ActivitySummarySection: View {
                             .fill(color.opacity(0.2))
                     )
             }
-            
+
             LazyVGrid(columns: [
                 GridItem(.flexible()),
-                GridItem(.flexible())
+                GridItem(.flexible()),
             ], spacing: 6) {
                 ForEach(activities, id: \.self) { activity in
                     HStack(spacing: 6) {
@@ -236,12 +236,12 @@ struct ActivitySummarySection: View {
                             .font(.caption2)
                             .foregroundColor(color)
                             .frame(width: 12)
-                        
+
                         Text(activity.displayName)
                             .font(.caption2)
                             .fontWeight(.medium)
                             .lineLimit(1)
-                        
+
                         Spacer(minLength: 0)
                     }
                     .padding(.horizontal, 8)

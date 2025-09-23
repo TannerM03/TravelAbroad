@@ -20,7 +20,6 @@ struct CitiesView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                
                 ScrollView {
                     headerSection
                     citiesGridSection

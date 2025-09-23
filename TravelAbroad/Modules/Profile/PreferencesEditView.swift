@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PreferencesEditView: View {
     @State private var viewModel = PreferencesEditViewModel()
-    
+
     var body: some View {
         NavigationView {
             Form {
@@ -52,7 +52,7 @@ struct PreferencesEditView: View {
                 }
             }
             .alert("Error", isPresented: $viewModel.showError) {
-                Button("OK") { }
+                Button("OK") {}
             } message: {
                 Text(viewModel.errorMessage)
             }
@@ -76,8 +76,8 @@ struct PreferencesEditView: View {
             await viewModel.loadPreferences()
         }
     }
-    
-    private func travelStyleSection(_ preferences: UserPreferences) -> some View {
+
+    private func travelStyleSection(_: UserPreferences) -> some View {
         Section("Travel Style") {
             Picker("Energy Level", selection: Binding(
                 get: { viewModel.preferences?.travelStyle.energyLevel ?? .balanced },
@@ -87,7 +87,7 @@ struct PreferencesEditView: View {
                     Text(level.displayName).tag(level)
                 }
             }
-            
+
             Picker("Social Preference", selection: Binding(
                 get: { viewModel.preferences?.travelStyle.socialPreference ?? .flexible },
                 set: { viewModel.preferences?.travelStyle.socialPreference = $0 }
@@ -96,7 +96,7 @@ struct PreferencesEditView: View {
                     Text(social.displayName).tag(social)
                 }
             }
-            
+
             Picker("Time Preference", selection: Binding(
                 get: { viewModel.preferences?.travelStyle.timePreference ?? .flexible },
                 set: { viewModel.preferences?.travelStyle.timePreference = $0 }
@@ -105,7 +105,7 @@ struct PreferencesEditView: View {
                     Text(time.displayName).tag(time)
                 }
             }
-            
+
             Picker("Budget Range", selection: Binding(
                 get: { viewModel.preferences?.travelStyle.budgetRange ?? .moderate },
                 set: { viewModel.preferences?.travelStyle.budgetRange = $0 }
@@ -116,8 +116,8 @@ struct PreferencesEditView: View {
             }
         }
     }
-    
-    private func activityPreferencesSection(_ preferences: UserPreferences) -> some View {
+
+    private func activityPreferencesSection(_: UserPreferences) -> some View {
         Section("Activity Preferences") {
             ForEach(ActivityPreferences.ActivityType.allCases, id: \.self) { activity in
                 HStack {
@@ -126,9 +126,9 @@ struct PreferencesEditView: View {
                         Image(systemName: activity.icon)
                             .foregroundColor(.secondary)
                     }
-                    
+
                     Spacer()
-                    
+
                     Picker(activity.displayName, selection: Binding(
                         get: { viewModel.preferences?.activityPreferences.preferences[activity] ?? .likeIt },
                         set: { newValue in
@@ -148,8 +148,8 @@ struct PreferencesEditView: View {
             }
         }
     }
-    
-    private func practicalPreferencesSection(_ preferences: UserPreferences) -> some View {
+
+    private func practicalPreferencesSection(_: UserPreferences) -> some View {
         Section("Getting Around") {
             Picker("Walking Distance", selection: Binding(
                 get: { viewModel.preferences?.practicalPreferences.maxWalkingDistance ?? .moderate },
@@ -159,7 +159,7 @@ struct PreferencesEditView: View {
                     Text(distance.displayName).tag(distance)
                 }
             }
-            
+
             Picker("Transportation", selection: Binding(
                 get: { viewModel.preferences?.practicalPreferences.transportationPreference ?? .flexible },
                 set: { viewModel.preferences?.practicalPreferences.transportationPreference = $0 }
@@ -168,7 +168,7 @@ struct PreferencesEditView: View {
                     Text(transport.displayName).tag(transport)
                 }
             }
-            
+
             Picker("Accommodation", selection: Binding(
                 get: { viewModel.preferences?.practicalPreferences.accommodationStyle ?? .flexible },
                 set: { viewModel.preferences?.practicalPreferences.accommodationStyle = $0 }
@@ -179,8 +179,8 @@ struct PreferencesEditView: View {
             }
         }
     }
-    
-    private func additionalPreferencesSection(_ preferences: UserPreferences) -> some View {
+
+    private func additionalPreferencesSection(_: UserPreferences) -> some View {
         Section("Additional Preferences") {
             Picker("Planning Style", selection: Binding(
                 get: { viewModel.preferences?.additionalPreferences.planningStyle ?? .structured },
@@ -190,7 +190,7 @@ struct PreferencesEditView: View {
                     Text(planning.displayName).tag(planning)
                 }
             }
-            
+
             Picker("Risk Tolerance", selection: Binding(
                 get: { viewModel.preferences?.additionalPreferences.riskTolerance ?? .moderate },
                 set: { viewModel.preferences?.additionalPreferences.riskTolerance = $0 }
@@ -199,7 +199,7 @@ struct PreferencesEditView: View {
                     Text(risk.displayName).tag(risk)
                 }
             }
-            
+
             Picker("Cultural Immersion", selection: Binding(
                 get: { viewModel.preferences?.additionalPreferences.culturalImmersion ?? .moderate },
                 set: { viewModel.preferences?.additionalPreferences.culturalImmersion = $0 }
@@ -208,7 +208,7 @@ struct PreferencesEditView: View {
                     Text(cultural.displayName).tag(cultural)
                 }
             }
-            
+
             Picker("Crowd Tolerance", selection: Binding(
                 get: { viewModel.preferences?.additionalPreferences.crowdTolerance ?? .moderate },
                 set: { viewModel.preferences?.additionalPreferences.crowdTolerance = $0 }

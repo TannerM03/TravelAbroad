@@ -73,8 +73,7 @@ struct RecommendationsView: View {
             checkAndShowRatingTip()
         }
         .alert("Rating Submitted!", isPresented: $vm.showSubmittedAlert) {
-            Button("OK", role: .cancel) {
-            }
+            Button("OK", role: .cancel) {}
         }
         .sheet(isPresented: $showingAddRecommendation) {
             AddRecommendationView(
@@ -133,8 +132,8 @@ struct RecommendationsView: View {
                     Spacer()
 
                     ratingButton
-                    
-/// Bookmark button - might use this later if i want to have a bucket list somewhere
+
+                    /// Bookmark button - might use this later if i want to have a bucket list somewhere
 //                    Button {
 //                        Task {
 //                            await vm.addOrRemoveFavorite(cityId: UUID(uuidString: vm.cityId) ?? UUID())
@@ -170,7 +169,7 @@ struct RecommendationsView: View {
     }
 
     private var ratingButton: some View {
-        Button(action: { 
+        Button(action: {
             vm.showRatingOverlay()
             if showRatingTip {
                 dismissRatingTip()
@@ -341,7 +340,7 @@ struct RecommendationsView: View {
             .padding(.horizontal, 32)
         }
     }
-    
+
     private var ratingTipOverlay: some View {
         ZStack {
             Color.clear
@@ -349,35 +348,35 @@ struct RecommendationsView: View {
                 .onTapGesture {
                     dismissRatingTip()
                 }
-            
+
             VStack {
                 HStack {
                     Spacer()
-                    
+
                     VStack(alignment: .trailing, spacing: 20) {
                         Image(systemName: "arrowtriangle.right.fill")
                             .font(.caption)
                             .foregroundColor(.black.opacity(0.8))
                             .padding(.trailing, 80)
 
-                            Text("Tap to rate this city!")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(.black.opacity(0.8))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        Text("Tap to rate this city!")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(.black.opacity(0.8))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                     .padding(.trailing, 35)
                 }
                 .padding(.top, 20)
-                
+
                 Spacer()
             }
         }
     }
-    
+
     private func checkAndShowRatingTip() {
         let tipCount = UserDefaults.standard.integer(forKey: "ratingTipShownCount")
         if tipCount < 3 {
@@ -387,7 +386,7 @@ struct RecommendationsView: View {
                     showRatingTip = true
                 }
                 UserDefaults.standard.set(tipCount + 1, forKey: "ratingTipShownCount")
-                
+
                 // Auto-dismiss after 3 seconds
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                     dismissRatingTip()
@@ -395,7 +394,7 @@ struct RecommendationsView: View {
             }
         }
     }
-    
+
     private func dismissRatingTip() {
         withAnimation(.easeInOut(duration: 0.3)) {
             showRatingTip = false

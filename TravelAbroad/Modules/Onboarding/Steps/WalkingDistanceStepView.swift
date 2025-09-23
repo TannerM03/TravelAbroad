@@ -7,7 +7,7 @@ import SwiftUI
 
 struct WalkingDistanceStepView: View {
     @Bindable var vm: OnboardingViewModel
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 32) {
@@ -20,13 +20,13 @@ struct WalkingDistanceStepView: View {
             .padding(.horizontal, 24)
         }
     }
-    
+
     private var headerSection: some View {
         VStack(spacing: 12) {
             Text("Getting Around")
                 .font(.title)
                 .fontWeight(.bold)
-            
+
             Text("Help us plan realistic itineraries for you")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -34,7 +34,7 @@ struct WalkingDistanceStepView: View {
         }
         .padding(.vertical, 20)
     }
-    
+
     private var walkingDistanceSection: some View {
         PreferenceSection(
             title: "Walking Distance",
@@ -53,7 +53,7 @@ struct WalkingDistanceStepView: View {
             }
         }
     }
-    
+
     private var transportationSection: some View {
         PreferenceSection(
             title: "Transportation",
@@ -73,7 +73,7 @@ struct WalkingDistanceStepView: View {
             }
         }
     }
-    
+
     private var accommodationSection: some View {
         PreferenceSection(
             title: "Accommodation Style",
@@ -99,7 +99,7 @@ struct WalkingDistanceCard: View {
     let distance: PracticalPreferences.WalkingDistance
     let isSelected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             VStack(spacing: 12) {
@@ -109,37 +109,37 @@ struct WalkingDistanceCard: View {
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundColor(.primary)
-                        
+
                         Text(walkingTimeDescription)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                    
+
                     Spacer()
-                    
+
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                         .font(.title3)
                         .foregroundColor(isSelected ? .accentColor : .secondary)
                 }
-                
+
                 // Visual walking indicator
                 HStack(spacing: 4) {
-                    ForEach(0..<walkingIndicatorCount, id: \.self) { index in
+                    ForEach(0 ..< walkingIndicatorCount, id: \.self) { _ in
                         Image(systemName: "figure.walk")
                             .font(.caption2)
                             .foregroundColor(isSelected ? .accentColor : .secondary)
                     }
-                    
+
                     if walkingIndicatorCount < 5 {
-                        ForEach(walkingIndicatorCount..<5, id: \.self) { index in
+                        ForEach(walkingIndicatorCount ..< 5, id: \.self) { _ in
                             Image(systemName: "figure.walk")
                                 .font(.caption2)
                                 .foregroundColor(.secondary.opacity(0.3))
                         }
                     }
-                    
+
                     Spacer()
-                    
+
                     Text("\(String(format: "%.1f", distance.maxDistanceInMiles)) mi")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -161,7 +161,7 @@ struct WalkingDistanceCard: View {
         }
         .buttonStyle(PlainButtonStyle())
     }
-    
+
     private var walkingIndicatorCount: Int {
         switch distance {
         case .short: return 2
@@ -169,7 +169,7 @@ struct WalkingDistanceCard: View {
         case .long: return 4
         }
     }
-    
+
     private var walkingTimeDescription: String {
         let minutes = Int(distance.maxDistanceInMiles * 20) // Assuming 20 minutes per mile
         return "~\(minutes) min walk"

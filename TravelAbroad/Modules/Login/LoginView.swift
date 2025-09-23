@@ -40,6 +40,13 @@ struct LoginView: View {
                 Spacer()
             }
         }
+        .alert("Check Your Email", isPresented: $vm.showEmailConfirmationDialog) {
+            Button("OK") {
+                vm.showEmailConfirmationDialog = false
+            }
+        } message: {
+            Text("We've sent a confirmation link to \(vm.loginCredential). Please check your email on your phone and tap the link to complete your account setup.")
+        }
     }
 
     private var titleSection: some View {
@@ -53,7 +60,7 @@ struct LoginView: View {
             HStack {
                 Image(systemName: "envelope")
                     .foregroundColor(.accentColor)
-                TextField(vm.isSignUp ? "Email" : "Email or username", text: $vm.loginCredential)
+                TextField(vm.isSignUp ? "University email (.edu)" : "Email or username", text: $vm.loginCredential)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .keyboardType(.emailAddress)
@@ -65,7 +72,7 @@ struct LoginView: View {
                 HStack {
                     Image(systemName: "person")
                         .foregroundColor(.accentColor)
-                    TextField("Username (minimum of 4 characters)", text: $vm.username)
+                    TextField("Username", text: $vm.username)
                 }
                 .padding(12)
                 .background(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.gray.opacity(0.24), lineWidth: 1))
@@ -101,18 +108,18 @@ struct LoginView: View {
             Task {
                 let wasSignUp = vm.isSignUp
                 isAuthenticated = await vm.authAction()
-                
+
                 // Only trigger onboarding for new sign-ups
                 if wasSignUp && isAuthenticated {
                     shouldShowOnboarding = true
                 }
-                
+
                 await profileVm.fetchUser()
             }
         } label: {
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(vm.loginCredential.isEmpty || vm.password.isEmpty || vm.isLoading ? Color.gray.opacity(0.5) : Color.accentColor)
+                    .fill(vm.loginCredential.isEmpty || vm.password.isEmpty || vm.isLoading || (vm.username.count < 4 && vm.isSignUp) ? Color.gray.opacity(0.5) : Color.accentColor)
                     .frame(height: 48)
                 Text(vm.isSignUp ? "Sign Up" : "Login")
                     .foregroundColor(.white)
@@ -136,6 +143,6 @@ struct LoginView: View {
     }
 }
 
-#Preview("Login Mode") {
-    LoginView(isAuthenticated: .constant(false), shouldShowOnboarding: .constant(false))
-}
+// #Preview("Login Mode") {
+//    LoginView(isAuthenticated: .constant(false), shouldShowOnboarding: .constant(false))
+// }

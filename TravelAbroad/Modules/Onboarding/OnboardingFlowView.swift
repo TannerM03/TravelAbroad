@@ -10,24 +10,24 @@ import SwiftUI
 struct OnboardingFlowView: View {
     @State private var vm = OnboardingViewModel()
     @Binding var shouldShowOnboarding: Bool
-    
+
     var body: some View {
         ZStack {
             // Background gradient
             LinearGradient(
                 gradient: Gradient(colors: [
                     Color(.systemTeal).opacity(0.15),
-                    Color(.systemIndigo).opacity(0.12)
+                    Color(.systemIndigo).opacity(0.12),
                 ]),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
-            
+
             VStack(spacing: 0) {
                 // Progress indicator
                 progressIndicator
-                
+
                 // Main content area
                 TabView(selection: $vm.currentStep) {
                     ForEach(OnboardingStep.allCases, id: \.self) { step in
@@ -37,7 +37,7 @@ struct OnboardingFlowView: View {
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 .animation(.easeInOut(duration: 0.4), value: vm.currentStep)
-                
+
                 // Navigation buttons
                 navigationButtons
             }
@@ -48,7 +48,7 @@ struct OnboardingFlowView: View {
             Text(vm.errorMessage)
         }
     }
-    
+
     @ViewBuilder
     private func stepContentView(for step: OnboardingStep) -> some View {
         switch step {
@@ -66,7 +66,7 @@ struct OnboardingFlowView: View {
             SummaryStepView(vm: vm)
         }
     }
-    
+
     private var progressIndicator: some View {
         VStack(spacing: 16) {
             HStack {
@@ -75,7 +75,7 @@ struct OnboardingFlowView: View {
                     .foregroundColor(.secondary)
                 Spacer()
             }
-            
+
             ProgressView(value: vm.currentStep.progress)
                 .tint(.accentColor)
                 .scaleEffect(y: 1.5)
@@ -83,7 +83,7 @@ struct OnboardingFlowView: View {
         .padding(.horizontal, 24)
         .padding(.vertical, 16)
     }
-    
+
     private var navigationButtons: some View {
         HStack(spacing: 20) {
             // Back button
@@ -97,9 +97,9 @@ struct OnboardingFlowView: View {
             }
             .opacity(vm.canGoBack ? 1.0 : 0.0)
             .disabled(!vm.canGoBack)
-            
+
             Spacer()
-            
+
             // Next/Complete button
             Button(action: {
                 if vm.isLastStep {

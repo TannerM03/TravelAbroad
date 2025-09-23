@@ -6,10 +6,10 @@
 //
 
 import Foundation
+import Observation
 import PhotosUI
 import Supabase
 import SwiftUI
-import Observation
 
 @MainActor
 @Observable
@@ -19,7 +19,7 @@ class TravelHistoryViewModel {
     var userSearch = ""
     var filter: CityFilter = .none
     var user: User?
-    var userId: UUID? = nil
+    var userId: UUID?
 
     // what will be shown to the user, includes the text the user is searching for and searches for the city name and the country it's in
     var filteredCities: [UserRatedCity] {

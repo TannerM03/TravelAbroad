@@ -25,7 +25,7 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                             .font(.caption)
                     }
-                    
+
                     NavigationLink(destination: PreferencesEditView()) {
                         HStack {
                             Image(systemName: "slider.horizontal.3")

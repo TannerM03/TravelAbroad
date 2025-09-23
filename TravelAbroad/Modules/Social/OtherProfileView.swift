@@ -1,5 +1,5 @@
 //
-//  ProfileView.swift
+//  OtherProfileView.swift
 //  TravelAbroad
 //
 //  Created by Tanner Macpherson on 9/15/25.
@@ -18,12 +18,12 @@ struct OtherProfileView: View {
     @State private var selectedUIImage: UIImage? = nil
     @State private var fromProfile = true
     @State private var selectedSegment = 0
-    
+
     init(selectedUserId: String) {
         self.selectedUserId = selectedUserId
-        self.vm = OtherProfileViewModel(userId: selectedUserId)
-        self.travelHistoryViewModel = OtherUserTravelHistoryViewModel(userId: selectedUserId)
-        self.spotsViewModel = OtherUserSpotsViewModel(userId: selectedUserId)
+        vm = OtherProfileViewModel(userId: selectedUserId)
+        travelHistoryViewModel = OtherUserTravelHistoryViewModel(userId: selectedUserId)
+        spotsViewModel = OtherUserSpotsViewModel(userId: selectedUserId)
     }
 
     var body: some View {
@@ -158,6 +158,6 @@ struct OtherProfileView: View {
     }
 }
 
-//#Preview {
+// #Preview {
 //    ProfileView(isAuthenticated: .constant(true), vm: ProfileViewModel())
-//}
+// }

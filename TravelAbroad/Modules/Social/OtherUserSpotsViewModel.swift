@@ -16,7 +16,7 @@ class OtherUserSpotsViewModel {
     var isLoading = false
     var userId: UUID?
     var user: User?
-    
+
     init(userId: String) {
         self.userId = UUID(uuidString: userId)
     }

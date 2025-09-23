@@ -106,8 +106,8 @@ class SupabaseManager {
             throw NSError(domain: "SupabaseManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "City not found"])
         }
 
-        let latitude = cityData.latitude ?? 0.0
-        let longitude = cityData.longitude ?? 0.0
+        let latitude = cityData.latitude
+        let longitude = cityData.longitude
 
         print("SupabaseManager: Fetched coordinates for city \(cityId): (\(latitude), \(longitude))")
 
@@ -229,6 +229,17 @@ class SupabaseManager {
         }
     }
 
+    // MARK: - SocialView Functions
+
+    func fetchUsers(userId: String) async throws -> [OtherProfile] {
+        let response: [OtherProfile] = try await supabase
+            .from("profiles")
+            .select("id, username, image_url")
+            .notEquals("id", value: userId)
+            .execute()
+            .value
+        return response
+    }
 
     // MARK: - CommentsView Functions
 
@@ -300,7 +311,7 @@ class SupabaseManager {
             imageUrl: response.imageUrl,
             username: response.profiles?.username,
         )
-        
+
         // If comment has an image, check if recommendation needs an image
         if let commentImageUrl = imageUrl {
             try await updateRecommendationImageIfNeeded(recommendationId: recommendationId, imageUrl: commentImageUrl)
@@ -308,14 +319,14 @@ class SupabaseManager {
 
         return newComment
     }
-    
+
     // Helper method to update recommendation image if it doesn't have one
     private func updateRecommendationImageIfNeeded(recommendationId: String, imageUrl: String) async throws {
         // First check if the recommendation already has an image
         struct RecommendationImage: Codable {
             let image_url: String?
         }
-        
+
         let currentRec: RecommendationImage = try await supabase
             .from("recommendations")
             .select("image_url")
@@ -323,7 +334,7 @@ class SupabaseManager {
             .single()
             .execute()
             .value
-        
+
         // If recommendation doesn't have an image, update it with the comment's image
         if currentRec.image_url == nil || currentRec.image_url?.isEmpty == true {
             try await supabase
@@ -347,7 +358,7 @@ class SupabaseManager {
         let imageUrl = try bucket.getPublicURL(path: fileName).absoluteString
         return imageUrl
     }
-    
+
     func uploadRecommendationImage(_ image: UIImage) async throws -> String {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             throw NSError(domain: "ImageError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image to JPEG"])
@@ -418,15 +429,15 @@ class SupabaseManager {
     }
 
     // MARK: - Comment Voting Functions
-    
+
     // Vote on a comment (upvote or downvote)
     func voteOnComment(commentId: String, voteType: VoteType) async throws {
         guard let userId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
-        
+
         print("voting on comment in server")
-        
+
         // First, remove any existing vote by this user on this comment
         try await supabase
             .from("comment_votes")
@@ -434,34 +445,34 @@ class SupabaseManager {
             .eq("user_id", value: userId.uuidString)
             .eq("comment_id", value: commentId)
             .execute()
-        
-        // Then insert the new vote
+
+        // Then insert the new vote1
         struct VoteInsert: Codable {
             let user_id: String
             let comment_id: String
             let vote_type: String
         }
-        
+
         let voteData = VoteInsert(
             user_id: userId.uuidString,
             comment_id: commentId,
             vote_type: voteType.rawValue
         )
-        
+
         try await supabase
             .from("comment_votes")
             .insert(voteData)
             .execute()
     }
-    
+
     // Remove vote from a comment
     func removeVoteFromComment(commentId: String) async throws {
         guard let userId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
-        
+
         print("removing vote in server layer")
-        
+
         try await supabase
             .from("comment_votes")
             .delete()
@@ -469,13 +480,13 @@ class SupabaseManager {
             .eq("comment_id", value: commentId)
             .execute()
     }
-    
+
     // Fetch comments with vote counts and user's vote status
     func fetchCommentsWithVotes(for recommendationId: String, sortBy: CommentSortOption) async throws -> [Comment] {
         guard let userId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
-        
+
         // Query your comments_with_votes view and join with user's votes
         struct CommentWithVotes: Codable {
             let id: String
@@ -489,13 +500,13 @@ class SupabaseManager {
             let upvote_count: Int?
             let downvote_count: Int?
             let net_votes: Int?
-            
+
             // User's vote will come from separate query
         }
-        
+
         // First get comments with vote counts - build query based on sort option
         let commentsResponse: [CommentWithVotes]
-        
+
         switch sortBy {
         case .upvotes:
             commentsResponse = try await supabase
@@ -524,15 +535,15 @@ class SupabaseManager {
                 .execute()
                 .value
         }
-        
+
         // Then get user's votes for these comments
         let commentIds = commentsResponse.map { $0.id }
-        
+
         struct UserVote: Codable {
             let comment_id: String
             let vote_type: String
         }
-        
+
         let userVotes: [UserVote] = try await supabase
             .from("comment_votes")
             .select("comment_id, vote_type")
@@ -540,10 +551,10 @@ class SupabaseManager {
             .in("comment_id", values: commentIds)
             .execute()
             .value
-        
+
         // Create a lookup dictionary for user votes
         let userVotesDict = Dictionary(uniqueKeysWithValues: userVotes.map { ($0.comment_id, $0.vote_type) })
-        
+
         return commentsResponse.map { commentData in
             Comment(
                 id: commentData.id,
@@ -588,6 +599,21 @@ class SupabaseManager {
             .from("profiles")
             .select("username")
             .ilike("username", pattern: username.lowercased())
+            .execute()
+            .value
+
+        return profiles.isEmpty
+    }
+
+    func isEmailAvailable(email: String) async throws -> Bool {
+        struct Profile: Codable {
+            let email: String?
+        }
+
+        let profiles: [Profile] = try await supabase
+            .from("profiles")
+            .select("email")
+            .ilike("email", pattern: email.lowercased())
             .execute()
             .value
 
@@ -786,13 +812,12 @@ class SupabaseManager {
             .execute()
         return num.count ?? 0
     }
-    
-    func deleteSpotComment(userId: UUID, spotId: UUID) async throws {
+
+    func deleteSpotComment(commentId: String) async throws {
         do {
             try await supabase.from("comments")
                 .delete()
-                .eq("user_id", value: userId)
-                .eq("rec_id", value: spotId)
+                .eq("id", value: commentId)
                 .execute()
         } catch {
             print("supabase delete spot error: \(error.localizedDescription)")
@@ -884,7 +909,7 @@ class SupabaseManager {
         guard let userId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
-        
+
         struct UserPreferencesInsert: Codable {
             let user_id: String
             let energy_level: String
@@ -900,13 +925,13 @@ class SupabaseManager {
             let cultural_immersion: String
             let crowd_tolerance: String
         }
-        
+
         // Convert activity preferences to dictionary
         var activityPrefsDict: [String: String] = [:]
         for (activity, level) in preferences.activityPreferences.preferences {
             activityPrefsDict[activity.rawValue] = level.rawValue
         }
-        
+
         let preferencesData = UserPreferencesInsert(
             user_id: userId.uuidString,
             energy_level: preferences.travelStyle.energyLevel.rawValue,
@@ -922,21 +947,21 @@ class SupabaseManager {
             cultural_immersion: preferences.additionalPreferences.culturalImmersion.rawValue,
             crowd_tolerance: preferences.additionalPreferences.crowdTolerance.rawValue
         )
-        
+
         do {
             // Try to insert new preferences
             try await supabase
                 .from("user_preferences")
                 .insert(preferencesData)
                 .execute()
-            
+
             print("✅ User preferences saved successfully")
-            
+
         } catch {
             // If insert fails (user already has preferences), update existing record
             let activityPrefsJsonData = try JSONSerialization.data(withJSONObject: preferencesData.activity_preferences)
             let activityPrefsJsonString = String(data: activityPrefsJsonData, encoding: .utf8) ?? "{}"
-            
+
             try await supabase
                 .from("user_preferences")
                 .update([
@@ -952,11 +977,11 @@ class SupabaseManager {
                     "risk_tolerance": preferencesData.risk_tolerance,
                     "cultural_immersion": preferencesData.cultural_immersion,
                     "crowd_tolerance": preferencesData.crowd_tolerance,
-                    "updated_at": ISO8601DateFormatter().string(from: Date())
+                    "updated_at": ISO8601DateFormatter().string(from: Date()),
                 ])
                 .eq("user_id", value: userId.uuidString)
                 .execute()
-            
+
             print("User preferences updated successfully")
         }
     }
@@ -965,7 +990,7 @@ class SupabaseManager {
         guard let userId = supabase.auth.currentUser?.id else {
             return nil
         }
-        
+
         struct UserPreferencesResponse: Codable {
             let id: String
             let user_id: String
@@ -984,7 +1009,7 @@ class SupabaseManager {
             let created_at: String
             let updated_at: String
         }
-        
+
         let response: [UserPreferencesResponse] = try await supabase
             .from("user_preferences")
             .select()
@@ -992,39 +1017,40 @@ class SupabaseManager {
             .limit(1)
             .execute()
             .value
-        
+
         guard let prefsData = response.first else {
             return nil
         }
-        
+
         // Convert response to UserPreferences model
         var preferences = UserPreferences(userId: userId)
         preferences.travelStyle.energyLevel = TravelStylePreferences.EnergyLevel(rawValue: prefsData.energy_level) ?? .balanced
         preferences.travelStyle.socialPreference = TravelStylePreferences.SocialPreference(rawValue: prefsData.social_preference) ?? .flexible
         preferences.travelStyle.timePreference = TravelStylePreferences.TimePreference(rawValue: prefsData.time_preference) ?? .flexible
         preferences.travelStyle.budgetRange = TravelStylePreferences.BudgetRange(rawValue: prefsData.budget_range) ?? .moderate
-        
+
         // Convert activity preferences back from dictionary
         for (activityKey, levelValue) in prefsData.activity_preferences {
             if let activity = ActivityPreferences.ActivityType(rawValue: activityKey),
-               let level = ActivityPreferences.PreferenceLevel(rawValue: levelValue) {
+               let level = ActivityPreferences.PreferenceLevel(rawValue: levelValue)
+            {
                 preferences.activityPreferences.preferences[activity] = level
             }
         }
-        
+
         preferences.practicalPreferences.maxWalkingDistance = PracticalPreferences.WalkingDistance(rawValue: prefsData.max_walking_distance) ?? .moderate
         preferences.practicalPreferences.transportationPreference = PracticalPreferences.TransportationPreference(rawValue: prefsData.transportation_preference) ?? .flexible
         preferences.practicalPreferences.accommodationStyle = PracticalPreferences.AccommodationStyle(rawValue: prefsData.accommodation_style) ?? .flexible
-        
+
         preferences.additionalPreferences.planningStyle = AdditionalPreferences.PlanningStyle(rawValue: prefsData.planning_style) ?? .structured
         preferences.additionalPreferences.riskTolerance = AdditionalPreferences.RiskTolerance(rawValue: prefsData.risk_tolerance) ?? .moderate
         preferences.additionalPreferences.culturalImmersion = AdditionalPreferences.CulturalImmersion(rawValue: prefsData.cultural_immersion) ?? .moderate
         preferences.additionalPreferences.crowdTolerance = AdditionalPreferences.CrowdTolerance(rawValue: prefsData.crowd_tolerance) ?? .moderate
-        
+
         // Set timestamps
         let dateFormatter = ISO8601DateFormatter()
         preferences.updatedAt = dateFormatter.date(from: prefsData.updated_at) ?? Date()
-        
+
         return preferences
     }
 
@@ -1055,6 +1081,7 @@ class SupabaseManager {
     // fetches all recommendations that a user has reviewed/rated
     func fetchUserReviewedSpots(userId: UUID) async throws -> [ReviewedSpot] {
         struct ReviewedSpotResponse: Codable {
+            let id: String
             let rec_id: String
             let rating: Int
             let comment: String?
@@ -1068,8 +1095,9 @@ class SupabaseManager {
             var country: String {
                 return rec_with_avg_rating.cities.country
             }
-    
+
             enum CodingKeys: String, CodingKey {
+                case id
                 case rec_id
                 case rating
                 case comment
@@ -1105,7 +1133,7 @@ class SupabaseManager {
 
         let response: [ReviewedSpotResponse] = try await supabase
             .from("comments")
-            .select("rec_id, rating, comment, created_at, rec_with_avg_rating!inner(*, cities!inner(name, country))")
+            .select("id, rec_id, rating, comment, created_at, rec_with_avg_rating!inner(*, cities!inner(name, country))")
             .eq("user_id", value: userId)
             .order("created_at", ascending: false)
             .execute()
@@ -1124,7 +1152,7 @@ class SupabaseManager {
                 avgRating: item.rec_with_avg_rating.avgRating,
                 aiSummary: nil
             )
-            return ReviewedSpot(recommendation: recommendation, comment: item.comment, userRating: Double(item.rating), cityName: item.cityName, country: item.country, createdAt: item.created_at)
+            return ReviewedSpot(commentId: item.id, recommendation: recommendation, comment: item.comment, userRating: Double(item.rating), cityName: item.cityName, country: item.country, createdAt: item.created_at)
         }
     }
 }
