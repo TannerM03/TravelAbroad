@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import Supabase
 import UIKit
 
 @MainActor
@@ -18,13 +19,23 @@ class CommentsViewModel {
     var recommendation: Recommendation?
     var isGeneratingSummary: Bool = false
     var sortOption: CommentSortOption = .recent
-
+    var userId: UUID?
+    var user: User?
     private let supabaseManager = SupabaseManager.shared
 
     var displayedAverageRating: Double {
         guard !comments.isEmpty else { return recommendation?.avgRating ?? 0.0 }
         let total = comments.reduce(0) { $0 + $1.rating }
         return Double(total) / Double(comments.count)
+    }
+
+    func fetchUser() async {
+        do {
+            user = try await SupabaseManager.shared.supabase.auth.user()
+            userId = user?.id
+        } catch {
+            print("error fetching user in comments view mode: \(error.localizedDescription)")
+        }
     }
 
     func fetchComments(for recommendationId: String) async {
@@ -75,6 +86,15 @@ class CommentsViewModel {
             comments.insert(newComment, at: 0)
         } catch {
             print("Error submitting comment: \(error)")
+        }
+    }
+
+    func deleteSpotReview(reviewId: String) async {
+        do {
+            try await SupabaseManager.shared.deleteSpotComment(commentId: reviewId)
+            comments.removeAll { $0.id == reviewId }
+        } catch {
+            print("Could not delete spot because of error: \(error.localizedDescription)")
         }
     }
 

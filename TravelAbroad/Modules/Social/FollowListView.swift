@@ -2,11 +2,11 @@ import SwiftUI
 
 struct FollowListView: View {
     @State private var vm: FollowListViewModel
-    
+
     init(userId: UUID, listType: FollowListViewModel.FollowListType) {
         _vm = State(initialValue: FollowListViewModel(userId: userId, listType: listType))
     }
-    
+
     var body: some View {
         Group {
             if vm.isLoading {

@@ -767,26 +767,26 @@ class SupabaseManager {
             .eq("following_id", value: followingId)
             .execute()
     }
-    
+
     func fetchFollowersList(userId: UUID) async throws -> [OtherProfile] {
         struct FollowerWithProfile: Codable {
             let follower_id: String
             let profiles: ProfileInfo
         }
-        
+
         struct ProfileInfo: Codable {
             let id: String
             let username: String
             let image_url: String?
         }
-        
+
         let response: [FollowerWithProfile] = try await supabase
             .from("followers")
             .select("follower_id, profiles!followers_follower_id_fkey(id, username, image_url)")
             .eq("following_id", value: userId)
             .execute()
             .value
-        
+
         return response.map { follower in
             OtherProfile(
                 id: UUID(uuidString: follower.profiles.id) ?? UUID(),
@@ -795,26 +795,26 @@ class SupabaseManager {
             )
         }
     }
-    
+
     func fetchFollowingList(userId: UUID) async throws -> [OtherProfile] {
         struct FollowingWithProfile: Codable {
             let following_id: String
             let profiles: ProfileInfo
         }
-        
+
         struct ProfileInfo: Codable {
             let id: String
             let username: String
             let image_url: String?
         }
-        
+
         let response: [FollowingWithProfile] = try await supabase
             .from("followers")
             .select("following_id, profiles!followers_following_id_fkey(id, username, image_url)")
             .eq("follower_id", value: userId)
             .execute()
             .value
-        
+
         return response.map { following in
             OtherProfile(
                 id: UUID(uuidString: following.profiles.id) ?? UUID(),
@@ -1176,6 +1176,23 @@ class SupabaseManager {
         preferences.updatedAt = dateFormatter.date(from: prefsData.updated_at) ?? Date()
 
         return preferences
+    }
+
+    // MARK: - City Request Function
+
+    func requestCity(userId: UUID, cityName: String, country: String) async throws {
+        struct CityRequest: Codable {
+            let user_id: UUID
+            let city_name: String
+            let country_name: String
+        }
+
+        let cityRequest = CityRequest(user_id: userId, city_name: cityName, country_name: country)
+
+        try await supabase
+            .from("city_requests")
+            .insert(cityRequest)
+            .execute()
     }
 
     // MARK: - Future Features (Untested)
