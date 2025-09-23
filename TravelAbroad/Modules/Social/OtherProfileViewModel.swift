@@ -22,6 +22,9 @@ class OtherProfileViewModel {
     var citiesVisited: Int = 0
     var spotsReviewed: Int = 0
     var countriesVisited: Int = 0
+    var followerCount: Int = 0
+    var followingCount: Int = 0
+    var isFollowing: Bool = false
 
     private var imageCache: [String: Image] = [:]
 
@@ -43,7 +46,6 @@ class OtherProfileViewModel {
                 countriesVisited = travelStats.countriesVisited
                 citiesVisited = travelStats.citiesVisited
                 spotsReviewed = travelStats.spotsVisited
-                print("fetched other user travel stats: countriesvisited: \(countriesVisited)")
 
             } else {
                 print("userId didn't work yet")
@@ -72,6 +74,60 @@ class OtherProfileViewModel {
             }
         } catch {
             print("Failed to load image from URL: \(error)")
+        }
+    }
+
+    func fetchFollowers() async throws {
+        Task {
+            do {
+                if let id = userId {
+                    let response = try await SupabaseManager.shared.fetchFollowerCount(userId: id)
+                    followerCount = response.0
+                    followingCount = response.1
+                } else {
+                    print("id not fetched")
+                }
+            } catch {
+                print("error fetching follow count: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func fetchIsFollowing() async throws {
+        Task {
+            do {
+                guard let otherUserId = userId,
+                      let currentUserId = SupabaseManager.shared.supabase.auth.currentUser?.id
+                else {
+                    return
+                }
+                isFollowing = try await SupabaseManager.shared.fetchIsFollowing(curUserId: currentUserId, otherUserId: otherUserId)
+            } catch {
+                print("error fetching follow status: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func toggleFollow() async throws {
+        guard let otherUserId = userId,
+              let currentUserId = SupabaseManager.shared.supabase.auth.currentUser?.id
+        else {
+            return
+        }
+
+        do {
+            if isFollowing {
+                try await SupabaseManager.shared.unfollowUser(followerId: currentUserId, followingId: otherUserId)
+                isFollowing = false
+                followerCount -= 1
+            } else {
+                try await SupabaseManager.shared.followUser(followerId: currentUserId, followingId: otherUserId)
+                isFollowing = true
+                followerCount += 1
+            }
+        } catch {
+            print("error toggling follow: \(error.localizedDescription)")
+            throw error
         }
     }
 }

@@ -59,16 +59,14 @@ struct OtherProfileView: View {
             if vm.user == nil {
                 await vm.fetchUser()
 
-                // Preload bucket list and travel history data
+                // Preload travel history data
                 if let userId = vm.userId {
-//                    await bucketListViewModel.fetchUser()
-
-//                    if bucketListViewModel.cities.isEmpty {
-//                        await bucketListViewModel.getCities(userId: userId)
-//                    }
                     if travelHistoryViewModel.cities.isEmpty {
                         await travelHistoryViewModel.getCities(userId: userId, showLoading: true)
                     }
+
+                    try? await vm.fetchFollowers()
+                    try? await vm.fetchIsFollowing()
                 }
             }
         }
@@ -78,13 +76,63 @@ struct OtherProfileView: View {
         HStack(alignment: .center) {
             Spacer()
             VStack(alignment: .center, spacing: 12) {
-//                Text("@\(vm.username)")
-//                    .font(.title2)
-//                    .fontWeight(.semibold)
-//                    .foregroundColor(.primary)
-//                    .padding(.bottom, 4)
-
                 CircularProfileImage(imageState: vm.imageState)
+                    .overlay(alignment: .bottomTrailing) {
+                        Button {
+                            Task {
+                                try await vm.toggleFollow()
+                            }
+                        } label: {
+                            Circle()
+                                .fill(vm.isFollowing ? Color.green : Color.blue)
+                                .frame(width: 40, height: 40)
+                                .overlay {
+                                    Image(systemName: vm.isFollowing ? "person.fill.checkmark" : "person.fill.badge.plus")
+                                        .font(.system(size: 16))
+                                        .foregroundStyle(.white)
+                                }
+                                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                HStack(spacing: 25) {
+                    NavigationLink {
+                        if let userId = vm.userId {
+                            FollowListView(userId: userId, listType: .followers)
+                        }
+                    } label: {
+                        VStack(spacing: 4) {
+                            Text("\(vm.followerCount)")
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+                            Text("Followers")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .fontWeight(.medium)
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink {
+                        if let userId = vm.userId {
+                            FollowListView(userId: userId, listType: .following)
+                        }
+                    } label: {
+                        VStack(spacing: 4) {
+                            Text("\(vm.followingCount)")
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+                            Text("Following")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .fontWeight(.medium)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
 
                 HStack {
                     VStack(spacing: 4) {
