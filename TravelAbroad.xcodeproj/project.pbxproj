@@ -8,15 +8,32 @@
 
 /* Begin PBXBuildFile section */
 		E34EE78E2DED0B33002B09DD /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = E34EE78D2DED0B33002B09DD /* Supabase */; };
+		E38598692E2E0926009F868D /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = E38598682E2E0926009F868D /* OpenAI */; };
+		E3A5F2F02E12592C00BA61CE /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = E3A5F2EF2E12592C00BA61CE /* Kingfisher */; };
+		E3A5F2F32E12596200BA61CE /* GooglePlaces in Frameworks */ = {isa = PBXBuildFile; productRef = E3A5F2F22E12596200BA61CE /* GooglePlaces */; };
+		E3A5F2F52E12596200BA61CE /* GooglePlacesSwift in Frameworks */ = {isa = PBXBuildFile; productRef = E3A5F2F42E12596200BA61CE /* GooglePlacesSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		E34EE77E2DDBD5CA002B09DD /* TravelAbroad.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TravelAbroad.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E3A86F9A2E81E078002D7A72 /* Exceptions for "TravelAbroad" folder in "TravelAbroad" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = E34EE77D2DDBD5CA002B09DD /* TravelAbroad */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		E34EE7802DDBD5CA002B09DD /* TravelAbroad */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E3A86F9A2E81E078002D7A72 /* Exceptions for "TravelAbroad" folder in "TravelAbroad" target */,
+			);
 			path = TravelAbroad;
 			sourceTree = "<group>";
 		};
@@ -27,7 +44,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E38598692E2E0926009F868D /* OpenAI in Frameworks */,
+				E3A5F2F32E12596200BA61CE /* GooglePlaces in Frameworks */,
+				E3A5F2F02E12592C00BA61CE /* Kingfisher in Frameworks */,
 				E34EE78E2DED0B33002B09DD /* Supabase in Frameworks */,
+				E3A5F2F52E12596200BA61CE /* GooglePlacesSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +92,10 @@
 			name = TravelAbroad;
 			packageProductDependencies = (
 				E34EE78D2DED0B33002B09DD /* Supabase */,
+				E3A5F2EF2E12592C00BA61CE /* Kingfisher */,
+				E3A5F2F22E12596200BA61CE /* GooglePlaces */,
+				E3A5F2F42E12596200BA61CE /* GooglePlacesSwift */,
+				E38598682E2E0926009F868D /* OpenAI */,
 			);
 			productName = TravelAbroad;
 			productReference = E34EE77E2DDBD5CA002B09DD /* TravelAbroad.app */;
@@ -102,6 +127,9 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				E34EE78C2DED0B33002B09DD /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				E3A5F2EE2E12592C00BA61CE /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				E3A5F2F12E12596200BA61CE /* XCRemoteSwiftPackageReference "ios-places-sdk" */,
+				E38598672E2E0926009F868D /* XCRemoteSwiftPackageReference "OpenAI" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E34EE77F2DDBD5CA002B09DD /* Products */;
@@ -265,12 +293,11 @@
 				DEVELOPMENT_TEAM = 3SDWL974BD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TravelAbroad/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -294,12 +321,11 @@
 				DEVELOPMENT_TEAM = 3SDWL974BD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TravelAbroad/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -345,6 +371,30 @@
 				minimumVersion = 2.5.1;
 			};
 		};
+		E38598672E2E0926009F868D /* XCRemoteSwiftPackageReference "OpenAI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/MacPaw/OpenAI";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.4.5;
+			};
+		};
+		E3A5F2EE2E12592C00BA61CE /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.3.3;
+			};
+		};
+		E3A5F2F12E12596200BA61CE /* XCRemoteSwiftPackageReference "ios-places-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlemaps/ios-places-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -352,6 +402,26 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E34EE78C2DED0B33002B09DD /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		E38598682E2E0926009F868D /* OpenAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E38598672E2E0926009F868D /* XCRemoteSwiftPackageReference "OpenAI" */;
+			productName = OpenAI;
+		};
+		E3A5F2EF2E12592C00BA61CE /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E3A5F2EE2E12592C00BA61CE /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+		E3A5F2F22E12596200BA61CE /* GooglePlaces */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E3A5F2F12E12596200BA61CE /* XCRemoteSwiftPackageReference "ios-places-sdk" */;
+			productName = GooglePlaces;
+		};
+		E3A5F2F42E12596200BA61CE /* GooglePlacesSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E3A5F2F12E12596200BA61CE /* XCRemoteSwiftPackageReference "ios-places-sdk" */;
+			productName = GooglePlacesSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
