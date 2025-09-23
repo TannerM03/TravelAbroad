@@ -37,7 +37,7 @@ struct OtherUserSpotsGridView: View {
     private var spotsListSection: some View {
         LazyVStack(spacing: 12) {
             ForEach(vm.spots) { spot in
-                OtherSpotCard(spot: spot)
+                OtherSpotCard(spot: spot, vm: vm)
             }
         }
         .padding(.horizontal, 16)
@@ -56,6 +56,7 @@ struct OtherUserSpotsGridView: View {
 
 struct OtherSpotCard: View {
     let spot: ReviewedSpot
+    let vm: OtherUserSpotsViewModel
 
     private var categoryIcon: String {
         switch spot.recommendation.category {
@@ -159,7 +160,7 @@ struct OtherSpotCard: View {
                 Spacer()
             }
 
-            // Comment and timestamp
+            // Comment
             HStack(alignment: .bottom) {
                 if let comment = spot.comment {
                     Text(comment)
@@ -168,12 +169,46 @@ struct OtherSpotCard: View {
                 }
 
                 Spacer()
+            }
+            .padding(.top, 12)
 
+            // timestamp and voting
+            HStack(spacing: 12) {
                 Text(timeString(from: spot.createdAt))
                     .font(.caption2)
                     .foregroundColor(.secondary)
+                    .padding(.top, 5)
+                Spacer()
+                Button {
+                    Task {
+                        await vm.toggleVote(spotId: spot.id, voteType: .upvote)
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: spot.userVote == .upvote ? "arrowshape.up.fill" : "arrowshape.up")
+                            .foregroundColor(spot.userVote == .upvote ? .green : .secondary)
+                        Text("\(spot.upvoteCount)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    Task {
+                        await vm.toggleVote(spotId: spot.id, voteType: .downvote)
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: spot.userVote == .downvote ? "arrowshape.down.fill" : "arrowshape.down")
+                            .foregroundColor(spot.userVote == .downvote ? .red : .secondary)
+                        Text("\(spot.downvoteCount)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .buttonStyle(.plain)
             }
-            .padding(.top, 12)
         }
         .padding()
         .background(Color(.tertiarySystemGroupedBackground))

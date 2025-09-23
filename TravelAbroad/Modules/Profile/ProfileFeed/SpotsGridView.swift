@@ -17,7 +17,12 @@ struct ReviewedSpot: Identifiable, Codable {
     let country: String
     let createdAt: Date
 
-    init(commentId: String, recommendation: Recommendation, comment: String?, userRating: Double, cityName: String, country: String, createdAt: Date) {
+    var upvoteCount: Int = 0
+    var downvoteCount: Int = 0
+    var netVotes: Int = 0
+    var userVote: VoteType? = nil
+
+    init(commentId: String, recommendation: Recommendation, comment: String?, userRating: Double, cityName: String, country: String, createdAt: Date, upvoteCount: Int = 0, downvoteCount: Int = 0, netVotes: Int = 0, userVote: VoteType? = nil) {
         id = commentId
         self.recommendation = recommendation
         self.comment = comment
@@ -25,6 +30,10 @@ struct ReviewedSpot: Identifiable, Codable {
         self.cityName = cityName
         self.country = country
         self.createdAt = createdAt
+        self.upvoteCount = upvoteCount
+        self.downvoteCount = downvoteCount
+        self.netVotes = netVotes
+        self.userVote = userVote
     }
 
     enum CodingKeys: String, CodingKey {
@@ -35,6 +44,44 @@ struct ReviewedSpot: Identifiable, Codable {
         case cityName
         case country
         case createdAt = "created_at"
+        case upvoteCount = "upvote_count"
+        case downvoteCount = "downvote_count"
+        case netVotes = "net_votes"
+        case userVote = "user_vote"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        recommendation = try container.decode(Recommendation.self, forKey: .recommendation)
+        comment = try container.decodeIfPresent(String.self, forKey: .comment)
+        userRating = try container.decode(Double.self, forKey: .userRating)
+        cityName = try container.decode(String.self, forKey: .cityName)
+        country = try container.decode(String.self, forKey: .country)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+
+        upvoteCount = try container.decodeIfPresent(Int.self, forKey: .upvoteCount) ?? 0
+        downvoteCount = try container.decodeIfPresent(Int.self, forKey: .downvoteCount) ?? 0
+        netVotes = try container.decodeIfPresent(Int.self, forKey: .netVotes) ?? 0
+
+        if let voteString = try container.decodeIfPresent(String.self, forKey: .userVote) {
+            userVote = VoteType(rawValue: voteString)
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(recommendation, forKey: .recommendation)
+        try container.encodeIfPresent(comment, forKey: .comment)
+        try container.encode(userRating, forKey: .userRating)
+        try container.encode(cityName, forKey: .cityName)
+        try container.encode(country, forKey: .country)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(upvoteCount, forKey: .upvoteCount)
+        try container.encode(downvoteCount, forKey: .downvoteCount)
+        try container.encode(netVotes, forKey: .netVotes)
+        try container.encodeIfPresent(userVote?.rawValue, forKey: .userVote)
     }
 }
 
@@ -200,22 +247,56 @@ struct ReviewCard: View {
                 Spacer()
             }
 
-            // Comment and timestamp
+            // Comment
             HStack(alignment: .bottom) {
                 if let comment = review.comment {
                     Text(comment)
                         .font(.caption)
                         .foregroundStyle(.primary)
-                        .lineLimit(2)
                 }
 
                 Spacer()
+            }
+            .padding(.top, 12)
 
+            // Timestamp and voting
+            HStack(spacing: 12) {
                 Text(timeString(from: review.createdAt))
                     .font(.caption2)
                     .foregroundColor(.secondary)
-            }
-            .padding(.top, 12)
+
+                Spacer()
+
+                Button {
+                    Task {
+                        await vm.toggleVote(spotId: review.id, voteType: .upvote)
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: review.userVote == .upvote ? "arrowshape.up.fill" : "arrowshape.up")
+                            .foregroundColor(review.userVote == .upvote ? .green : .secondary)
+                        Text("\(review.upvoteCount)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    Task {
+                        await vm.toggleVote(spotId: review.id, voteType: .downvote)
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: review.userVote == .downvote ? "arrowshape.down.fill" : "arrowshape.down")
+                            .foregroundColor(review.userVote == .downvote ? .red : .secondary)
+                        Text("\(review.downvoteCount)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .buttonStyle(.plain)
+            }.padding(.top, 5)
         }
         .padding()
         .background(Color(.tertiarySystemGroupedBackground))

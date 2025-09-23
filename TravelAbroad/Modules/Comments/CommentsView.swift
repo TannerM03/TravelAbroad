@@ -529,8 +529,6 @@ struct CommentCardView: View {
 
                 Spacer()
 
-                let _ = print("Comment userId: \(comment.userId), Current userId: \(viewModel.userId?.uuidString ?? "nil")")
-
                 if comment.userId.uppercased() == viewModel.userId?.uuidString {
                     Button {
                         commentToDelete = comment
@@ -544,13 +542,23 @@ struct CommentCardView: View {
                 }
             }
 
-            HStack {
+            HStack(spacing: 2) {
                 // Star rating
-                ForEach(Array(0 ..< comment.rating), id: \.self) { _ in
-                    Image(systemName: "star.fill")
+                ForEach(1 ... 5, id: \.self) { star in
+                    Image(systemName: star <= Int(comment.rating) ? "star.fill" : "star")
                         .foregroundColor(.yellow)
                         .font(.caption)
                 }
+//                ForEach(1 ... 5, id: \.self) { star in
+//                    Image(systemName: star <= Int(review.userRating) ? "star.fill" : "star")
+//                        .foregroundColor(.yellow)
+//                        .font(.caption)
+//                }
+//                ForEach(Array(0 ..< comment.rating), id: \.self) { _ in
+//                    Image(systemName: "star.fill")
+//                        .foregroundColor(.yellow)
+//                        .font(.caption)
+//                }
             }
 
             if let commentText = comment.comment {
