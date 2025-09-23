@@ -85,6 +85,7 @@ struct ProfileView: View {
         }
         .onAppear {
             Task {
+                try await vm.fetchFollowers()
                 await vm.refreshTravelStats()
             }
         }
@@ -94,24 +95,47 @@ struct ProfileView: View {
         HStack(alignment: .center) {
             Spacer()
             VStack(alignment: .center, spacing: 12) {
-//                Text("@\(vm.username)")
-//                    .font(.title2)
-//                    .fontWeight(.semibold)
-//                    .foregroundColor(.primary)
-//                    .padding(.bottom, 4)
-
                 CircularProfileImage(imageState: vm.imageState)
                     .overlay(alignment: .bottomTrailing) {
                         PhotosPicker(selection: $vm.imageSelection,
                                      matching: .images,
                                      photoLibrary: .shared())
                         {
-                            Image(systemName: "pencil.circle.fill")
-                                .symbolRenderingMode(.multicolor)
-                                .font(.title)
-                                .foregroundStyle(Color.accentColor)
-                        }.buttonStyle(.borderless)
+                            Circle()
+                                .fill(Color.blue)
+                                .frame(width: 40, height: 40)
+                                .overlay {
+                                    Image(systemName: "pencil")
+                                        .font(.system(size: 16))
+                                        .foregroundStyle(.white)
+                                }
+                                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                        }
+                        .buttonStyle(.plain)
                     }
+                HStack(spacing: 25) {
+                    VStack(spacing: 4) {
+                        Text("\(vm.followerCount)")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                        Text("Followers")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fontWeight(.medium)
+                    }
+
+                    VStack(spacing: 4) {
+                        Text("\(vm.followingCount)")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                        Text("Following")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fontWeight(.medium)
+                    }
+                }
 
                 HStack {
                     VStack(spacing: 4) {

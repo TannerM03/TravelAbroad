@@ -22,6 +22,8 @@ class ProfileViewModel {
     var citiesVisited: Int = 0
     var spotsReviewed: Int = 0
     var countriesVisited: Int = 0
+    var followingCount: Int = 0
+    var followerCount: Int = 0
     var imageSelection: PhotosPickerItem? {
         didSet {
             if let imageSelection {
@@ -108,6 +110,24 @@ class ProfileViewModel {
                 case let .failure(error):
                     self.imageState = .failure(error)
                 }
+            }
+        }
+    }
+
+    func fetchFollowers() async throws {
+        Task {
+            do {
+                if let id = userId {
+                    let response = try await SupabaseManager.shared.fetchFollowerCount(userId: id)
+                    followerCount = response.0
+                    followingCount = response.1
+
+                    print("followers response: \(response)")
+                } else {
+                    print("id not fetched")
+                }
+            } catch {
+                print("error fetching follow count: \(error.localizedDescription)")
             }
         }
     }
