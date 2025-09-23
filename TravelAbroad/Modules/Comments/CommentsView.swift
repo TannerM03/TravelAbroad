@@ -18,6 +18,8 @@ struct CommentsView: View {
     @State private var userRating: Double = 5.0
     @FocusState private var isTextFieldFocused: Bool
     @State private var confirmReviewSubmitted: Bool = false
+    @State private var showDeleteCommentDialogue = false
+    @State private var commentToDelete: Comment? = nil
 
     var body: some View {
         NavigationStack {
@@ -64,8 +66,21 @@ struct CommentsView: View {
             .alert("Review Submitted!", isPresented: $confirmReviewSubmitted) {
                 Button("OK", role: .cancel) {}
             }
+            .confirmationDialog("Delete Review", isPresented: $showDeleteCommentDialogue) {
+                Button("Delete Review", role: .destructive) {
+                    if let comment = commentToDelete {
+                        Task {
+                            await vm.deleteSpotReview(reviewId: comment.id)
+                            commentToDelete = nil
+                        }
+                    }
+                }
+            } message: {
+                Text("Are you sure you want to delete your review for \(recommendation.name)?")
+            }
         }
         .task {
+            await vm.fetchUser()
             vm.recommendation = recommendation
             await vm.fetchComments(for: recommendation.id)
             await vm.fetchUserRating(for: recommendation.id)
@@ -226,7 +241,12 @@ struct CommentsView: View {
                 LazyVStack(spacing: 12) {
                     ForEach(vm.comments) { comment in
                         if comment.comment != nil || comment.imageUrl != nil {
-                            CommentCardView(comment: comment, viewModel: vm)
+                            CommentCardView(
+                                comment: comment,
+                                viewModel: vm,
+                                commentToDelete: $commentToDelete,
+                                showDeleteCommentDialogue: $showDeleteCommentDialogue
+                            )
                         }
                     }
                 }
@@ -487,6 +507,8 @@ struct CommentsView: View {
 struct CommentCardView: View {
     let comment: Comment
     let viewModel: CommentsViewModel
+    @Binding var commentToDelete: Comment?
+    @Binding var showDeleteCommentDialogue: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -507,9 +529,19 @@ struct CommentCardView: View {
 
                 Spacer()
 
-                Text(timeAgoText(from: comment.createdAt))
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                let _ = print("Comment userId: \(comment.userId), Current userId: \(viewModel.userId?.uuidString ?? "nil")")
+
+                if comment.userId.uppercased() == viewModel.userId?.uuidString {
+                    Button {
+                        commentToDelete = comment
+                        showDeleteCommentDialogue = true
+                    } label: {
+                        Image(systemName: "trash")
+                            .font(.subheadline)
+                            .foregroundStyle(.red)
+                            .padding(.leading, 4)
+                    }
+                }
             }
 
             HStack {
@@ -534,6 +566,9 @@ struct CommentCardView: View {
                     .cornerRadius(8)
             }
             HStack {
+                Text(timeAgoText(from: comment.createdAt))
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
                 Spacer()
                 commentVoteButtons
             }

@@ -11,6 +11,7 @@ import SwiftUI
 struct CitiesView: View {
     @Bindable var vm: CityListViewModel
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
+    @State private var showRequestCitySheet = false
     private var groupedCities: [String: [City]] {
         Dictionary(grouping: vm.sortedCities) { city in
             city.country
@@ -23,6 +24,13 @@ struct CitiesView: View {
                 ScrollView {
                     headerSection
                     citiesGridSection
+                }
+            }
+            .sheet(isPresented: $showRequestCitySheet) {
+                RequestCitySheet { cityName, countryName in
+                    Task {
+                        await vm.submitCityRequest(city: cityName, country: countryName)
+                    }
                 }
             }
             .scrollDismissesKeyboard(.interactively)
@@ -68,7 +76,35 @@ struct CitiesView: View {
 
             SearchBar(placeholder: "Search cities or countries...", searchText: $vm.userSearch)
                 .padding(.horizontal, 17)
-                .padding(.bottom, 10)
+
+            Button {
+                showRequestCitySheet = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.subheadline)
+                    Text("Request New City")
+                        .font(.subheadline.weight(.semibold))
+                        .fontDesign(.rounded)
+                }
+                .foregroundStyle(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.purple, Color.blue]),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.purple.opacity(0.15), Color.blue.opacity(0.15)]),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(Capsule())
+            }
         }
     }
 
@@ -81,7 +117,7 @@ struct CitiesView: View {
             }
         }
         .padding(.horizontal, 20)
-        .padding(.top, 20)
+        .padding(.top, 10)
     }
 
     private func countrySection(country: String, cities: [City]) -> some View {

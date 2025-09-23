@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import Supabase
 
 @MainActor
 @Observable
@@ -50,6 +51,16 @@ class CityListViewModel {
     func updateCityRating(cityId: String, newRating: Double) {
         if let index = cities.firstIndex(where: { $0.id == cityId }) {
             cities[index].userRating = newRating
+        }
+    }
+
+    func submitCityRequest(city: String, country: String) async {
+        do {
+            let user = try await SupabaseManager.shared.supabase.auth.user()
+            let userId = user.id
+            try await SupabaseManager.shared.requestCity(userId: userId, cityName: city, country: country)
+        } catch {
+            print("failed to submit city request citylistvm: \(error.localizedDescription)")
         }
     }
 }
