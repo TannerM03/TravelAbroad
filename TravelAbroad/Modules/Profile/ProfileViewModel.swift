@@ -121,8 +121,6 @@ class ProfileViewModel {
                     let response = try await SupabaseManager.shared.fetchFollowerCount(userId: id)
                     followerCount = response.0
                     followingCount = response.1
-
-                    print("followers response: \(response)")
                 } else {
                     print("id not fetched")
                 }

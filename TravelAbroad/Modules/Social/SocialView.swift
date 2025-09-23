@@ -91,8 +91,10 @@ struct SocialView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
                                 Button("Cancel") {
-                                    isSearching = false
-                                    searchText = ""
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        isSearching = false
+                                        searchText = ""
+                                    }
                                 }
                                 .foregroundStyle(
                                     LinearGradient(

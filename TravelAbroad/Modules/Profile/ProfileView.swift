@@ -114,27 +114,41 @@ struct ProfileView: View {
                         .buttonStyle(.plain)
                     }
                 HStack(spacing: 25) {
-                    VStack(spacing: 4) {
-                        Text("\(vm.followerCount)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.primary)
-                        Text("Followers")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .fontWeight(.medium)
+                    NavigationLink {
+                        if let userId = vm.userId {
+                            FollowListView(userId: userId, listType: .followers)
+                        }
+                    } label: {
+                        VStack(spacing: 4) {
+                            Text("\(vm.followerCount)")
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+                            Text("Followers")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .fontWeight(.medium)
+                        }
                     }
+                    .buttonStyle(.plain)
 
-                    VStack(spacing: 4) {
-                        Text("\(vm.followingCount)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.primary)
-                        Text("Following")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .fontWeight(.medium)
+                    NavigationLink {
+                        if let userId = vm.userId {
+                            FollowListView(userId: userId, listType: .following)
+                        }
+                    } label: {
+                        VStack(spacing: 4) {
+                            Text("\(vm.followingCount)")
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+                            Text("Following")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .fontWeight(.medium)
+                        }
                     }
+                    .buttonStyle(.plain)
                 }
 
                 HStack {

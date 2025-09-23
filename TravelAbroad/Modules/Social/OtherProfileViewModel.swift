@@ -46,7 +46,6 @@ class OtherProfileViewModel {
                 countriesVisited = travelStats.countriesVisited
                 citiesVisited = travelStats.citiesVisited
                 spotsReviewed = travelStats.spotsVisited
-                print("fetched other user travel stats: countriesvisited: \(countriesVisited)")
 
             } else {
                 print("userId didn't work yet")
@@ -85,8 +84,6 @@ class OtherProfileViewModel {
                     let response = try await SupabaseManager.shared.fetchFollowerCount(userId: id)
                     followerCount = response.0
                     followingCount = response.1
-
-                    print("followers response: \(response)")
                 } else {
                     print("id not fetched")
                 }

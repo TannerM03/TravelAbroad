@@ -767,6 +767,62 @@ class SupabaseManager {
             .eq("following_id", value: followingId)
             .execute()
     }
+    
+    func fetchFollowersList(userId: UUID) async throws -> [OtherProfile] {
+        struct FollowerWithProfile: Codable {
+            let follower_id: String
+            let profiles: ProfileInfo
+        }
+        
+        struct ProfileInfo: Codable {
+            let id: String
+            let username: String
+            let image_url: String?
+        }
+        
+        let response: [FollowerWithProfile] = try await supabase
+            .from("followers")
+            .select("follower_id, profiles!followers_follower_id_fkey(id, username, image_url)")
+            .eq("following_id", value: userId)
+            .execute()
+            .value
+        
+        return response.map { follower in
+            OtherProfile(
+                id: UUID(uuidString: follower.profiles.id) ?? UUID(),
+                username: follower.profiles.username,
+                imageUrl: follower.profiles.image_url
+            )
+        }
+    }
+    
+    func fetchFollowingList(userId: UUID) async throws -> [OtherProfile] {
+        struct FollowingWithProfile: Codable {
+            let following_id: String
+            let profiles: ProfileInfo
+        }
+        
+        struct ProfileInfo: Codable {
+            let id: String
+            let username: String
+            let image_url: String?
+        }
+        
+        let response: [FollowingWithProfile] = try await supabase
+            .from("followers")
+            .select("following_id, profiles!followers_following_id_fkey(id, username, image_url)")
+            .eq("follower_id", value: userId)
+            .execute()
+            .value
+        
+        return response.map { following in
+            OtherProfile(
+                id: UUID(uuidString: following.profiles.id) ?? UUID(),
+                username: following.profiles.username,
+                imageUrl: following.profiles.image_url
+            )
+        }
+    }
 
     func fetchUserTravelHistory(userId: UUID) async throws -> [UserRatedCity] {
         struct CityReviewWithCity: Decodable {
@@ -840,14 +896,12 @@ class SupabaseManager {
     }
 
     func fetchTravelStats(userId: UUID) async throws -> TravelStats {
-        print("running stats in supapasbe")
         let stats: [TravelStats] = try await supabase
             .from("user_travel_stats")
             .select("*")
             .eq("user_id", value: userId)
             .execute()
             .value
-        print("stats: \(stats)")
 
         return stats.first ?? TravelStats(userId: userId.uuidString, countriesVisited: 0, citiesVisited: 0, spotsVisited: 0)
     }
