@@ -30,18 +30,18 @@ class LoginViewModel {
                 if !loginCredential.lowercased().hasSuffix(".edu") {
                     throw NSError(domain: "AuthError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Please use a valid .edu email address"])
                 }
-                
+
                 // Validate username length
                 if username.count < 4 {
                     throw NSError(domain: "AuthError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Username must be at least 4 characters"])
                 }
-                
+
                 // Check username availability first
                 let isAvailable = try await SupabaseManager.shared.isUsernameAvailable(username: username)
                 if !isAvailable {
                     throw NSError(domain: "AuthError", code: 0, userInfo: [NSLocalizedDescriptionKey: "This username is already taken"])
                 }
-                
+
                 let emailAvailable = try await SupabaseManager.shared.isEmailAvailable(email: loginCredential)
                 if !emailAvailable {
                     throw NSError(domain: "AuthError", code: 0, userInfo: [NSLocalizedDescriptionKey: "This email already exists"])
@@ -49,13 +49,13 @@ class LoginViewModel {
 
                 // Store username temporarily for email confirmation flow
                 UserDefaults.standard.set(username, forKey: "pendingUsername")
-                
+
                 try await SupabaseManager.shared.supabase.auth.signUp(email: loginCredential, password: password)
-                
+
                 // For signup with email confirmation, show success dialog instead of proceeding
                 showEmailConfirmationDialog = true
                 isLoading = false
-                return false  // Don't proceed to main app yet
+                return false // Don't proceed to main app yet
             } else {
                 if loginCredential.contains("@") {
                     try await SupabaseManager.shared.supabase.auth.signIn(email: loginCredential, password: password)
@@ -69,7 +69,7 @@ class LoginViewModel {
         } catch {
             print("❌ Signup failed with error: \(error.localizedDescription)")
             errorMessage = translateError(error)
-            showEmailConfirmationDialog = false  // Make sure dialog is hidden on error
+            showEmailConfirmationDialog = false // Make sure dialog is hidden on error
             isLoading = false
             return false
         }

@@ -42,7 +42,7 @@ struct RecommendationsCardView: View {
                     .frame(height: 170)
                     .cornerRadius(15)
                 }
-                
+
                 HStack(alignment: .center, spacing: 8) {
                     Text(rec.name)
                         .foregroundColor(.primary)
@@ -73,7 +73,6 @@ struct RecommendationsCardView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 6)
-
     }
 }
 

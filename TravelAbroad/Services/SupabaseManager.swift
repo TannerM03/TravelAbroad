@@ -228,11 +228,10 @@ class SupabaseManager {
             throw error
         }
     }
-    
-    // MARK: - SocialView Functions
-    
-    func fetchUsers(userId: String) async throws -> [OtherProfile] {
 
+    // MARK: - SocialView Functions
+
+    func fetchUsers(userId: String) async throws -> [OtherProfile] {
         let response: [OtherProfile] = try await supabase
             .from("profiles")
             .select("id, username, image_url")
@@ -240,7 +239,6 @@ class SupabaseManager {
             .execute()
             .value
         return response
-            
     }
 
     // MARK: - CommentsView Functions
@@ -606,7 +604,7 @@ class SupabaseManager {
 
         return profiles.isEmpty
     }
-    
+
     func isEmailAvailable(email: String) async throws -> Bool {
         struct Profile: Codable {
             let email: String?

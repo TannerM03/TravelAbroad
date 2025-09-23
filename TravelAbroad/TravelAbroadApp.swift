@@ -46,6 +46,7 @@ struct TravelAbroadApp: App {
             }
         }
     }
+
     private func handleDeepLink(_ url: URL) {
         print("handle deep link func")
         print("url scheme: \(String(describing: url.scheme))")
@@ -57,22 +58,22 @@ struct TravelAbroadApp: App {
                     // Process the email confirmation
                     try await SupabaseManager.shared.supabase.auth.session(from: url)
                     print("✅ Email confirmed successfully!")
-                    
+
                     // Insert username if it was stored during signup
                     if let pendingUsername = UserDefaults.standard.string(forKey: "pendingUsername") {
                         try await SupabaseManager.shared.insertUsername(username: pendingUsername)
                         print("✅ Username inserted: \(pendingUsername)")
-                        
+
                         // Clean up stored username
                         UserDefaults.standard.removeObject(forKey: "pendingUsername")
                         print("✅ Pending username cleared")
                     }
-                    
+
                     // Update authentication state on main thread
                     await MainActor.run {
                         print("inside main actor")
                         isAuthenticated = true
-                        shouldShowOnboarding = true  // Trigger onboarding for new users
+                        shouldShowOnboarding = true // Trigger onboarding for new users
                     }
                 } catch {
                     print("❌ Email confirmation failed: \(error)")

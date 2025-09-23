@@ -111,7 +111,7 @@ class ProfileViewModel {
             }
         }
     }
-    
+
     func refreshTravelStats() async {
         guard let userId = userId else { return }
         do {

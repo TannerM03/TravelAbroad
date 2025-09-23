@@ -7,17 +7,16 @@
 
 import SwiftUI
 
-
 struct SocialView: View {
     @State private var vm = SocialViewModel()
     @State private var isSearching = false
     @State private var searchText = ""
-    
+
     private let columns = [
         GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
+        GridItem(.flexible(), spacing: 12),
     ]
-    
+
     private var filteredProfiles: [OtherProfile] {
         if searchText.isEmpty {
             return vm.profiles
@@ -27,7 +26,7 @@ struct SocialView: View {
             }
         }
     }
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -38,7 +37,7 @@ struct SocialView: View {
                     endPoint: .bottomTrailing
                 )
                 .ignoresSafeArea()
-                
+
                 ScrollView {
                     VStack(spacing: 24) {
                         // Header section
@@ -55,7 +54,7 @@ struct SocialView: View {
                                                 endPoint: .trailing
                                             )
                                         )
-                                    
+
                                     Text("Connect with fellow travelers")
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
@@ -66,17 +65,17 @@ struct SocialView: View {
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 8)
-                        
+
                         // Search bar (when active)
                         if isSearching {
                             HStack {
                                 HStack {
                                     Image(systemName: "magnifyingglass")
                                         .foregroundColor(.secondary)
-                                    
+
                                     TextField("Search travelers...", text: $searchText)
                                         .textFieldStyle(PlainTextFieldStyle())
-                                    
+
                                     if !searchText.isEmpty {
                                         Button {
                                             searchText = ""
@@ -90,7 +89,7 @@ struct SocialView: View {
                                 .padding(.vertical, 10)
                                 .background(.ultraThinMaterial)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                
+
                                 Button("Cancel") {
                                     isSearching = false
                                     searchText = ""
@@ -107,7 +106,7 @@ struct SocialView: View {
                             .padding(.horizontal, 20)
                             .transition(.move(edge: .top).combined(with: .opacity))
                         }
-                        
+
                         // Profiles grid
                         LazyVGrid(columns: columns, spacing: 16) {
                             ForEach(filteredProfiles) { profile in
@@ -124,7 +123,7 @@ struct SocialView: View {
                         }
                         .padding(.horizontal, 20)
                         .animation(.easeInOut(duration: 0.3), value: filteredProfiles.count)
-                        
+
                         // Loading/Empty state
                         if filteredProfiles.isEmpty && !searchText.isEmpty {
                             VStack(spacing: 16) {
@@ -137,13 +136,13 @@ struct SocialView: View {
                                             endPoint: .bottomTrailing
                                         )
                                     )
-                                
+
                                 VStack(spacing: 8) {
                                     Text("No travelers found")
                                         .font(.headline.weight(.semibold))
                                         .fontDesign(.rounded)
                                         .foregroundColor(.primary)
-                                    
+
                                     Text("Try adjusting your search terms")
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
@@ -164,7 +163,7 @@ struct SocialView: View {
                                             endPoint: .bottomTrailing
                                         )
                                     )
-                                
+
                                 VStack(spacing: 8) {
                                     ProgressView("Loading Travelers")
                                         .font(.headline.weight(.semibold))

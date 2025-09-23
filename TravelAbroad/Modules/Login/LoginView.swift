@@ -11,7 +11,7 @@ struct LoginView: View {
     @State private var profileVm = ProfileViewModel()
     @Binding var isAuthenticated: Bool
     @Binding var shouldShowOnboarding: Bool
-    
+
     var body: some View {
         ZStack {
             LinearGradient(gradient: Gradient(colors: [Color(.systemTeal).opacity(0.18), Color(.systemIndigo).opacity(0.14)]), startPoint: .top, endPoint: .bottom)
@@ -143,6 +143,6 @@ struct LoginView: View {
     }
 }
 
-//#Preview("Login Mode") {
+// #Preview("Login Mode") {
 //    LoginView(isAuthenticated: .constant(false), shouldShowOnboarding: .constant(false))
-//}
+// }

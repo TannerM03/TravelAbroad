@@ -5,12 +5,12 @@
 //  Created by Tanner Macpherson on 9/22/25.
 //
 
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 struct ProfileCardView: View {
     let profile: OtherProfile
-    
+
     var body: some View {
         VStack(spacing: 12) {
             ZStack {
@@ -42,7 +42,7 @@ struct ProfileCardView: View {
                                 .font(.title2)
                         )
                 }
-                
+
                 Circle()
                     .stroke(
                         LinearGradient(
@@ -54,13 +54,13 @@ struct ProfileCardView: View {
                     .frame(width: 76, height: 76)
             }
             .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-            
+
             Text(profile.username)
                 .font(.subheadline.weight(.semibold))
                 .fontDesign(.rounded)
                 .lineLimit(1)
                 .foregroundColor(.primary)
-    }
+        }
         .padding(.vertical, 20)
         .padding(.horizontal, 40)
         .background(Color(.tertiarySystemGroupedBackground))

@@ -42,7 +42,7 @@ class SocialViewModel {
             print("Failed to fetch user: \(error)")
         }
     }
-    
+
     private func loadImageFromURL(_ url: URL) async {
         let urlString = url.absoluteString
 
@@ -63,7 +63,7 @@ class SocialViewModel {
             print("Failed to load image from URL: \(error)")
         }
     }
-    
+
     func fetchProfiles(userId: UUID) async {
         let userIdString = userId.uuidString
         do {
