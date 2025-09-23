@@ -109,8 +109,6 @@ class SupabaseManager {
         let latitude = cityData.latitude
         let longitude = cityData.longitude
 
-        print("SupabaseManager: Fetched coordinates for city \(cityId): (\(latitude), \(longitude))")
-
         return (latitude, longitude)
     }
 
@@ -436,8 +434,6 @@ class SupabaseManager {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
 
-        print("voting on comment in server")
-
         // First, remove any existing vote by this user on this comment
         try await supabase
             .from("comment_votes")
@@ -470,8 +466,6 @@ class SupabaseManager {
         guard let userId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
-
-        print("removing vote in server layer")
 
         try await supabase
             .from("comment_votes")
@@ -1294,6 +1288,122 @@ class SupabaseManager {
                 aiSummary: nil
             )
             return ReviewedSpot(commentId: item.id, recommendation: recommendation, comment: item.comment, userRating: Double(item.rating), cityName: item.cityName, country: item.country, createdAt: item.created_at)
+        }
+    }
+
+    func fetchUserReviewedSpotsWithVotes(userId: UUID) async throws -> [ReviewedSpot] {
+        guard let currentUserId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
+        }
+
+        struct ReviewedSpotWithVotesResponse: Codable {
+            let id: String
+            let rec_id: String
+            let rating: Int
+            let comment: String?
+            let created_at: Date
+            let upvote_count: Int?
+            let downvote_count: Int?
+            let net_votes: Int?
+            let rec_with_avg_rating: RecommendationWithCityName
+
+            var cityName: String {
+                return rec_with_avg_rating.cities.name
+            }
+
+            var country: String {
+                return rec_with_avg_rating.cities.country
+            }
+
+            enum CodingKeys: String, CodingKey {
+                case id
+                case rec_id
+                case rating
+                case comment
+                case created_at
+                case upvote_count
+                case downvote_count
+                case net_votes
+                case rec_with_avg_rating
+            }
+        }
+
+        struct RecommendationWithCityName: Codable {
+            let id: String
+            let name: String
+            let category: CategoryType
+            let imageUrl: String?
+            let location: String?
+            let avgRating: Double
+            let cities: CityNameOnly
+
+            enum CodingKeys: String, CodingKey {
+                case id
+                case name
+                case category
+                case imageUrl = "image_url"
+                case location
+                case avgRating = "avg_rating"
+                case cities
+            }
+        }
+
+        struct CityNameOnly: Codable {
+            let name: String
+            let country: String
+        }
+
+        let response: [ReviewedSpotWithVotesResponse] = try await supabase
+            .from("comments_with_votes")
+            .select("id, rec_id, rating, comment, created_at, upvote_count, downvote_count, net_votes, rec_with_avg_rating!inner(*, cities!inner(name, country))")
+            .eq("user_id", value: userId)
+            .order("created_at", ascending: false)
+            .execute()
+            .value
+
+        struct UserVote: Codable {
+            let comment_id: String
+            let vote_type: String
+        }
+
+        let userVotes: [UserVote] = try await supabase
+            .from("comment_votes")
+            .select("comment_id, vote_type")
+            .eq("user_id", value: currentUserId.uuidString)
+            .execute()
+            .value
+
+        let voteMap = Dictionary(uniqueKeysWithValues: userVotes.map { ($0.comment_id, $0.vote_type) })
+
+        return response.map { item in
+            let recommendation = Recommendation(
+                id: item.rec_with_avg_rating.id,
+                userId: "",
+                cityId: "",
+                category: item.rec_with_avg_rating.category,
+                name: item.rec_with_avg_rating.name,
+                description: nil,
+                imageUrl: item.rec_with_avg_rating.imageUrl,
+                location: item.rec_with_avg_rating.location,
+                avgRating: item.rec_with_avg_rating.avgRating,
+                aiSummary: nil
+            )
+
+            let userVote: VoteType? = voteMap[item.id].flatMap { VoteType(rawValue: $0) }
+
+            return ReviewedSpot(
+                commentId: item.id,
+                recommendation: recommendation,
+                comment: item.comment,
+                userRating: Double(item.rating),
+                cityName: item.cityName,
+                country: item.country,
+                createdAt: item.created_at,
+                upvoteCount: item.upvote_count ?? 0,
+                downvoteCount: item.downvote_count ?? 0,
+                netVotes: item.net_votes ?? 0,
+                userVote: userVote
+            )
         }
     }
 }
