@@ -15,6 +15,8 @@ import SwiftUI
 @Observable
 class ProfileViewModel {
     var username: String = ""
+    var firstName: String = ""
+    var lastName: String = ""
     var user: User?
     var profileImageURL: String?
     var userId: UUID?
@@ -47,7 +49,10 @@ class ProfileViewModel {
             userId = user?.id
 
             if let userId = userId {
-                username = try await SupabaseManager.shared.fetchUsername(userId: userId)
+                let names = try await SupabaseManager.shared.fetchUsernameAndNames(userId: userId)
+                username = names[0]
+                firstName = names[1]
+                lastName = names[2]
                 profileImageURL = try await SupabaseManager.shared.fetchProfilePic(userId: userId)
 
                 if let urlString = profileImageURL, let url = URL(string: urlString) {
@@ -141,4 +146,43 @@ class ProfileViewModel {
             print("Failed to refresh travel stats: \(error)")
         }
     }
+
+    func makeProfileChanges(newUsername: String?) async {
+        Task {
+            if let newUsername = newUsername {
+                let isAvailable = try await SupabaseManager.shared.isUsernameAvailable(username: newUsername)
+                if isAvailable {
+                    if let id = userId {
+                        try await SupabaseManager.shared.changeUsername(userId: id, username: newUsername)
+                        username = newUsername
+                    }
+                }
+            }
+        }
+        Task {
+            if let id = userId {
+                try await SupabaseManager.shared.changeFirstName(userId: id, name: firstName)
+            }
+        }
+        Task {
+            if let id = userId {
+                try await SupabaseManager.shared.changeLastName(userId: id, name: lastName)
+            }
+        }
+    }
+//    func changeUsername(newUsername: String) async {
+//        print("vm change: \(newUsername)")
+//        Task {
+//            let isAvailable = try await SupabaseManager.shared.isUsernameAvailable(username: newUsername)
+//            print("vm available")
+//
+//            if isAvailable {
+//                if let id = userId {
+//                    print("vm changing with userId: \(id)")
+//                    try await SupabaseManager.shared.changeUsername(userId: id, username: newUsername)
+//                    username = newUsername
+//                }
+//            }
+//        }
+//    }
 }

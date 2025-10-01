@@ -22,7 +22,7 @@ struct SocialView: View {
             return vm.profiles
         } else {
             return vm.profiles.filter { profile in
-                profile.username.localizedCaseInsensitiveContains(searchText)
+                profile.username?.localizedCaseInsensitiveContains(searchText) ?? false
             }
         }
     }

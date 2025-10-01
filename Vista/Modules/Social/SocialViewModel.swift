@@ -17,6 +17,8 @@ class SocialViewModel {
     var userId: UUID?
     var user: User?
     var username: String = ""
+    var firstName: String = ""
+    var lastName: String = ""
     var profileImageURL: String?
     var imageState: ImageState = .empty
     private var imageCache: [String: Image] = [:]
@@ -27,7 +29,10 @@ class SocialViewModel {
             userId = user?.id
 
             if let userId = userId {
-                username = try await SupabaseManager.shared.fetchUsername(userId: userId)
+                let names = try await SupabaseManager.shared.fetchUsernameAndNames(userId: userId)
+                username = names[0]
+                firstName = names[1]
+                lastName = names[2]
                 profileImageURL = try await SupabaseManager.shared.fetchProfilePic(userId: userId)
 
                 if let urlString = profileImageURL, let url = URL(string: urlString) {

@@ -9,21 +9,19 @@ import SwiftUI
 
 struct SettingsView: View {
     @Binding var isAuthenticated: Bool
+    @Bindable var vm: ProfileViewModel
     @State private var showLogoutDialog = false
-    @State var vm = ProfileViewModel()
     var body: some View {
         NavigationStack {
             Form {
                 Section("Account") {
-                    HStack {
-                        Image(systemName: "person.circle")
-                            .foregroundColor(.blue)
-                            .frame(width: 24)
-                        Text("Profile")
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
+                    NavigationLink(destination: ProfileEditView(vm: vm)) {
+                        HStack {
+                            Image(systemName: "person.circle")
+                                .foregroundColor(.blue)
+                                .frame(width: 24)
+                            Text("Profile")
+                        }
                     }
 
                     NavigationLink(destination: PreferencesEditView()) {

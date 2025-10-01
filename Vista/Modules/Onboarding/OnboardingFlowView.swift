@@ -39,7 +39,9 @@ struct OnboardingFlowView: View {
                 .animation(.easeInOut(duration: 0.4), value: vm.currentStep)
 
                 // Navigation buttons
-                navigationButtons
+                if vm.currentStep != .names {
+                    navigationButtons
+                }
             }
         }
         .alert("Error", isPresented: $vm.showError) {
@@ -54,6 +56,8 @@ struct OnboardingFlowView: View {
         switch step {
         case .welcome:
             WelcomeStepView()
+        case .names:
+            NamesView(onCompletion: vm.nextStep)
         case .travelStyle:
             TravelStyleStepView(vm: vm)
         case .activityPreferences:

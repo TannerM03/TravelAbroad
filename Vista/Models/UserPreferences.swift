@@ -318,15 +318,17 @@ struct AdditionalPreferences: Codable {
 
 enum OnboardingStep: Int, CaseIterable {
     case welcome = 0
-    case travelStyle = 1
-    case activityPreferences = 2
-    case walkingDistance = 3
-    case additionalPreferences = 4
-    case summary = 5
+    case names = 1
+    case travelStyle = 2
+    case activityPreferences = 3
+    case walkingDistance = 4
+    case additionalPreferences = 5
+    case summary = 6
 
     var title: String {
         switch self {
         case .welcome: return "Welcome to Vista!"
+        case .names: return "Tell us about yourself"
         case .travelStyle: return "Your Travel Style"
         case .activityPreferences: return "Activity Preferences"
         case .walkingDistance: return "Getting Around"
@@ -338,6 +340,7 @@ enum OnboardingStep: Int, CaseIterable {
     var subtitle: String {
         switch self {
         case .welcome: return "Let's personalize your travel experience"
+        case .names: return "We'll use this information to personalize your experience"
         case .travelStyle: return "How do you like to travel?"
         case .activityPreferences: return "Drag activities to show your preferences"
         case .walkingDistance: return "How far are you comfortable walking?"

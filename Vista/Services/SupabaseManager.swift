@@ -594,6 +594,56 @@ class SupabaseManager {
         return profiles.isEmpty
     }
 
+    func changeUsername(userId: UUID, username: String) async throws {
+        print("userId: \(userId)")
+
+        do {
+            try await supabase
+                .from("profiles")
+                .update(["username": username])
+                .eq("id", value: userId)
+                .execute()
+        } catch {
+            print("error changing username: \(error.localizedDescription)")
+        }
+    }
+
+    func changeFirstName(userId: UUID, name: String) async throws {
+        do {
+            try await supabase
+                .from("profiles")
+                .update(["first_name": name])
+                .eq("id", value: userId)
+                .execute()
+        } catch {
+            print("error changing first name: \(error.localizedDescription)")
+        }
+    }
+
+    func changeLastName(userId: UUID, name: String) async throws {
+        do {
+            try await supabase
+                .from("profiles")
+                .update(["last_name": name])
+                .eq("id", value: userId)
+                .execute()
+        } catch {
+            print("error changing last name: \(error.localizedDescription)")
+        }
+    }
+
+    func saveUserNames(userId: UUID, username: String, firstName: String, lastName: String) async throws {
+        try await supabase
+            .from("profiles")
+            .update([
+                "username": username,
+                "first_name": firstName,
+                "last_name": lastName,
+            ])
+            .eq("id", value: userId)
+            .execute()
+    }
+
     func isEmailAvailable(email: String) async throws -> Bool {
         struct Profile: Codable {
             let email: String?
@@ -607,6 +657,21 @@ class SupabaseManager {
             .value
 
         return profiles.isEmpty
+    }
+
+    func hasCompletedOnboarding(userId: UUID) async throws -> Bool {
+        struct UserPreference: Codable {
+            let id: String
+        }
+
+        let response: [UserPreference] = try await supabase
+            .from("user_preferences")
+            .select("id")
+            .eq("user_id", value: userId)
+            .execute()
+            .value
+
+        return !response.isEmpty
     }
 
     // MARK: - ProfileView Functions
@@ -651,19 +716,21 @@ class SupabaseManager {
     }
 
     // fetch username from profiles table by user id
-    func fetchUsername(userId: UUID) async throws -> String {
+    func fetchUsernameAndNames(userId: UUID) async throws -> [String] {
         struct Profile: Codable {
             let username: String?
+            let firstName: String?
+            let lastName: String?
         }
 
         let profile: Profile = try await supabase.from("profiles")
-            .select("username")
+            .select("username, first_name, last_name")
             .eq("id", value: userId)
             .single()
             .execute()
             .value
 
-        return profile.username ?? ""
+        return [profile.username ?? "", profile.firstName ?? "", profile.lastName ?? ""]
     }
 
     // fetch username from profiles table by user id

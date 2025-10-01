@@ -49,7 +49,7 @@ struct ProfileView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         NavigationLink {
-                            SettingsView(isAuthenticated: $isAuthenticated)
+                            SettingsView(isAuthenticated: $isAuthenticated, vm: vm)
                         } label: {
                             Image(systemName: "gear")
                                 .foregroundColor(.primary)

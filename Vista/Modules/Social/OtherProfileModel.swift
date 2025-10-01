@@ -9,7 +9,7 @@ import Foundation
 
 struct OtherProfile: Codable, Identifiable {
     let id: UUID
-    let username: String
+    let username: String?
     let imageUrl: String?
 
     enum CodingKeys: String, CodingKey {

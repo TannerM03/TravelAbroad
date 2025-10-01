@@ -69,6 +69,8 @@ class OnboardingViewModel {
         switch currentStep {
         case .welcome:
             return true
+        case .names:
+            return true // NamesView will handle validation when button is pressed
         case .travelStyle:
             return true // All have default values
         case .activityPreferences:
