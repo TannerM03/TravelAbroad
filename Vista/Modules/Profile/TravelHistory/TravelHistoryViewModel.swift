@@ -46,6 +46,16 @@ class TravelHistoryViewModel {
         }
     }
 
+    var displayedCities: [UserRatedCity] {
+        return sortedCities.map { city in
+            var updatedCity = city
+            if let newRating = CityRatingManager.shared.getRating(cityId: city.id.uuidString) {
+                updatedCity.userRating = newRating
+            }
+            return updatedCity
+        }
+    }
+
     func fetchUser() async {
         do {
             user = try await SupabaseManager.shared.supabase.auth.user()
@@ -77,6 +87,20 @@ class TravelHistoryViewModel {
     func updateCityRating(cityId: String, newRating: Double) {
         if let index = cities.firstIndex(where: { $0.id.uuidString == cityId }) {
             cities[index].userRating = newRating
+        }
+    }
+
+    func deleteCityRating(cityId: UUID) async {
+        do {
+            guard let userId = userId else { return }
+            try await SupabaseManager.shared.deleteCityReview(userId: userId, cityId: cityId)
+            // Remove from local array
+            cities.removeAll { $0.id == cityId }
+
+            // Clear from rating manager
+            CityRatingManager.shared.clearRating(cityId: cityId.uuidString)
+        } catch {
+            print("Error deleting city rating: \(error)")
         }
     }
 }

@@ -37,7 +37,12 @@ struct OtherUserSpotsGridView: View {
     private var spotsListSection: some View {
         LazyVStack(spacing: 12) {
             ForEach(vm.spots) { spot in
-                OtherSpotCard(spot: spot, vm: vm)
+                NavigationLink {
+                    CommentsView(recommendation: spot.recommendation)
+                } label: {
+                    OtherSpotCard(spot: spot, vm: vm)
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 16)

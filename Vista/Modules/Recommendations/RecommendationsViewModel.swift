@@ -96,6 +96,7 @@ class RecommendationsViewModel {
         do {
             userRating = tempRating
             try await SupabaseManager.shared.addCityReview(userId: userId, cityId: cityId, rating: rating)
+            CityRatingManager.shared.updateRating(cityId: cityId.uuidString, rating: rating)
             onRatingUpdated?(userRating ?? 5.0)
         } catch {
             print("Error updating/creating city review in vm: \(error)")
