@@ -11,7 +11,7 @@ import SwiftUI
 // model for a recommended location from a user's submission
 struct Recommendation: Codable, Identifiable {
     let id: String
-    let userId: String
+    let userId: String?
     let cityId: String
     let category: CategoryType
     let name: String
@@ -39,7 +39,7 @@ struct Recommendation: Codable, Identifiable {
     // Memberwise initializer
     init(
         id: String,
-        userId: String,
+        userId: String? = nil,
         cityId: String,
         category: CategoryType,
         name: String,
@@ -67,7 +67,7 @@ struct Recommendation: Codable, Identifiable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         id = try container.decode(String.self, forKey: .id)
-        userId = try container.decode(String.self, forKey: .userId)
+        userId = try container.decodeIfPresent(String.self, forKey: .userId)
         cityId = try container.decode(String.self, forKey: .cityId)
         category = try container.decode(CategoryType.self, forKey: .category)
         name = try container.decode(String.self, forKey: .name)
@@ -94,6 +94,7 @@ struct Recommendation: Codable, Identifiable {
 }
 
 enum CategoryType: String, Codable, CaseIterable {
+    case all
     case sights = "sight"
     case restaurants = "restaurant"
     case nightlife
@@ -105,6 +106,7 @@ enum CategoryType: String, Codable, CaseIterable {
 extension CategoryType {
     var pillColor: Color {
         switch self {
+        case .all: return Color.white.opacity(0.4)
         case .activities: return Color.green.opacity(0.4)
         case .nightlife: return Color.purple.opacity(0.4)
         case .restaurants: return Color.orange.opacity(0.4)

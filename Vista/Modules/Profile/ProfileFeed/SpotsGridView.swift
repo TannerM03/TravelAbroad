@@ -87,6 +87,7 @@ struct ReviewedSpot: Identifiable, Codable {
 
 struct SpotsGridView: View {
     @Bindable var vm: SpotsViewModel
+    @Bindable var profileViewModel: ProfileViewModel
 
     var body: some View {
         VStack {
@@ -115,7 +116,12 @@ struct SpotsGridView: View {
     private var spotsListSection: some View {
         LazyVStack(spacing: 12) {
             ForEach(vm.reviews) { review in
-                ReviewCard(review: review, vm: vm)
+                NavigationLink {
+                    CommentsView(recommendation: review.recommendation)
+                } label: {
+                    ReviewCard(review: review, vm: vm, profileVm: profileViewModel)
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 16)
@@ -135,10 +141,12 @@ struct SpotsGridView: View {
 struct ReviewCard: View {
     let review: ReviewedSpot
     @Bindable var vm: SpotsViewModel
+    @Bindable var profileVm: ProfileViewModel
     @State private var showDeleteCommentDialogue: Bool = false
 
     private var categoryIcon: String {
         switch review.recommendation.category {
+        case .all: return "mappin.and.ellipse.circle"
         case .activities: return "figure.hiking"
         case .nightlife: return "music.note"
         case .restaurants: return "fork.knife"
@@ -306,6 +314,7 @@ struct ReviewCard: View {
             Button("Delete Review", role: .destructive) {
                 Task {
                     await vm.deleteSpot(spot: review)
+                    profileVm.spotsReviewed -= 1
                 }
             }
         } message: {

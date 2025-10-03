@@ -138,6 +138,18 @@ class SupabaseManager {
             .execute()
     }
 
+    func fetchSingleRecommendation(recommendationId: String) async throws -> Recommendation {
+        let rec: Recommendation = try await supabase
+            .from("recommendations")
+            .select()
+            .eq("id", value: recommendationId)
+            .single()
+            .execute()
+            .value
+
+        return rec
+    }
+
     func createRecommendation(
         cityId: String,
         name: String,
@@ -220,6 +232,62 @@ class SupabaseManager {
             print("❌ Supabase: Failed to create recommendation - Error: \(error.localizedDescription)")
             throw error
         }
+    }
+
+    func deleteRecommendationIfNew(userId _: UUID, spotId: String) async throws {
+        struct CommentWithRecId: Codable {
+            let rec_id: String
+        }
+
+        struct OtherComment: Codable {
+            let id: String
+        }
+
+        do {
+            // First, get the recommendation ID from the comment being deleted
+            let commentResponse: [CommentWithRecId] = try await supabase
+                .from("comments")
+                .select("rec_id")
+                .eq("id", value: spotId)
+                .execute()
+                .value
+
+            guard let recommendationId = commentResponse.first?.rec_id else {
+                print("Could not find recommendation ID for comment: \(spotId)")
+                return
+            }
+
+            // Check if there are ANY other comments on this recommendation (from any user)
+            let otherCommentsResponse: [OtherComment] = try await supabase
+                .from("comments")
+                .select("id")
+                .eq("rec_id", value: UUID(uuidString: recommendationId))
+                .neq("id", value: UUID(uuidString: spotId))
+                .execute()
+                .value
+
+            // Only delete the recommendation if no other comments exist
+            if otherCommentsResponse.isEmpty {
+                try await supabase
+                    .from("recommendations")
+                    .delete()
+                    .eq("id", value: UUID(uuidString: recommendationId))
+                    .execute()
+            } else {
+                print("Other comments exist. Keeping recommendation \(recommendationId)")
+            }
+        } catch {
+            print("error in deleteRecommendationIfNew: \(error.localizedDescription)")
+        }
+    }
+
+    func getNumCityRatings(cityId: UUID) async throws -> Int {
+        let response = try await supabase
+            .from("city_reviews")
+            .select("id", count: .exact)
+            .eq("city_id", value: cityId)
+            .execute()
+        return response.count ?? 0
     }
 
     // MARK: - SocialView Functions
@@ -1047,6 +1115,21 @@ class SupabaseManager {
                 .eq("city_id", value: cityId)
                 .eq("user_id", value: userId)
                 .execute()
+        }
+    }
+
+    // deletes a city review for a user
+    func deleteCityReview(userId: UUID, cityId: UUID) async throws {
+        do {
+            print("in supabase, userId: \(userId) and cityId: \(cityId)")
+            try await supabase
+                .from("city_reviews")
+                .delete()
+                .eq("city_id", value: cityId)
+                .eq("user_id", value: userId)
+                .execute()
+        } catch {
+            print("error deleting city rating: \(error.localizedDescription)")
         }
     }
 

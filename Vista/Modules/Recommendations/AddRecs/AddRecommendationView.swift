@@ -33,6 +33,7 @@ struct AddRecommendationView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 24) {
+                    typeOfSpotSection
                     placeInputSection
                     imageSection
                     starRatingSection
@@ -79,7 +80,7 @@ struct AddRecommendationView: View {
 
     private var headerSection: some View {
         VStack(spacing: 12) {
-            Text("Add \(selectedCategory.rawValue.capitalized)")
+            Text("Add \(viewModel.selectedCategory.rawValue.capitalized)")
                 .font(.title2)
                 .fontWeight(.bold)
                 .fontDesign(.rounded)
@@ -91,7 +92,7 @@ struct AddRecommendationView: View {
                     )
                 )
 
-            Text("Search and add a \(selectedCategory.rawValue) to recommend in \(cityName)")
+            Text("Search and add a \(viewModel.selectedCategory.rawValue) to recommend in \(cityName)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -99,9 +100,43 @@ struct AddRecommendationView: View {
         .padding(.bottom, 8)
     }
 
+    private var typeOfSpotSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Category*")
+                .font(.headline)
+                .fontWeight(.semibold)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(CategoryType.allCases.filter { $0 != .all }, id: \.self) { category in
+                        Text(category.rawValue.capitalized)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(viewModel.selectedCategory == category ? category.pillColor : Color(.tertiarySystemBackground))
+                            .cornerRadius(20)
+                            .foregroundColor(viewModel.selectedCategory == category ? .white : .primary)
+                            .scaleEffect(viewModel.selectedCategory == category ? 1.05 : 1.0)
+                            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.selectedCategory == category)
+                            .onTapGesture {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                    viewModel.selectedCategory = category
+                                }
+                            }
+                    }
+                }
+                .padding(.horizontal, 4)
+            }
+        }
+        .padding(20)
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+    }
+
     private var placeInputSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(selectedCategory == CategoryType.activities ? "Name of \(selectedCategory.rawValue)" : "Name of \(selectedCategory.rawValue)")
+            Text(viewModel.selectedCategory == CategoryType.all ? "Name of spot*" : "Name of \(viewModel.selectedCategory.rawValue)*")
                 .font(.headline)
                 .fontWeight(.semibold)
 
@@ -172,7 +207,7 @@ struct AddRecommendationView: View {
 
     private var starRatingSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Rating")
+            Text("Rating*")
                 .font(.headline)
                 .fontWeight(.semibold)
 
@@ -210,11 +245,11 @@ struct AddRecommendationView: View {
                 .fontWeight(.semibold)
 
             HStack {
-                Text(selectedCategory.rawValue.capitalized)
+                Text(viewModel.selectedCategory.rawValue.capitalized)
                     .fontWeight(.semibold)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
-                    .background(selectedCategory.pillColor)
+                    .background(viewModel.selectedCategory.pillColor)
                     .cornerRadius(25)
                     .foregroundColor(.primary)
 
@@ -288,7 +323,7 @@ struct AddRecommendationView: View {
             .scaleEffect(viewModel.isSubmitting ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: viewModel.isSubmitting)
         }
-        .disabled(viewModel.isSubmitting || viewModel.placeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        .disabled(viewModel.selectedCategory == CategoryType.all || viewModel.isSubmitting || viewModel.placeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         .buttonStyle(PlainButtonStyle())
         .padding(.horizontal, 20)
     }

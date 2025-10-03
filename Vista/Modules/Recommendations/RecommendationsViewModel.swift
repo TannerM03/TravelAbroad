@@ -17,7 +17,7 @@ class RecommendationsViewModel {
     var userId: UUID = .init()
     var user: User?
     var userRating: Double?
-    var selectedCategory: CategoryType? = .sights
+    var selectedCategory: CategoryType? = .all
     var isFavoriteCity: Bool = false
     var tempRating: Double?
     var userSearch: String = ""
@@ -35,6 +35,9 @@ class RecommendationsViewModel {
 
     var categorizedRecs: [Recommendation] {
         if let selected = selectedCategory {
+            if selected == CategoryType.all {
+                return recommendations
+            }
             return recommendations.filter { $0.category == selected }
         } else {
             return recommendations
@@ -96,7 +99,11 @@ class RecommendationsViewModel {
         do {
             userRating = tempRating
             try await SupabaseManager.shared.addCityReview(userId: userId, cityId: cityId, rating: rating)
+            CityRatingManager.shared.updateRating(cityId: cityId.uuidString, rating: rating)
             onRatingUpdated?(userRating ?? 5.0)
+
+            // Post notification for TravelHistoryViewModel to refresh
+            NotificationCenter.default.post(name: NSNotification.Name("CityRatingAdded"), object: nil)
         } catch {
             print("Error updating/creating city review in vm: \(error)")
         }
