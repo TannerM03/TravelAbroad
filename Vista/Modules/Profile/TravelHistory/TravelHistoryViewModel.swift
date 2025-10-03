@@ -20,6 +20,21 @@ class TravelHistoryViewModel {
     var filter: CityFilter = .none
     var user: User?
     var userId: UUID?
+    var onCityDeleted: (() -> Void)?
+    var onCityAdded: (() -> Void)?
+
+    init() {
+        // Listen for city rating added notifications
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("CityRatingAdded"),
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task {
+                await self?.refreshCitiesAfterAdd()
+            }
+        }
+    }
 
     // what will be shown to the user, includes the text the user is searching for and searches for the city name and the country it's in
     var filteredCities: [UserRatedCity] {
@@ -99,8 +114,17 @@ class TravelHistoryViewModel {
 
             // Clear from rating manager
             CityRatingManager.shared.clearRating(cityId: cityId.uuidString)
+
+            // Notify ProfileViewModel to refresh travel stats
+            onCityDeleted?()
         } catch {
             print("Error deleting city rating: \(error)")
         }
+    }
+
+    func refreshCitiesAfterAdd() async {
+        guard let userId = userId else { return }
+        await getCities(userId: userId, showLoading: false)
+        onCityAdded?()
     }
 }

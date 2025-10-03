@@ -85,6 +85,8 @@ struct CommentsView: View {
             await vm.fetchComments(for: recommendation.id)
             await vm.fetchUserRating(for: recommendation.id)
 
+            await vm.refreshRecommendationData()
+
             if let rec = vm.recommendation {
                 let shouldUpdate = rec.summaryUpdatedAt == nil ||
                     (rec.summaryUpdatedAt != nil &&

@@ -136,11 +136,9 @@ class CommentsViewModel {
     func refreshRecommendationData() async {
         guard let recId = recommendation?.id else { return }
         do {
-            // Fetch updated recommendation data from database
-            let updatedRecs = try await supabaseManager.fetchRecommendations(cityId: UUID(uuidString: recommendation?.cityId ?? "") ?? UUID())
-            if let updatedRec = updatedRecs.first(where: { $0.id == recId }) {
-                recommendation = updatedRec
-            }
+            // Fetch updated recommendation data from database with all fields including summaryUpdatedAt
+            let updatedRec = try await supabaseManager.fetchSingleRecommendation(recommendationId: recId)
+            recommendation = updatedRec
         } catch {
             print("Error refreshing recommendation data: \(error)")
         }

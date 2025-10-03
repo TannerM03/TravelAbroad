@@ -13,6 +13,7 @@ struct RecommendationsCardView: View {
 
     private var categoryIcon: String {
         switch rec.category {
+        case .all: return "mappin.and.ellipse.circle"
         case .activities: return "figure.hiking"
         case .nightlife: return "music.note"
         case .restaurants: return "fork.knife"

@@ -146,6 +146,7 @@ struct ReviewCard: View {
 
     private var categoryIcon: String {
         switch review.recommendation.category {
+        case .all: return "mappin.and.ellipse.circle"
         case .activities: return "figure.hiking"
         case .nightlife: return "music.note"
         case .restaurants: return "fork.knife"

@@ -138,6 +138,18 @@ class SupabaseManager {
             .execute()
     }
 
+    func fetchSingleRecommendation(recommendationId: String) async throws -> Recommendation {
+        let rec: Recommendation = try await supabase
+            .from("recommendations")
+            .select()
+            .eq("id", value: recommendationId)
+            .single()
+            .execute()
+            .value
+
+        return rec
+    }
+
     func createRecommendation(
         cityId: String,
         name: String,
@@ -267,6 +279,15 @@ class SupabaseManager {
         } catch {
             print("error in deleteRecommendationIfNew: \(error.localizedDescription)")
         }
+    }
+
+    func getNumCityRatings(cityId: UUID) async throws -> Int {
+        let response = try await supabase
+            .from("city_reviews")
+            .select("id", count: .exact)
+            .eq("city_id", value: cityId)
+            .execute()
+        return response.count ?? 0
     }
 
     // MARK: - SocialView Functions

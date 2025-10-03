@@ -28,6 +28,20 @@ struct CitiesGridView: View {
             }
         }
         .onAppear {
+            // Set up callback for when cities are deleted
+            vm.onCityDeleted = {
+                Task {
+                    await profileViewModel.refreshTravelStats()
+                }
+            }
+
+            // Set up callback for when cities are added
+            vm.onCityAdded = {
+                Task {
+                    await profileViewModel.refreshTravelStats()
+                }
+            }
+
             // Refresh data when view appears to catch rating updates
             if let userId = vm.userId, vm.cities.count == 0 {
                 Task {
@@ -44,7 +58,6 @@ struct CitiesGridView: View {
                     Task {
                         await vm.deleteCityRating(cityId: city.id)
                         cityToDelete = nil
-                        profileViewModel.citiesVisited -= 1
                     }
                 }
             }

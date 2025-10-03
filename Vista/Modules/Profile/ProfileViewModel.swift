@@ -63,9 +63,6 @@ class ProfileViewModel {
                 countriesVisited = travelStats.countriesVisited
                 citiesVisited = travelStats.citiesVisited
                 spotsReviewed = travelStats.spotsVisited
-//                countriesVisited = try await SupabaseManager.shared.fetchNumCountriesVisited(userId: userId)
-//                citiesVisited = try await SupabaseManager.shared.fetchNumCitiesVisited(userId: userId)
-//                recsSubmitted = try await SupabaseManager.shared.fetchNumRecsSubmitted(userId: userId)
 
             } else {
                 print("userId didn't work yet")
