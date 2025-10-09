@@ -68,16 +68,6 @@ struct LoginView: View {
             .padding(12)
             .background(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.gray.opacity(0.24), lineWidth: 1))
 
-            if vm.isSignUp {
-                HStack {
-                    Image(systemName: "person")
-                        .foregroundColor(.accentColor)
-                    TextField("Username", text: $vm.username)
-                }
-                .padding(12)
-                .background(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.gray.opacity(0.24), lineWidth: 1))
-            }
-
             HStack {
                 Image(systemName: "lock")
                     .foregroundColor(.accentColor)
@@ -108,9 +98,10 @@ struct LoginView: View {
             Task {
                 let wasSignUp = vm.isSignUp
                 isAuthenticated = await vm.authAction()
+                let isDoneOnboarding = await vm.hasCompletedOnboarding()
 
                 // Only trigger onboarding for new sign-ups
-                if wasSignUp && isAuthenticated {
+                if wasSignUp && isAuthenticated || !isDoneOnboarding && isAuthenticated {
                     shouldShowOnboarding = true
                 }
 
@@ -119,14 +110,14 @@ struct LoginView: View {
         } label: {
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(vm.loginCredential.isEmpty || vm.password.isEmpty || vm.isLoading || (vm.username.count < 4 && vm.isSignUp) ? Color.gray.opacity(0.5) : Color.accentColor)
+                    .fill(vm.loginCredential.isEmpty || vm.password.isEmpty || vm.isLoading ? Color.gray.opacity(0.5) : Color.accentColor)
                     .frame(height: 48)
                 Text(vm.isSignUp ? "Sign Up" : "Login")
                     .foregroundColor(.white)
                     .font(.headline.bold())
             }
         }
-        .disabled(vm.loginCredential == "" || vm.password == "" || vm.isLoading || (vm.username.count < 4 && vm.isSignUp))
+        .disabled(vm.loginCredential == "" || vm.password == "" || vm.isLoading)
         .padding(.horizontal, 4)
     }
 

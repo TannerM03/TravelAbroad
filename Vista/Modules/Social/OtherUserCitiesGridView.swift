@@ -41,22 +41,23 @@ struct OtherUserCitiesGridView: View {
         LazyVGrid(columns: columns, spacing: 20) {
             ForEach(vm.sortedCities) { city in
                 let emoji = CountryEmoji.emoji(for: city.country)
-                ProfileCityCard(cityName: city.name, imageUrl: city.imageUrl, rating: city.userRating, flagEmoji: emoji)
 
-//                    NavigationLink {
-//                        RecommendationsView(
-//                            cityId: city.id.uuidString,
-//                            cityName: city.name,
-//                            imageUrl: city.imageUrl ?? "",
-//                            userRating: city.userRating,
-//                            isBucketList: false,
-//                            onRatingUpdated: { newRating in
-//                                vm.updateCityRating(cityId: city.id.uuidString, newRating: newRating)
-//                            }, cityRating: city.userRating ?? 0.0
-//                        )
-//                    } label: {
-//                        TravelHistoryCityCardView(cityName: city.name, imageUrl: city.imageUrl, rating: city.userRating, flagEmoji: emoji)
-//                    }
+                NavigationLink {
+                    RecommendationsView(
+                        cityId: city.id.uuidString,
+                        cityName: city.name,
+                        imageUrl: city.imageUrl ?? "",
+                        userRating: city.userRating,
+                        isBucketList: false,
+                        onRatingUpdated: { _ in
+                            // Other user's cities - no rating updates allowed
+                        },
+                        cityRating: city.userRating ?? 0.0
+                    )
+                } label: {
+                    ProfileCityCard(cityName: city.name, imageUrl: city.imageUrl, rating: city.userRating, flagEmoji: emoji)
+                }
+                .buttonStyle(.plain)
             }
         }
 //        }

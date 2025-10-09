@@ -24,7 +24,7 @@ class AddRecommendationViewModel {
     // Properties from AddRecommendationView
     let cityId: String
     let cityName: String
-    let selectedCategory: CategoryType
+    var selectedCategory: CategoryType
     var dismiss: (() -> Void)?
 
     private let supabaseManager = SupabaseManager.shared

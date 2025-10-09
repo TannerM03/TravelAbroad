@@ -20,6 +20,21 @@ class TravelHistoryViewModel {
     var filter: CityFilter = .none
     var user: User?
     var userId: UUID?
+    var onCityDeleted: (() -> Void)?
+    var onCityAdded: (() -> Void)?
+
+    init() {
+        // Listen for city rating added notifications
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("CityRatingAdded"),
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task {
+                await self?.refreshCitiesAfterAdd()
+            }
+        }
+    }
 
     // what will be shown to the user, includes the text the user is searching for and searches for the city name and the country it's in
     var filteredCities: [UserRatedCity] {
@@ -43,6 +58,16 @@ class TravelHistoryViewModel {
             return filteredCities.sorted { $0.userRating ?? 0 > $1.userRating ?? 0 }
         } else {
             return filteredCities.sorted { $0.userRating ?? 0 < $1.userRating ?? 0 }
+        }
+    }
+
+    var displayedCities: [UserRatedCity] {
+        return sortedCities.map { city in
+            var updatedCity = city
+            if let newRating = CityRatingManager.shared.getRating(cityId: city.id.uuidString) {
+                updatedCity.userRating = newRating
+            }
+            return updatedCity
         }
     }
 
@@ -78,5 +103,28 @@ class TravelHistoryViewModel {
         if let index = cities.firstIndex(where: { $0.id.uuidString == cityId }) {
             cities[index].userRating = newRating
         }
+    }
+
+    func deleteCityRating(cityId: UUID) async {
+        do {
+            guard let userId = userId else { return }
+            try await SupabaseManager.shared.deleteCityReview(userId: userId, cityId: cityId)
+            // Remove from local array
+            cities.removeAll { $0.id == cityId }
+
+            // Clear from rating manager
+            CityRatingManager.shared.clearRating(cityId: cityId.uuidString)
+
+            // Notify ProfileViewModel to refresh travel stats
+            onCityDeleted?()
+        } catch {
+            print("Error deleting city rating: \(error)")
+        }
+    }
+
+    func refreshCitiesAfterAdd() async {
+        guard let userId = userId else { return }
+        await getCities(userId: userId, showLoading: false)
+        onCityAdded?()
     }
 }

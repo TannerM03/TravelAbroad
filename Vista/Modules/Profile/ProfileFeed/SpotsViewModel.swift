@@ -49,8 +49,12 @@ class SpotsViewModel {
 
     func deleteSpot(spot: ReviewedSpot) async {
         do {
+            if let userId = userId {
+                try await SupabaseManager.shared.deleteRecommendationIfNew(userId: userId, spotId: spot.id)
+            }
             try await SupabaseManager.shared.deleteSpotComment(commentId: spot.id)
             reviews.removeAll { $0.id == spot.id }
+
         } catch {
             print("Could not delete spot because of error: \(error.localizedDescription)")
         }

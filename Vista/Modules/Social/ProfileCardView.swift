@@ -55,7 +55,7 @@ struct ProfileCardView: View {
             }
             .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
 
-            Text(profile.username)
+            Text(profile.username ?? "Anonymous")
                 .font(.subheadline.weight(.semibold))
                 .fontDesign(.rounded)
                 .lineLimit(1)

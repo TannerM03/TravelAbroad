@@ -17,7 +17,6 @@ class LoginViewModel {
     var isSignUp: Bool = false
     var errorMessage: String?
     var isLoading: Bool = false
-    var username: String = ""
     var showEmailConfirmationDialog: Bool = false
     private var email: String?
 
@@ -31,24 +30,10 @@ class LoginViewModel {
                     throw NSError(domain: "AuthError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Please use a valid .edu email address"])
                 }
 
-                // Validate username length
-                if username.count < 4 {
-                    throw NSError(domain: "AuthError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Username must be at least 4 characters"])
-                }
-
-                // Check username availability first
-                let isAvailable = try await SupabaseManager.shared.isUsernameAvailable(username: username)
-                if !isAvailable {
-                    throw NSError(domain: "AuthError", code: 0, userInfo: [NSLocalizedDescriptionKey: "This username is already taken"])
-                }
-
                 let emailAvailable = try await SupabaseManager.shared.isEmailAvailable(email: loginCredential)
                 if !emailAvailable {
                     throw NSError(domain: "AuthError", code: 0, userInfo: [NSLocalizedDescriptionKey: "This email already exists"])
                 }
-
-                // Store username temporarily for email confirmation flow
-                UserDefaults.standard.set(username, forKey: "pendingUsername")
 
                 try await SupabaseManager.shared.supabase.auth.signUp(email: loginCredential, password: password)
 
@@ -77,6 +62,18 @@ class LoginViewModel {
         return true
     }
 
+    func hasCompletedOnboarding() async -> Bool {
+        do {
+            let user = try await SupabaseManager.shared.supabase.auth.user()
+            let userId = user.id
+
+            return try await SupabaseManager.shared.hasCompletedOnboarding(userId: userId)
+        } catch {
+            print("Error checking onboarding status: \(error)")
+            return false
+        }
+    }
+
     private func translateError(_ error: Error) -> String {
         let errorString = error.localizedDescription.lowercased()
 
@@ -92,15 +89,6 @@ class LoginViewModel {
         }
         if errorString.contains("user already registered") || errorString.contains("already exists") {
             return "Account already exists. Please check your email for the confirmation link or try logging in"
-        }
-        if errorString.contains("unique") && errorString.contains("username") {
-            return "This username is already taken"
-        }
-        if errorString.contains("this username is already taken") {
-            return "This username is already taken"
-        }
-        if errorString.contains("username must be at least 4 characters") {
-            return "Username must be at least 4 characters"
         }
         if errorString.contains("weak password") || errorString.contains("password") {
             return "Password must be at least 8 characters with 1 uppercase character and 1 number"

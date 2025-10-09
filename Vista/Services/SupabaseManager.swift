@@ -138,6 +138,18 @@ class SupabaseManager {
             .execute()
     }
 
+    func fetchSingleRecommendation(recommendationId: String) async throws -> Recommendation {
+        let rec: Recommendation = try await supabase
+            .from("rec_with_avg_rating")
+            .select()
+            .eq("id", value: recommendationId)
+            .single()
+            .execute()
+            .value
+
+        return rec
+    }
+
     func createRecommendation(
         cityId: String,
         name: String,
@@ -220,6 +232,62 @@ class SupabaseManager {
             print("❌ Supabase: Failed to create recommendation - Error: \(error.localizedDescription)")
             throw error
         }
+    }
+
+    func deleteRecommendationIfNew(userId _: UUID, spotId: String) async throws {
+        struct CommentWithRecId: Codable {
+            let rec_id: String
+        }
+
+        struct OtherComment: Codable {
+            let id: String
+        }
+
+        do {
+            // First, get the recommendation ID from the comment being deleted
+            let commentResponse: [CommentWithRecId] = try await supabase
+                .from("comments")
+                .select("rec_id")
+                .eq("id", value: spotId)
+                .execute()
+                .value
+
+            guard let recommendationId = commentResponse.first?.rec_id else {
+                print("Could not find recommendation ID for comment: \(spotId)")
+                return
+            }
+
+            // Check if there are ANY other comments on this recommendation (from any user)
+            let otherCommentsResponse: [OtherComment] = try await supabase
+                .from("comments")
+                .select("id")
+                .eq("rec_id", value: UUID(uuidString: recommendationId))
+                .neq("id", value: UUID(uuidString: spotId))
+                .execute()
+                .value
+
+            // Only delete the recommendation if no other comments exist
+            if otherCommentsResponse.isEmpty {
+                try await supabase
+                    .from("recommendations")
+                    .delete()
+                    .eq("id", value: UUID(uuidString: recommendationId))
+                    .execute()
+            } else {
+                print("Other comments exist. Keeping recommendation \(recommendationId)")
+            }
+        } catch {
+            print("error in deleteRecommendationIfNew: \(error.localizedDescription)")
+        }
+    }
+
+    func getNumCityRatings(cityId: UUID) async throws -> Int {
+        let response = try await supabase
+            .from("city_reviews")
+            .select("id", count: .exact)
+            .eq("city_id", value: cityId)
+            .execute()
+        return response.count ?? 0
     }
 
     // MARK: - SocialView Functions
@@ -594,6 +662,56 @@ class SupabaseManager {
         return profiles.isEmpty
     }
 
+    func changeUsername(userId: UUID, username: String) async throws {
+        print("userId: \(userId)")
+
+        do {
+            try await supabase
+                .from("profiles")
+                .update(["username": username])
+                .eq("id", value: userId)
+                .execute()
+        } catch {
+            print("error changing username: \(error.localizedDescription)")
+        }
+    }
+
+    func changeFirstName(userId: UUID, name: String) async throws {
+        do {
+            try await supabase
+                .from("profiles")
+                .update(["first_name": name])
+                .eq("id", value: userId)
+                .execute()
+        } catch {
+            print("error changing first name: \(error.localizedDescription)")
+        }
+    }
+
+    func changeLastName(userId: UUID, name: String) async throws {
+        do {
+            try await supabase
+                .from("profiles")
+                .update(["last_name": name])
+                .eq("id", value: userId)
+                .execute()
+        } catch {
+            print("error changing last name: \(error.localizedDescription)")
+        }
+    }
+
+    func saveUserNames(userId: UUID, username: String, firstName: String, lastName: String) async throws {
+        try await supabase
+            .from("profiles")
+            .update([
+                "username": username,
+                "first_name": firstName,
+                "last_name": lastName,
+            ])
+            .eq("id", value: userId)
+            .execute()
+    }
+
     func isEmailAvailable(email: String) async throws -> Bool {
         struct Profile: Codable {
             let email: String?
@@ -607,6 +725,21 @@ class SupabaseManager {
             .value
 
         return profiles.isEmpty
+    }
+
+    func hasCompletedOnboarding(userId: UUID) async throws -> Bool {
+        struct UserPreference: Codable {
+            let id: String
+        }
+
+        let response: [UserPreference] = try await supabase
+            .from("user_preferences")
+            .select("id")
+            .eq("user_id", value: userId)
+            .execute()
+            .value
+
+        return !response.isEmpty
     }
 
     // MARK: - ProfileView Functions
@@ -651,19 +784,21 @@ class SupabaseManager {
     }
 
     // fetch username from profiles table by user id
-    func fetchUsername(userId: UUID) async throws -> String {
+    func fetchUsernameAndNames(userId: UUID) async throws -> [String] {
         struct Profile: Codable {
             let username: String?
+            let firstName: String?
+            let lastName: String?
         }
 
         let profile: Profile = try await supabase.from("profiles")
-            .select("username")
+            .select("username, first_name, last_name")
             .eq("id", value: userId)
             .single()
             .execute()
             .value
 
-        return profile.username ?? ""
+        return [profile.username ?? "", profile.firstName ?? "", profile.lastName ?? ""]
     }
 
     // fetch username from profiles table by user id
@@ -980,6 +1115,21 @@ class SupabaseManager {
                 .eq("city_id", value: cityId)
                 .eq("user_id", value: userId)
                 .execute()
+        }
+    }
+
+    // deletes a city review for a user
+    func deleteCityReview(userId: UUID, cityId: UUID) async throws {
+        do {
+            print("in supabase, userId: \(userId) and cityId: \(cityId)")
+            try await supabase
+                .from("city_reviews")
+                .delete()
+                .eq("city_id", value: cityId)
+                .eq("user_id", value: userId)
+                .execute()
+        } catch {
+            print("error deleting city rating: \(error.localizedDescription)")
         }
     }
 

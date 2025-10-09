@@ -15,6 +15,8 @@ import SwiftUI
 @Observable
 class OtherProfileViewModel {
     var username: String = ""
+    var firstName: String = ""
+    var lastName: String = ""
     var user: User?
     var profileImageURL: String?
     var userId: UUID?
@@ -35,7 +37,10 @@ class OtherProfileViewModel {
     func fetchUser() async {
         do {
             if let userId = userId {
-                username = try await SupabaseManager.shared.fetchUsername(userId: userId)
+                let names = try await SupabaseManager.shared.fetchUsernameAndNames(userId: userId)
+                username = names[0]
+                firstName = names[1]
+                lastName = names[2]
                 profileImageURL = try await SupabaseManager.shared.fetchProfilePic(userId: userId)
 
                 if let urlString = profileImageURL, let url = URL(string: urlString) {

@@ -49,7 +49,7 @@ struct ProfileView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         NavigationLink {
-                            SettingsView(isAuthenticated: $isAuthenticated)
+                            SettingsView(isAuthenticated: $isAuthenticated, vm: vm)
                         } label: {
                             Image(systemName: "gear")
                                 .foregroundColor(.primary)
@@ -216,9 +216,9 @@ struct ProfileView: View {
     @ViewBuilder
     private var gridSection: some View {
         if selectedSegment == 0 {
-            CitiesGridView(vm: travelHistoryViewModel)
+            CitiesGridView(vm: travelHistoryViewModel, profileViewModel: vm)
         } else {
-            SpotsGridView(vm: spotsViewModel)
+            SpotsGridView(vm: spotsViewModel, profileViewModel: vm)
         }
     }
 }

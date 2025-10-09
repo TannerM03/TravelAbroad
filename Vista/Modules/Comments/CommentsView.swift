@@ -85,10 +85,12 @@ struct CommentsView: View {
             await vm.fetchComments(for: recommendation.id)
             await vm.fetchUserRating(for: recommendation.id)
 
+            await vm.refreshRecommendationData()
+
             if let rec = vm.recommendation {
                 let shouldUpdate = rec.summaryUpdatedAt == nil ||
                     (rec.summaryUpdatedAt != nil &&
-                        Calendar.current.dateComponents([.day], from: rec.summaryUpdatedAt!, to: Date()).day ?? 0 >= 1)
+                        Calendar.current.dateComponents([.day], from: rec.summaryUpdatedAt!, to: Date()).day ?? 0 >= 14)
 
                 if shouldUpdate {
                     await vm.generateSummary(for: rec, comments: vm.comments)
