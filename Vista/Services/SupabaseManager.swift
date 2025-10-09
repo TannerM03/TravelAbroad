@@ -140,7 +140,7 @@ class SupabaseManager {
 
     func fetchSingleRecommendation(recommendationId: String) async throws -> Recommendation {
         let rec: Recommendation = try await supabase
-            .from("recommendations")
+            .from("rec_with_avg_rating")
             .select()
             .eq("id", value: recommendationId)
             .single()

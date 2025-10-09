@@ -23,36 +23,36 @@ struct RecommendationsView: View {
     let cityRating: Double
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading) {
-                cityImageSection
-                categoryFilterSection
-                HStack(spacing: 12) {
-                    SearchBar(placeholder: "Search recommendations", searchText: $vm.userSearch)
-                    Button {
-                        showingAddRecommendation = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .padding(12)
-                            .background(.ultraThinMaterial)
-                            .clipShape(Circle())
+        ZStack {
+            LinearGradient(
+                gradient: Gradient(colors: [Color.purple.opacity(0.1), Color.blue.opacity(0.1), Color.clear]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ).ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading) {
+                    cityImageSection
+                    categoryFilterSection
+                    HStack(spacing: 12) {
+                        SearchBar(placeholder: "Search recommendations", searchText: $vm.userSearch)
+                        Button {
+                            showingAddRecommendation = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .padding(12)
+                                .background(.ultraThinMaterial)
+                                .clipShape(Circle())
+                        }
                     }
+                    .padding(.bottom, 10)
+                    .padding(.horizontal, 18)
+                    recommendationsListSection
                 }
-                .padding(.bottom, 10)
-                .padding(.horizontal, 18)
-                recommendationsListSection
+                .scrollDismissesKeyboard(.interactively)
             }
-            .scrollDismissesKeyboard(.interactively)
-            .background(
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.purple.opacity(0.1), Color.blue.opacity(0.1), Color.clear]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
         }
         .toolbar(.hidden)
         .ignoresSafeArea()
