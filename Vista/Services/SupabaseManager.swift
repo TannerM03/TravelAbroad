@@ -302,6 +302,160 @@ class SupabaseManager {
         return response
     }
 
+    // Fetches activity feed from users that the current user follows
+    func fetchFollowingActivityFeed(userId: UUID, limit: Int = 50) async throws -> [FeedItem] {
+        // First, get the list of users that the current user follows
+        struct Following: Codable {
+            let following_id: String
+        }
+
+        let followingResponse: [Following] = try await supabase
+            .from("followers")
+            .select("following_id")
+            .eq("follower_id", value: userId)
+            .execute()
+            .value
+
+        let followingIds = followingResponse.map { $0.following_id }
+
+        // If not following anyone, return empty array
+        if followingIds.isEmpty {
+            return []
+        }
+
+        // Fetch city ratings from followed users
+        struct CityRatingResponse: Codable {
+            let id: String
+            let user_id: String
+            let city_id: String
+            let overall_rating: Double
+            let created_at: Date
+            let profiles: ProfileData
+            let cities: CityData
+
+            struct ProfileData: Codable {
+                let username: String
+                let image_url: String?
+            }
+
+            struct CityData: Codable {
+                let name: String
+                let country: String
+                let image_url: String?
+            }
+        }
+
+        let cityRatings: [CityRatingResponse] = try await supabase
+            .from("city_reviews")
+            .select("id, user_id, city_id, overall_rating, created_at, profiles!inner(username, image_url), cities!inner(name, country, image_url)")
+            .in("user_id", values: followingIds)
+            .order("created_at", ascending: false)
+            .limit(limit)
+            .execute()
+            .value
+
+        // Fetch spot reviews from followed users
+        struct SpotReviewResponse: Codable {
+            let id: String
+            let user_id: String
+            let rec_id: String
+            let rating: Int
+            let comment: String?
+            let created_at: Date
+            let profiles: ProfileData
+            let rec_with_avg_rating: RecommendationData
+
+            struct ProfileData: Codable {
+                let username: String
+                let image_url: String?
+            }
+
+            struct RecommendationData: Codable {
+                let id: String
+                let name: String
+                let category: String
+                let description: String?
+                let location: String?
+                let image_url: String?
+                let avg_rating: Double
+                let city_id: String
+                let cities: CityData
+
+                struct CityData: Codable {
+                    let name: String
+                    let country: String
+                }
+            }
+        }
+
+        let spotReviews: [SpotReviewResponse] = try await supabase
+            .from("comments")
+            .select("id, user_id, rec_id, rating, comment, created_at, profiles!inner(username, image_url), rec_with_avg_rating!inner(id, name, category, description, location, image_url, avg_rating, city_id, cities!inner(name, country))")
+            .in("user_id", values: followingIds)
+            .order("created_at", ascending: false)
+            .limit(limit)
+            .execute()
+            .value
+
+        // Convert city ratings to feed items
+        let cityFeedItems: [FeedItem] = cityRatings.map { rating in
+            FeedItem(
+                id: "\(rating.id)-city",
+                type: .cityRating,
+                userId: rating.user_id,
+                username: rating.profiles.username,
+                userImageUrl: rating.profiles.image_url,
+                rating: rating.overall_rating,
+                createdAt: rating.created_at,
+                cityId: rating.city_id,
+                cityName: rating.cities.name,
+                cityImageUrl: rating.cities.image_url,
+                cityCountry: rating.cities.country,
+                spotId: nil,
+                spotName: nil,
+                spotImageUrl: nil,
+                spotCategory: nil,
+                spotLocation: nil,
+                spotDescription: nil,
+                spotAvgRating: nil,
+                spotCityCountry: nil,
+                reviewComment: nil
+            )
+        }
+
+        // Convert spot reviews to feed items
+        let spotFeedItems: [FeedItem] = spotReviews.map { review in
+            FeedItem(
+                id: "\(review.id)-spot",
+                type: .spotReview,
+                userId: review.user_id,
+                username: review.profiles.username,
+                userImageUrl: review.profiles.image_url,
+                rating: Double(review.rating),
+                createdAt: review.created_at,
+                cityId: review.rec_with_avg_rating.city_id,
+                cityName: review.rec_with_avg_rating.cities.name,
+                cityImageUrl: nil,
+                cityCountry: nil,
+                spotId: review.rec_id,
+                spotName: review.rec_with_avg_rating.name,
+                spotImageUrl: review.rec_with_avg_rating.image_url,
+                spotCategory: CategoryType(rawValue: review.rec_with_avg_rating.category),
+                spotLocation: review.rec_with_avg_rating.location,
+                spotDescription: review.rec_with_avg_rating.description,
+                spotAvgRating: review.rec_with_avg_rating.avg_rating,
+                spotCityCountry: review.rec_with_avg_rating.cities.country,
+                reviewComment: review.comment
+            )
+        }
+
+        // Combine and sort by date
+        let allFeedItems = (cityFeedItems + spotFeedItems).sorted { $0.createdAt > $1.createdAt }
+
+        // Return limited results
+        return Array(allFeedItems.prefix(limit))
+    }
+
     // MARK: - CommentsView Functions
 
     // fetches all the comments for a given rec

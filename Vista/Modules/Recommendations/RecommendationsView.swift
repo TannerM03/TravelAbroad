@@ -262,11 +262,11 @@ struct RecommendationsView: View {
                                     vm.tempRating = Double(i * 2)
                                 }
                             }) {
-                                Image(systemName: (vm.tempRating ?? 5.0) >= Double(i * 2) ? "star.fill" : (vm.tempRating ?? 5.0) >= Double(i * 2 - 1) ? "star.lefthalf.fill" : "star")
+                                Image(systemName: (vm.tempRating ?? 5.0) >= Double(i) ? "star.fill" : (vm.tempRating ?? 5.0) >= Double(i) - 0.5 ? "star.lefthalf.fill" : "star")
                                     .font(.title)
                                     .fontWeight(.medium)
                                     .foregroundStyle(.yellow)
-                                    .scaleEffect((vm.tempRating ?? 5.0) >= Double(i * 2) ? 1.1 : 1.0)
+                                    .scaleEffect((vm.tempRating ?? 5.0) >= Double(i) ? 1.1 : 1.0)
                                     .animation(.spring(response: 0.3, dampingFraction: 0.6), value: vm.tempRating)
                             }
                         }
@@ -285,9 +285,9 @@ struct RecommendationsView: View {
                         )
 
                     Slider(value: Binding(
-                        get: { vm.tempRating ?? 5.5 },
+                        get: { vm.tempRating ?? 5.0 },
                         set: { vm.tempRating = $0 }
-                    ), in: 1 ... 10, step: 0.1)
+                    ), in: 1 ... 5, step: 0.1)
                         .accentColor(.yellow)
                         .padding(.horizontal, 8)
                 }

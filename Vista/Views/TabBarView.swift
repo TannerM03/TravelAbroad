@@ -47,11 +47,11 @@ struct TabBarView: View {
                 Label("Social", systemImage: "magnifyingglass.circle.fill")
             }
             .tag(1)
-            Text("Itinerary Builder Coming Soon!")
-                .tabItem {
-                    Label("Itinerary", systemImage: "airplane.circle.fill")
-                }
-                .tag(2)
+//            Text("Itinerary Builder Coming Soon!")
+//                .tabItem {
+//                    Label("Itinerary", systemImage: "airplane.circle.fill")
+//                }
+//                .tag(2)
             ProfileView(isAuthenticated: $isAuthenticated, vm: profileViewModel)
                 .tabItem {
                     Label("Profile", systemImage: "person.crop.circle")
