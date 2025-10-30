@@ -9,23 +9,6 @@ import SwiftUI
 
 struct SocialView: View {
     @State private var vm = SocialViewModel()
-    @State private var isSearching = false
-    @State private var searchText = ""
-
-    private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12),
-    ]
-
-    private var filteredProfiles: [OtherProfile] {
-        if searchText.isEmpty {
-            return vm.profiles
-        } else {
-            return vm.profiles.filter { profile in
-                profile.username?.localizedCaseInsensitiveContains(searchText) ?? false
-            }
-        }
-    }
 
     var body: some View {
         NavigationStack {
@@ -40,158 +23,61 @@ struct SocialView: View {
 
                 ScrollView {
                     VStack(spacing: 24) {
-                        // Header section
-                        VStack(spacing: 12) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Social")
-                                        .font(.title.weight(.bold))
-                                        .fontDesign(.rounded)
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [Color.purple, Color.blue]),
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
-                                        )
 
-                                    Text("Connect with fellow travelers")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                        .fontDesign(.rounded)
-                                }
-                                Spacer()
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 8)
-
-                        // Search bar (when active)
-                        if isSearching {
-                            HStack {
-                                HStack {
-                                    Image(systemName: "magnifyingglass")
-                                        .foregroundColor(.secondary)
-
-                                    TextField("Search travelers...", text: $searchText)
-                                        .textFieldStyle(PlainTextFieldStyle())
-
-                                    if !searchText.isEmpty {
-                                        Button {
-                                            searchText = ""
-                                        } label: {
-                                            Image(systemName: "xmark.circle.fill")
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 10)
-                                .background(.ultraThinMaterial)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                                Button("Cancel") {
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        isSearching = false
-                                        searchText = ""
-                                    }
-                                }
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [Color.purple, Color.blue]),
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .fontWeight(.medium)
-                            }
-                            .padding(.horizontal, 20)
-                            .transition(.move(edge: .top).combined(with: .opacity))
-                        }
-
-                        // Profiles grid
-                        LazyVGrid(columns: columns, spacing: 16) {
-                            ForEach(filteredProfiles) { profile in
-                                NavigationLink {
-                                    OtherProfileView(selectedUserId: profile.id.uuidString)
-                                } label: {
-                                    ProfileCardView(profile: profile)
-                                        .transition(.asymmetric(
-                                            insertion: .scale.combined(with: .opacity),
-                                            removal: .scale.combined(with: .opacity)
-                                        ))
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        .animation(.easeInOut(duration: 0.3), value: filteredProfiles.count)
-
-                        // Loading/Empty state
-                        if filteredProfiles.isEmpty && !searchText.isEmpty {
+                        // Feed content
+                        if vm.isLoading && vm.feedItems.isEmpty {
+                            // Loading state
                             VStack(spacing: 16) {
-                                Image(systemName: "magnifyingglass")
-                                    .font(.system(size: 48))
-                                    .foregroundStyle(
-                                        LinearGradient(
-                                            gradient: Gradient(colors: [Color.purple.opacity(0.6), Color.blue.opacity(0.6)]),
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
+                                ProgressView()
+                                    .scaleEffect(1.2)
+                                Text("Loading feed...")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .fontDesign(.rounded)
+                            }
+                            .padding(.vertical, 60)
+                        } else if vm.feedItems.isEmpty {
+                            // Empty state
+                            emptyStateView
+                        } else {
+                            // Feed items
+                            LazyVStack(spacing: 12) {
+                                ForEach(vm.feedItems) { feedItem in
+                                    FeedItemCard(
+                                        feedItem: feedItem,
+                                        destination: destinationView(for: feedItem)
                                     )
-
-                                VStack(spacing: 8) {
-                                    Text("No travelers found")
-                                        .font(.headline.weight(.semibold))
-                                        .fontDesign(.rounded)
-                                        .foregroundColor(.primary)
-
-                                    Text("Try adjusting your search terms")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                        .multilineTextAlignment(.center)
-                                        .fontDesign(.rounded)
                                 }
                             }
-                            .padding(.vertical, 40)
-                            .padding(.horizontal, 20)
-                        } else if vm.profiles.isEmpty {
-                            VStack(spacing: 16) {
-                                Image(systemName: "person.2.badge.plus")
-                                    .font(.system(size: 48))
-                                    .foregroundStyle(
-                                        LinearGradient(
-                                            gradient: Gradient(colors: [Color.purple.opacity(0.6), Color.blue.opacity(0.6)]),
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-
-                                VStack(spacing: 8) {
-                                    ProgressView("Loading Travelers")
-                                        .font(.headline.weight(.semibold))
-                                        .fontDesign(.rounded)
-                                        .foregroundColor(.primary)
-                                }
-                            }
-                            .padding(.vertical, 40)
                             .padding(.horizontal, 20)
                         }
                     }
-                    .padding(.bottom, 24)
+                    .padding(.vertical, 24)
+                }
+                .refreshable {
+                    await vm.refreshFeed()
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Following")
+                        .font(.title2.weight(.bold))
+                        .fontDesign(.rounded)
+                        .foregroundStyle(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.purple, Color.blue, Color.teal]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                }
+
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            isSearching.toggle()
-                            if !isSearching {
-                                searchText = ""
-                            }
-                        }
+                    NavigationLink {
+                        UserSearchView()
                     } label: {
-                        Image(systemName: isSearching ? "xmark" : "magnifyingglass")
+                        Image(systemName: "magnifyingglass")
                             .foregroundStyle(
                                 LinearGradient(
                                     gradient: Gradient(colors: [Color.purple, Color.blue]),
@@ -204,12 +90,88 @@ struct SocialView: View {
                 }
             }
         }
-        .onAppear {
-            Task {
-                await vm.fetchUser()
-                if let userId = vm.userId {
-                    await vm.fetchProfiles(userId: userId)
+        .task {
+            await vm.fetchUser()
+            await vm.fetchActivityFeed()
+        }
+    }
+
+    // Empty state view
+    private var emptyStateView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "person.2.slash")
+                .font(.system(size: 60))
+                .foregroundStyle(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.purple.opacity(0.6), Color.blue.opacity(0.6)]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .padding(.top, 40)
+
+            VStack(spacing: 8) {
+                Text("No Activity Yet")
+                    .font(.title2.weight(.bold))
+                    .fontDesign(.rounded)
+                    .foregroundColor(.primary)
+
+                Text("Follow travelers to see their city and spot ratings here")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fontDesign(.rounded)
+                    .padding(.horizontal, 40)
+            }
+
+            NavigationLink {
+                UserSearchView()
+            } label: {
+                HStack {
+                    Image(systemName: "person.badge.plus")
+                    Text("Find Travelers")
                 }
+                .font(.headline)
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.purple, Color.blue]),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(Capsule())
+            }
+            .padding(.top, 8)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 60)
+    }
+
+    // Destination view for navigation
+    @ViewBuilder
+    private func destinationView(for feedItem: FeedItem) -> some View {
+        switch feedItem.type {
+        case .cityRating:
+            if let cityId = feedItem.cityId,
+               let cityName = feedItem.cityName,
+               let imageUrl = feedItem.cityImageUrl
+            {
+                RecommendationsView(
+                    cityId: cityId,
+                    cityName: cityName,
+                    imageUrl: imageUrl,
+                    userRating: nil,
+                    isBucketList: false,
+                    onRatingUpdated: nil,
+                    cityRating: feedItem.rating
+                )
+            }
+        case .spotReview:
+            if let recommendation = feedItem.toRecommendation() {
+                CommentsView(recommendation: recommendation)
             }
         }
     }

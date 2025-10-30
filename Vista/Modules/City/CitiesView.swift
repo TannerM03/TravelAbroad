@@ -34,7 +34,21 @@ struct CitiesView: View {
                 }
             }
             .scrollDismissesKeyboard(.interactively)
-            .navigationBarHidden(true)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Discover Your Next Trip")
+                        .font(.title2.weight(.bold))
+                        .fontDesign(.rounded)
+                        .foregroundStyle(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.purple, Color.blue, Color.teal]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                }
+            }
             .background(
                 LinearGradient(
                     gradient: Gradient(colors: [Color.purple.opacity(0.1), Color.blue.opacity(0.1), Color.clear]),
@@ -55,27 +69,9 @@ struct CitiesView: View {
 
     private var headerSection: some View {
         VStack(spacing: 10) {
-            HStack(spacing: 20) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Discover Your Next Trip")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .fontDesign(.rounded)
-                        .foregroundStyle(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.purple, Color.blue, Color.teal]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                }
-//                Spacer()
-//                filterToolbarSection
-            }
-            .padding(20)
-
             SearchBar(placeholder: "Search cities or countries...", searchText: $vm.userSearch)
                 .padding(.horizontal, 17)
+                .padding(.top, 8)
 
             Button {
                 showRequestCitySheet = true
