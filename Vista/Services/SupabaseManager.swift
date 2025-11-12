@@ -1113,7 +1113,7 @@ class SupabaseManager {
                 case cityId = "city_id"
                 case overallRating = "overall_rating"
                 case createdAt = "created_at"
-                case city = "cities"
+                case city = "city_with_avg_rating"
             }
         }
 
@@ -1122,18 +1122,20 @@ class SupabaseManager {
             let name: String
             let country: String
             let imageUrl: String?
+            let avgRating: Double?
 
             enum CodingKeys: String, CodingKey {
                 case id
                 case name
                 case country
                 case imageUrl = "image_url"
+                case avgRating = "avg_rating"
             }
         }
 
         let userRatedCities: [CityReviewWithCity] = try await supabase
             .from("city_reviews")
-            .select("city_id, overall_rating, created_at, cities!inner(id, name, country, image_url)")
+            .select("city_id, overall_rating, created_at, city_with_avg_rating!inner(id, name, country, image_url, avg_rating)")
             .eq("user_id", value: userId)
             .execute()
             .value
@@ -1145,7 +1147,8 @@ class SupabaseManager {
                 country: reviewData.city.country,
                 imageUrl: reviewData.city.imageUrl,
                 userRating: reviewData.overallRating,
-                createdAt: reviewData.createdAt
+                createdAt: reviewData.createdAt,
+                avgRating: reviewData.city.avgRating
             )
         }
     }

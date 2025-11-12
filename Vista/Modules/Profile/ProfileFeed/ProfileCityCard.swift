@@ -48,10 +48,10 @@ struct ProfileCityCard: View {
                                 .foregroundColor(.yellow)
                                 .font(.caption2.weight(.bold))
                             Text(String(format: "%.1f", rating))
+                                .foregroundStyle(.primary)
                                 .font(.caption.weight(.bold))
                                 .fontDesign(.rounded)
                         }
-                        .foregroundColor(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(.regularMaterial)

@@ -52,7 +52,7 @@ struct OtherUserCitiesGridView: View {
                         onRatingUpdated: { _ in
                             // Other user's cities - no rating updates allowed
                         },
-                        cityRating: city.userRating ?? 0.0
+                        cityRating: city.avgRating ?? 0.0
                     )
                 } label: {
                     ProfileCityCard(cityName: city.name, imageUrl: city.imageUrl, rating: city.userRating, flagEmoji: emoji)
