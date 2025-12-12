@@ -1708,4 +1708,43 @@ class SupabaseManager {
             )
         }
     }
+
+    // MARK: - Account Management Functions
+
+    func deleteUserAccount() async throws {
+        guard let session = try? await supabase.auth.session else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No active session found"])
+        }
+
+
+        // Call Supabase Edge Function to delete user account
+        // The Edge Function has service role access to delete from both profiles table and auth
+        guard let baseURL = URL(string: ConfigManager.shared.supabaseURL) else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid Supabase URL"])
+        }
+        let url = baseURL.appendingPathComponent("functions/v1/delete-user-account")
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue(ConfigManager.shared.supabaseKey, forHTTPHeaderField: "apikey")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid response"])
+            }
+
+            if httpResponse.statusCode == 200 {
+            } else {
+                let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+                throw NSError(domain: "SupabaseError", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Failed to delete account: \(errorMessage)"])
+            }
+        } catch {
+            throw error
+        }
+    }
 }
+

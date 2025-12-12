@@ -9,6 +9,7 @@ import SwiftUI
 struct LoginView: View {
     @State private var vm = LoginViewModel()
     @State private var profileVm = ProfileViewModel()
+    @State private var appleSignInVm = AppleSignInViewModel()
     @Binding var isAuthenticated: Bool
     @Binding var shouldShowOnboarding: Bool
 
@@ -25,6 +26,10 @@ struct LoginView: View {
                     inputFieldsSection
                     errorMessageSection
                     actionButtonSection
+
+                    dividerSection
+                    appleSignInSection
+
                     toggleModeSection
                 }
                 .padding(.horizontal, 28)
@@ -49,7 +54,7 @@ struct LoginView: View {
         }
     }
 
-    private var titleSection: some View {
+    private var titleSection: some View {            
         Text(vm.isSignUp ? "Create Account" : "Login")
             .font(.largeTitle).bold()
             .padding(.top, 8)
@@ -60,7 +65,7 @@ struct LoginView: View {
             HStack {
                 Image(systemName: "envelope")
                     .foregroundColor(.accentColor)
-                TextField(vm.isSignUp ? "University email (.edu)" : "Email or username", text: $vm.loginCredential)
+                TextField(vm.isSignUp ? "Email" : "Email or username", text: $vm.loginCredential)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .keyboardType(.emailAddress)
@@ -119,6 +124,40 @@ struct LoginView: View {
         }
         .disabled(vm.loginCredential == "" || vm.password == "" || vm.isLoading)
         .padding(.horizontal, 4)
+    }
+
+    private var dividerSection: some View {
+        HStack {
+            Rectangle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(height: 1)
+            Text("or")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .padding(.horizontal, 12)
+            Rectangle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(height: 1)
+        }
+        .padding(.vertical, 8)
+    }
+
+    private var appleSignInSection: some View {
+        VStack(spacing: 12) {
+            AppleSignInButton(
+                viewModel: appleSignInVm,
+                isAuthenticated: $isAuthenticated,
+                shouldShowOnboarding: $shouldShowOnboarding
+            )
+            .padding(.horizontal, 4)
+
+            if let errorMessage = appleSignInVm.errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                    .font(.caption)
+                    .multilineTextAlignment(.center)
+            }
+        }
     }
 
     private var toggleModeSection: some View {

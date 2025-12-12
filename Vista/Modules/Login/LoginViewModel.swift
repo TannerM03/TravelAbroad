@@ -26,9 +26,9 @@ class LoginViewModel {
         do {
             if isSignUp {
                 // Validate .edu email requirement
-                if !loginCredential.lowercased().hasSuffix(".edu") {
-                    throw NSError(domain: "AuthError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Please use a valid .edu email address"])
-                }
+//                if !loginCredential.lowercased().hasSuffix(".edu") {
+//                    throw NSError(domain: "AuthError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Please use a valid .edu email address"])
+//                }
 
                 let emailAvailable = try await SupabaseManager.shared.isEmailAvailable(email: loginCredential)
                 if !emailAvailable {
@@ -93,9 +93,9 @@ class LoginViewModel {
         if errorString.contains("weak password") || errorString.contains("password") {
             return "Password must be at least 8 characters with 1 uppercase character and 1 number"
         }
-        if errorString.contains("please use a valid .edu email address") {
-            return "Please use a valid .edu email address"
-        }
+//        if errorString.contains("please use a valid .edu email address") {
+//            return "Please use a valid .edu email address"
+//        }
         if errorString.contains("invalid email") {
             return "Please enter a valid email address"
         }
