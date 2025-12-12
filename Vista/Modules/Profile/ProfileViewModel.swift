@@ -43,6 +43,12 @@ class ProfileViewModel {
         try await SupabaseManager.shared.supabase.auth.signOut()
     }
 
+    func deleteAccount() async throws {
+        try await SupabaseManager.shared.deleteUserAccount()
+        // Sign out after deletion
+        try await SupabaseManager.shared.supabase.auth.signOut()
+    }
+
     func fetchUser() async {
         do {
             user = try await SupabaseManager.shared.supabase.auth.user()

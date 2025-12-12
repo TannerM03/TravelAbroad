@@ -13,6 +13,7 @@ struct NamesView: View {
     @State private var lastName: String = ""
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
+    @State private var isPrePopulated: Bool = false
     let onCompletion: () -> Void
 
     enum Field {
@@ -53,6 +54,9 @@ struct NamesView: View {
             )
         )
         .scrollDismissesKeyboard(.interactively)
+        .onAppear {
+            loadAppleUserDataIfAvailable()
+        }
     }
 
     private var headerSection: some View {
@@ -78,6 +82,17 @@ struct NamesView: View {
                         endPoint: .trailing
                     )
                 )
+
+            if isPrePopulated {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.caption)
+                    Text("Name imported from Apple")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
         }
         .padding(.bottom, 8)
     }
@@ -213,6 +228,25 @@ struct NamesView: View {
                 isLoading = false
                 print("Error saving names: \(error)")
             }
+        }
+    }
+
+    private func loadAppleUserDataIfAvailable() {
+        let appleSignInVm = AppleSignInViewModel()
+        let userData = appleSignInVm.getAppleUserData()
+
+        if let givenName = userData.givenName, !givenName.isEmpty {
+            firstName = givenName
+            isPrePopulated = true
+        }
+
+        if let familyName = userData.familyName, !familyName.isEmpty {
+            lastName = familyName
+            isPrePopulated = true
+        }
+
+        if isPrePopulated {
+            print("✅ Pre-populated name fields from Apple Sign In: \(firstName) \(lastName)")
         }
     }
 }

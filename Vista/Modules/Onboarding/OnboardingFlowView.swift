@@ -11,7 +11,22 @@ struct OnboardingFlowView: View {
     @State private var vm = OnboardingViewModel()
     @Binding var shouldShowOnboarding: Bool
 
+    // TEMPORARY: Set to true to show only NamesView, false to show full onboarding flow
+    private let simplifiedOnboarding = true
+
     var body: some View {
+        if simplifiedOnboarding {
+            // Simplified onboarding - just show NamesView
+            NamesView(onCompletion: {
+                shouldShowOnboarding = false
+            })
+        } else {
+            // Full onboarding flow (currently disabled)
+            fullOnboardingFlow
+        }
+    }
+
+    private var fullOnboardingFlow: some View {
         ZStack {
             // Background gradient
             LinearGradient(
