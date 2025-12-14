@@ -171,7 +171,7 @@ struct FeedItemCard<Destination: View>: View {
                 // Timestamp at bottom right
                 HStack {
                     Spacer()
-                    Text(timeAgoString(from: feedItem.createdAt))
+                    Text(feedItem.createdAt.timeAgoOrDateString())
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -183,24 +183,6 @@ struct FeedItemCard<Destination: View>: View {
         .background(feedItem.type == .spotReview ? Color(.secondarySystemGroupedBackground) : Color(.tertiarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
-    }
-
-    // Time ago formatter
-    private func timeAgoString(from date: Date) -> String {
-        let now = Date()
-        let components = Calendar.current.dateComponents([.minute, .hour, .day, .weekOfYear], from: date, to: now)
-
-        if let weeks = components.weekOfYear, weeks > 0 {
-            return weeks == 1 ? "1w ago" : "\(weeks)w ago"
-        } else if let days = components.day, days > 0 {
-            return days == 1 ? "1d ago" : "\(days)d ago"
-        } else if let hours = components.hour, hours > 0 {
-            return hours == 1 ? "1h ago" : "\(hours)h ago"
-        } else if let minutes = components.minute, minutes > 0 {
-            return minutes == 1 ? "1m ago" : "\(minutes)m ago"
-        } else {
-            return "Just now"
-        }
     }
 
     // Helper function to determine which star icon to show

@@ -156,24 +156,6 @@ struct ReviewCard: View {
         }
     }
 
-    private func timeString(from date: Date) -> String {
-        let now = Date()
-        let timeInterval = now.timeIntervalSince(date)
-
-        if timeInterval < 60 {
-            return "Just now"
-        } else if timeInterval < 3600 {
-            let minutes = Int(timeInterval / 60)
-            return "\(minutes)m"
-        } else if timeInterval < 86400 {
-            let hours = Int(timeInterval / 3600)
-            return "\(hours)h"
-        } else {
-            let days = Int(timeInterval / 86400)
-            return "\(days)d"
-        }
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header with city name and flag
@@ -269,7 +251,7 @@ struct ReviewCard: View {
 
             // Timestamp and voting
             HStack(spacing: 12) {
-                Text(timeString(from: review.createdAt))
+                Text(review.createdAt.timeAgoOrDateString())
                     .font(.caption2)
                     .foregroundColor(.secondary)
 

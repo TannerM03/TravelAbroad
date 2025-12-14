@@ -941,8 +941,8 @@ class SupabaseManager {
     func fetchUsernameAndNames(userId: UUID) async throws -> [String] {
         struct Profile: Codable {
             let username: String?
-            let firstName: String?
-            let lastName: String?
+            let first_name: String?
+            let last_name: String?
         }
 
         let profile: Profile = try await supabase.from("profiles")
@@ -952,7 +952,7 @@ class SupabaseManager {
             .execute()
             .value
 
-        return [profile.username ?? "", profile.firstName ?? "", profile.lastName ?? ""]
+        return [profile.username ?? "", profile.first_name ?? "", profile.last_name ?? ""]
     }
 
     // fetch username from profiles table by user id

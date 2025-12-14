@@ -87,7 +87,6 @@ struct ProfileEditView: View {
             usernameField
             firstNameField
             lastNameField
-            emailField
         }
     }
 
