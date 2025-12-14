@@ -56,6 +56,7 @@ class ProfileViewModel {
 
             if let userId = userId {
                 let names = try await SupabaseManager.shared.fetchUsernameAndNames(userId: userId)
+                print(names)
                 username = names[0]
                 firstName = names[1]
                 lastName = names[2]

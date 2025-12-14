@@ -38,13 +38,13 @@ class AddRecommendationViewModel {
     func submitRecommendation() {
         // Check if user has entered a place name
         guard !placeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            print("❌ AddRecommendation: No place name entered")
+            print("AddRecommendation: No place name entered")
             return
         }
 
         // Check if user has selected a rating
         guard userRating > 0 else {
-            print("⚠️ AddRecommendation: No rating selected")
+            print("AddRecommendation: No rating selected")
             showNoRatingAlert = true
             return
         }
@@ -78,16 +78,16 @@ class AddRecommendationViewModel {
                 _ = try await supabaseManager.submitComment(
                     recommendationId: recommendation.id,
                     text: description.isEmpty ? nil : description,
-                    imageUrl: nil,
+                    imageUrl: imageUrl,
                     rating: userRating
                 )
 
                 isSubmitting = false
-                print("✅ AddRecommendation: Successfully created recommendation with ID: \(recommendation.id) and added rating")
+                print("AddRecommendation: Successfully created recommendation with ID: \(recommendation.id) and added rating")
                 dismiss?()
             } catch {
                 isSubmitting = false
-                print("❌ AddRecommendation: Error creating recommendation: \(error.localizedDescription)")
+                print("AddRecommendation: Error creating recommendation: \(error.localizedDescription)")
             }
         }
     }
