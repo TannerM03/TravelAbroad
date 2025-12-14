@@ -316,8 +316,9 @@ class SupabaseManager {
             .execute()
             .value
 
-        let followingIds = followingResponse.map { $0.following_id }
-
+        var followingIds = followingResponse.map { $0.following_id }
+        followingIds.append(userId.uuidString)
+ 
         // If not following anyone, return empty array
         if followingIds.isEmpty {
             return []
@@ -361,6 +362,7 @@ class SupabaseManager {
             let rec_id: String
             let rating: Int
             let comment: String?
+            let image_url: String?
             let created_at: Date
             let profiles: ProfileData
             let rec_with_avg_rating: RecommendationData
@@ -390,7 +392,7 @@ class SupabaseManager {
 
         let spotReviews: [SpotReviewResponse] = try await supabase
             .from("comments")
-            .select("id, user_id, rec_id, rating, comment, created_at, profiles!inner(username, image_url), rec_with_avg_rating!inner(id, name, category, description, location, image_url, avg_rating, city_id, cities!inner(name, country))")
+            .select("id, user_id, rec_id, rating, comment, image_url, created_at, profiles!inner(username, image_url), rec_with_avg_rating!inner(id, name, category, description, location, image_url, avg_rating, city_id, cities!inner(name, country))")
             .in("user_id", values: followingIds)
             .order("created_at", ascending: false)
             .limit(limit)
@@ -414,6 +416,7 @@ class SupabaseManager {
                 spotId: nil,
                 spotName: nil,
                 spotImageUrl: nil,
+                commentImageUrl: nil,
                 spotCategory: nil,
                 spotLocation: nil,
                 spotDescription: nil,
@@ -440,6 +443,7 @@ class SupabaseManager {
                 spotId: review.rec_id,
                 spotName: review.rec_with_avg_rating.name,
                 spotImageUrl: review.rec_with_avg_rating.image_url,
+                commentImageUrl: review.image_url,
                 spotCategory: CategoryType(rawValue: review.rec_with_avg_rating.category),
                 spotLocation: review.rec_with_avg_rating.location,
                 spotDescription: review.rec_with_avg_rating.description,

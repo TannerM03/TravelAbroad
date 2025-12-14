@@ -67,33 +67,42 @@ struct FeedItemCard<Destination: View>: View {
 
                     // Main image
                     GeometryReader { geometry in
-                if let imageUrl = feedItem.displayImageUrl, let url = URL(string: imageUrl) {
-                    KFImage(url)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: geometry.size.width, height: 300)
-                        .clipped()
-                } else {
-                    // Default image with category icon
-                    ZStack {
-                        if let category = feedItem.spotCategory {
-                            category.pillColor.opacity(0.3)
-                        } else {
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.purple.opacity(0.2), Color.blue.opacity(0.2)]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                        if feedItem.type == .spotReview {
+                            // Use carousel for spot reviews
+                            FeedImageCarousel(
+                                commentImageUrl: feedItem.commentImageUrl,
+                                spotImageUrl: feedItem.spotImageUrl,
+                                categoryIcon: categoryIcon,
+                                categoryColor: feedItem.spotCategory?.pillColor ?? .gray,
+                                width: geometry.size.width,
+                                height: 300
                             )
-                        }
+                        } else {
+                            // City ratings - keep existing logic
+                            if let imageUrl = feedItem.displayImageUrl, let url = URL(string: imageUrl) {
+                                KFImage(url)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: geometry.size.width, height: 300)
+                                    .clipped()
+                            } else {
+                                // City placeholder
+                                ZStack {
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.purple.opacity(0.2), Color.blue.opacity(0.2)]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
 
-                        Image(systemName: categoryIcon)
-                            .font(.system(size: 60))
-                            .foregroundColor(feedItem.spotCategory?.pillColor ?? .gray)
+                                    Image(systemName: categoryIcon)
+                                        .font(.system(size: 60))
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(width: geometry.size.width, height: 300)
+                            }
+                        }
                     }
-                    .frame(width: geometry.size.width, height: 300)
-                }
-            }
-            .frame(height: 300)
+                    .frame(height: 300)
                 }
             }
             .buttonStyle(.plain)
