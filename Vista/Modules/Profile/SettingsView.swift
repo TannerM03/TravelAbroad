@@ -11,6 +11,10 @@ struct SettingsView: View {
     @Binding var isAuthenticated: Bool
     @Bindable var vm: ProfileViewModel
     @State private var showLogoutDialog = false
+    @State private var showDeleteAccountDialog = false
+    @State private var showDeleteAccountError = false
+    @State private var deleteAccountErrorMessage = ""
+
     var body: some View {
         NavigationStack {
             Form {
@@ -24,22 +28,39 @@ struct SettingsView: View {
                         }
                     }
 
-                    NavigationLink(destination: PreferencesEditView()) {
-                        HStack {
-                            Image(systemName: "slider.horizontal.3")
-                                .foregroundColor(.blue)
-                                .frame(width: 24)
-                            Text("Travel Preferences")
-                        }
-                    }
+//                    NavigationLink(destination: PreferencesEditView()) {
+//                        HStack {
+//                            Image(systemName: "slider.horizontal.3")
+//                                .foregroundColor(.blue)
+//                                .frame(width: 24)
+//                            Text("Travel Preferences")
+//                        }
+//                    }
                 }
 
                 Section {
                     logoutSection
                 }
+
+                Section {
+                    Color.clear
+                        .frame(height: 200)
+                        .listRowBackground(Color.clear)
+                }
+
+                Section {
+                    deleteAccountSection
+                } header: {
+                    Text("Danger Zone")
+                }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
+            .alert("Account Deletion Error", isPresented: $showDeleteAccountError) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(deleteAccountErrorMessage)
+            }
         }
     }
 
@@ -64,6 +85,37 @@ struct SettingsView: View {
                 }
             }
             Button("Cancel", role: .cancel) {}
+        }
+    }
+
+    private var deleteAccountSection: some View {
+        Button(action: {
+            showDeleteAccountDialog = true
+        }) {
+            HStack {
+                Image(systemName: "trash")
+                    .foregroundColor(.red)
+                    .frame(width: 24)
+                Text("Delete Account")
+                    .foregroundColor(.red)
+                Spacer()
+            }
+        }
+        .confirmationDialog("Delete Account Permanently?", isPresented: $showDeleteAccountDialog, titleVisibility: .visible) {
+            Button("Delete My Account", role: .destructive) {
+                Task {
+                    do {
+                        try await vm.deleteAccount()
+                        isAuthenticated = false
+                    } catch {
+                        deleteAccountErrorMessage = "Failed to delete account: \(error.localizedDescription)"
+                        showDeleteAccountError = true
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This action cannot be undone. All your data including reviews, ratings, and profile information will be permanently deleted.")
         }
     }
 }

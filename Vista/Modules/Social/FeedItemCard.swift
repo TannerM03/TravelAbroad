@@ -67,33 +67,42 @@ struct FeedItemCard<Destination: View>: View {
 
                     // Main image
                     GeometryReader { geometry in
-                if let imageUrl = feedItem.displayImageUrl, let url = URL(string: imageUrl) {
-                    KFImage(url)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: geometry.size.width, height: 300)
-                        .clipped()
-                } else {
-                    // Default image with category icon
-                    ZStack {
-                        if let category = feedItem.spotCategory {
-                            category.pillColor.opacity(0.3)
-                        } else {
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.purple.opacity(0.2), Color.blue.opacity(0.2)]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                        if feedItem.type == .spotReview {
+                            // Use carousel for spot reviews
+                            FeedImageCarousel(
+                                commentImageUrl: feedItem.commentImageUrl,
+                                spotImageUrl: feedItem.spotImageUrl,
+                                categoryIcon: categoryIcon,
+                                categoryColor: feedItem.spotCategory?.pillColor ?? .gray,
+                                width: geometry.size.width,
+                                height: 300
                             )
-                        }
+                        } else {
+                            // City ratings - keep existing logic
+                            if let imageUrl = feedItem.displayImageUrl, let url = URL(string: imageUrl) {
+                                KFImage(url)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: geometry.size.width, height: 300)
+                                    .clipped()
+                            } else {
+                                // City placeholder
+                                ZStack {
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.purple.opacity(0.2), Color.blue.opacity(0.2)]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
 
-                        Image(systemName: categoryIcon)
-                            .font(.system(size: 60))
-                            .foregroundColor(feedItem.spotCategory?.pillColor ?? .gray)
+                                    Image(systemName: categoryIcon)
+                                        .font(.system(size: 60))
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(width: geometry.size.width, height: 300)
+                            }
+                        }
                     }
-                    .frame(width: geometry.size.width, height: 300)
-                }
-            }
-            .frame(height: 300)
+                    .frame(height: 300)
                 }
             }
             .buttonStyle(.plain)
@@ -171,7 +180,7 @@ struct FeedItemCard<Destination: View>: View {
                 // Timestamp at bottom right
                 HStack {
                     Spacer()
-                    Text(timeAgoString(from: feedItem.createdAt))
+                    Text(feedItem.createdAt.timeAgoOrDateString())
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -183,24 +192,6 @@ struct FeedItemCard<Destination: View>: View {
         .background(feedItem.type == .spotReview ? Color(.secondarySystemGroupedBackground) : Color(.tertiarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
-    }
-
-    // Time ago formatter
-    private func timeAgoString(from date: Date) -> String {
-        let now = Date()
-        let components = Calendar.current.dateComponents([.minute, .hour, .day, .weekOfYear], from: date, to: now)
-
-        if let weeks = components.weekOfYear, weeks > 0 {
-            return weeks == 1 ? "1w ago" : "\(weeks)w ago"
-        } else if let days = components.day, days > 0 {
-            return days == 1 ? "1d ago" : "\(days)d ago"
-        } else if let hours = components.hour, hours > 0 {
-            return hours == 1 ? "1h ago" : "\(hours)h ago"
-        } else if let minutes = components.minute, minutes > 0 {
-            return minutes == 1 ? "1m ago" : "\(minutes)m ago"
-        } else {
-            return "Just now"
-        }
     }
 
     // Helper function to determine which star icon to show

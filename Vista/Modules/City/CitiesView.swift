@@ -37,16 +37,33 @@ struct CitiesView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Discover Your Next Trip")
+                    Text("Cities")
                         .font(.title2.weight(.bold))
                         .fontDesign(.rounded)
-                        .foregroundStyle(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.purple, Color.blue, Color.teal]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .foregroundStyle(.primary)
+//                        .foregroundStyle(
+//                            LinearGradient(
+//                                gradient: Gradient(colors: [Color.purple, Color.blue, Color.teal]),
+//                                startPoint: .leading,
+//                                endPoint: .trailing
+//                            )
+//                        )
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showRequestCitySheet = true
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2.weight(.bold))
+                            .foregroundStyle(.primary)
+//                            .foregroundStyle(
+//                                LinearGradient(
+//                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
+//                                    startPoint: .leading,
+//                                    endPoint: .trailing
+//                                )
+//                            )
+                    }
                 }
             }
             .background(
@@ -73,34 +90,34 @@ struct CitiesView: View {
                 .padding(.horizontal, 17)
                 .padding(.top, 8)
 
-            Button {
-                showRequestCitySheet = true
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.subheadline)
-                    Text("Request New City")
-                        .font(.subheadline.weight(.semibold))
-                        .fontDesign(.rounded)
-                }
-                .foregroundStyle(
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color.purple, Color.blue]),
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color.purple.opacity(0.15), Color.blue.opacity(0.15)]),
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .clipShape(Capsule())
-            }
+//            Button {
+//                showRequestCitySheet = true
+//            } label: {
+//                HStack(spacing: 6) {
+//                    Image(systemName: "plus.circle.fill")
+//                        .font(.subheadline)
+//                    Text("Request New City")
+//                        .font(.subheadline.weight(.semibold))
+//                        .fontDesign(.rounded)
+//                }
+//                .foregroundStyle(
+//                    LinearGradient(
+//                        gradient: Gradient(colors: [Color.purple, Color.blue]),
+//                        startPoint: .leading,
+//                        endPoint: .trailing
+//                    )
+//                )
+//                .padding(.horizontal, 16)
+//                .padding(.vertical, 8)
+//                .background(
+//                    LinearGradient(
+//                        gradient: Gradient(colors: [Color.purple.opacity(0.15), Color.blue.opacity(0.15)]),
+//                        startPoint: .leading,
+//                        endPoint: .trailing
+//                    )
+//                )
+//                .clipShape(Capsule())
+//            }
         }
     }
 
@@ -200,11 +217,12 @@ struct CitiesView: View {
 
     private var overlayContentSection: some View {
         Group {
-            if vm.isLoading {
+            if vm.isLoading || vm.cities.isEmpty {
                 ProgressView("Loading Cities...")
-            } else if vm.cities.isEmpty {
-                Text("No cities")
             }
+//            else if vm.cities.isEmpty {
+//                Text("No cities")
+//            }
         }
     }
 }

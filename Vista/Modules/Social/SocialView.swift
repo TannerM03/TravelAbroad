@@ -64,13 +64,14 @@ struct SocialView: View {
                     Text("Following")
                         .font(.title2.weight(.bold))
                         .fontDesign(.rounded)
-                        .foregroundStyle(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.purple, Color.blue, Color.teal]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .foregroundStyle(.primary)
+//                        .foregroundStyle(
+//                            LinearGradient(
+//                                gradient: Gradient(colors: [Color.purple, Color.blue, Color.teal]),
+//                                startPoint: .leading,
+//                                endPoint: .trailing
+//                            )
+//                        )
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -78,13 +79,14 @@ struct SocialView: View {
                         UserSearchView()
                     } label: {
                         Image(systemName: "magnifyingglass")
-                            .foregroundStyle(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
+                            .foregroundStyle(.primary)
+//                            .foregroundStyle(
+//                                LinearGradient(
+//                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
+//                                    startPoint: .leading,
+//                                    endPoint: .trailing
+//                                )
+//                            )
                             .font(.body.weight(.medium))
                     }
                 }

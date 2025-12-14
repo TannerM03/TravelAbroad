@@ -316,8 +316,9 @@ class SupabaseManager {
             .execute()
             .value
 
-        let followingIds = followingResponse.map { $0.following_id }
-
+        var followingIds = followingResponse.map { $0.following_id }
+        followingIds.append(userId.uuidString)
+ 
         // If not following anyone, return empty array
         if followingIds.isEmpty {
             return []
@@ -361,6 +362,7 @@ class SupabaseManager {
             let rec_id: String
             let rating: Int
             let comment: String?
+            let image_url: String?
             let created_at: Date
             let profiles: ProfileData
             let rec_with_avg_rating: RecommendationData
@@ -390,7 +392,7 @@ class SupabaseManager {
 
         let spotReviews: [SpotReviewResponse] = try await supabase
             .from("comments")
-            .select("id, user_id, rec_id, rating, comment, created_at, profiles!inner(username, image_url), rec_with_avg_rating!inner(id, name, category, description, location, image_url, avg_rating, city_id, cities!inner(name, country))")
+            .select("id, user_id, rec_id, rating, comment, image_url, created_at, profiles!inner(username, image_url), rec_with_avg_rating!inner(id, name, category, description, location, image_url, avg_rating, city_id, cities!inner(name, country))")
             .in("user_id", values: followingIds)
             .order("created_at", ascending: false)
             .limit(limit)
@@ -414,6 +416,7 @@ class SupabaseManager {
                 spotId: nil,
                 spotName: nil,
                 spotImageUrl: nil,
+                commentImageUrl: nil,
                 spotCategory: nil,
                 spotLocation: nil,
                 spotDescription: nil,
@@ -440,6 +443,7 @@ class SupabaseManager {
                 spotId: review.rec_id,
                 spotName: review.rec_with_avg_rating.name,
                 spotImageUrl: review.rec_with_avg_rating.image_url,
+                commentImageUrl: review.image_url,
                 spotCategory: CategoryType(rawValue: review.rec_with_avg_rating.category),
                 spotLocation: review.rec_with_avg_rating.location,
                 spotDescription: review.rec_with_avg_rating.description,
@@ -941,8 +945,8 @@ class SupabaseManager {
     func fetchUsernameAndNames(userId: UUID) async throws -> [String] {
         struct Profile: Codable {
             let username: String?
-            let firstName: String?
-            let lastName: String?
+            let first_name: String?
+            let last_name: String?
         }
 
         let profile: Profile = try await supabase.from("profiles")
@@ -952,7 +956,7 @@ class SupabaseManager {
             .execute()
             .value
 
-        return [profile.username ?? "", profile.firstName ?? "", profile.lastName ?? ""]
+        return [profile.username ?? "", profile.first_name ?? "", profile.last_name ?? ""]
     }
 
     // fetch username from profiles table by user id
@@ -1113,7 +1117,7 @@ class SupabaseManager {
                 case cityId = "city_id"
                 case overallRating = "overall_rating"
                 case createdAt = "created_at"
-                case city = "cities"
+                case city = "city_with_avg_rating"
             }
         }
 
@@ -1122,18 +1126,20 @@ class SupabaseManager {
             let name: String
             let country: String
             let imageUrl: String?
+            let avgRating: Double?
 
             enum CodingKeys: String, CodingKey {
                 case id
                 case name
                 case country
                 case imageUrl = "image_url"
+                case avgRating = "avg_rating"
             }
         }
 
         let userRatedCities: [CityReviewWithCity] = try await supabase
             .from("city_reviews")
-            .select("city_id, overall_rating, created_at, cities!inner(id, name, country, image_url)")
+            .select("city_id, overall_rating, created_at, city_with_avg_rating!inner(id, name, country, image_url, avg_rating)")
             .eq("user_id", value: userId)
             .execute()
             .value
@@ -1145,7 +1151,8 @@ class SupabaseManager {
                 country: reviewData.city.country,
                 imageUrl: reviewData.city.imageUrl,
                 userRating: reviewData.overallRating,
-                createdAt: reviewData.createdAt
+                createdAt: reviewData.createdAt,
+                avgRating: reviewData.city.avgRating
             )
         }
     }
@@ -1705,4 +1712,43 @@ class SupabaseManager {
             )
         }
     }
+
+    // MARK: - Account Management Functions
+
+    func deleteUserAccount() async throws {
+        guard let session = try? await supabase.auth.session else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No active session found"])
+        }
+
+
+        // Call Supabase Edge Function to delete user account
+        // The Edge Function has service role access to delete from both profiles table and auth
+        guard let baseURL = URL(string: ConfigManager.shared.supabaseURL) else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid Supabase URL"])
+        }
+        let url = baseURL.appendingPathComponent("functions/v1/delete-user-account")
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue(ConfigManager.shared.supabaseKey, forHTTPHeaderField: "apikey")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid response"])
+            }
+
+            if httpResponse.statusCode == 200 {
+            } else {
+                let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+                throw NSError(domain: "SupabaseError", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Failed to delete account: \(errorMessage)"])
+            }
+        } catch {
+            throw error
+        }
+    }
 }
+
