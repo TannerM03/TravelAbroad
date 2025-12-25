@@ -78,7 +78,6 @@ struct FeedItemCard<Destination: View>: View {
                                 height: 300
                             )
                         } else {
-                            // City ratings - keep existing logic
                             if let imageUrl = feedItem.displayImageUrl, let url = URL(string: imageUrl) {
                                 KFImage(url)
                                     .resizable()
@@ -141,19 +140,21 @@ struct FeedItemCard<Destination: View>: View {
                         }
                     }
                     .buttonStyle(.plain)
-                    // Rating stars
-                    HStack(spacing: 2) {
-                        ForEach(0 ..< 5) { index in
-                            Image(systemName: starIcon(for: index, rating: feedItem.rating))
-                                .font(.caption)
-                                .foregroundColor(.yellow)
+                    // Rating stars next to username for cities
+                    if feedItem.type == .cityRating {
+                        HStack(spacing: 2) {
+                            ForEach(0 ..< 5) { index in
+                                Image(systemName: starIcon(for: index, rating: feedItem.rating))
+                                    .font(.caption)
+                                    .foregroundColor(.yellow)
+                            }
+                            Text(String(format: "%.1f", feedItem.rating))
+                                .font(.caption.weight(.medium))
+                                .fontDesign(.rounded)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                                .fixedSize()
                         }
-                        Text(String(format: "%.1f", feedItem.rating))
-                            .font(.caption.weight(.medium))
-                            .fontDesign(.rounded)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                            .fixedSize()
                     }
 
                     // Category pill for spot reviews
@@ -166,6 +167,23 @@ struct FeedItemCard<Destination: View>: View {
                             .padding(.vertical, 4)
                             .background(category.pillColor)
                             .cornerRadius(8)
+                    }
+                }
+                
+                // Rating stars below username for spots
+                if feedItem.type == .spotReview {
+                    HStack(spacing: 2) {
+                        ForEach(0 ..< 5) { index in
+                            Image(systemName: starIcon(for: index, rating: feedItem.rating))
+                                .font(.caption)
+                                .foregroundColor(.yellow)
+                        }
+                        Text(String(format: "%.1f", feedItem.rating))
+                            .font(.caption.weight(.medium))
+                            .fontDesign(.rounded)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                            .fixedSize()
                     }
                 }
 

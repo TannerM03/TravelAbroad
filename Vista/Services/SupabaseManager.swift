@@ -289,6 +289,138 @@ class SupabaseManager {
             .execute()
         return response.count ?? 0
     }
+    
+    // MARK: - Alert/Notification Functions
+    
+    func fetchNotifications(limit: Int = 50) async throws -> [AppNotification] {
+        guard let userId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "NotificationError", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+        }
+        
+        struct NotificationResponse: Codable {
+            let id: UUID
+            let user_id: UUID
+            let actor_user_id: UUID
+            let type: String
+            let created_at: Date
+            let read_at: Date?
+            let profiles: ActorProfile
+            
+            struct ActorProfile: Codable {
+                let username: String
+                let image_url: String?
+            }
+        }
+        
+        let response: [NotificationResponse] = try await supabase
+            .from("notifications")
+            .select("id, user_id, actor_user_id, type, created_at, read_at, profiles!actor_user_id(username, image_url)")
+            .eq("user_id", value: userId)
+            .order("created_at", ascending: false)
+            .limit(limit)
+            .execute()
+            .value
+                
+        return response.map { notif in
+            AppNotification(
+                id: notif.id,
+                userId: notif.user_id,
+                actorUserId: notif.actor_user_id,
+                type: AppNotificationType(rawValue: notif.type) ?? .newFollower,
+                createdAt: notif.created_at,
+                readAt: notif.read_at,
+                actorUsername: notif.profiles.username,
+                actorImageUrl: notif.profiles.image_url
+            )
+        }
+    }
+    
+    func fetchUnreadNotificationCount() async throws -> Int {
+        guard let userId = supabase.auth.currentUser?.id else {
+            return 0
+        }
+
+        struct NotificationId: Codable {
+            let id: UUID
+        }
+
+        let response: [NotificationId] = try await supabase
+            .from("notifications")
+            .select("id")
+            .eq("user_id", value: userId)
+            .is("read_at", value: nil)
+            .execute()
+            .value
+        print("response count: \(response.count)")
+
+        return response.count
+    }
+    
+    // Mark notification as read
+    func markNotificationAsRead(notificationId: UUID) async throws {
+        try await supabase
+            .from("notifications")
+            .update(["read_at": Date()])
+            .eq("id", value: notificationId)
+            .execute()
+    }
+
+    // Mark all notifications as read
+    func markAllNotificationsAsRead() async throws {
+        guard let userId = supabase.auth.currentUser?.id else { return }
+
+        try await supabase
+            .from("notifications")
+            .update(["read_at": Date()])
+            .eq("user_id", value: userId)
+            .is("read_at", value: nil)
+            .execute()
+    }
+    
+    func createFollowerNotification(followerId: UUID, followingId: UUID) async throws {
+        struct NotificationInsert: Encodable {
+            let user_id: UUID
+            let actor_user_id: UUID
+            let type: String
+        }
+
+        struct RecentNotification: Decodable {
+            let id: UUID
+            let created_at: Date
+            let type: String
+        }
+
+        // Get the most recent notification from this actor to this user
+        let recentNotifications: [RecentNotification] = try await supabase
+            .from("notifications")
+            .select("id, created_at, type")
+            .eq("user_id", value: followingId.uuidString.lowercased())
+            .eq("actor_user_id", value: followerId.uuidString.lowercased())
+            .order("created_at", ascending: false)
+            .limit(1)
+            .execute()
+            .value
+
+        if let _ = recentNotifications.first {
+            print(recentNotifications)
+        }
+        
+        // Check if the most recent notification is within the cooldown period
+        if let mostRecent = recentNotifications.first {
+            let timeSinceLastNotification = Date().timeIntervalSince(mostRecent.created_at)
+            let cooldownSeconds = TimeInterval(3600) // 1hr cooldown
+
+            if timeSinceLastNotification < cooldownSeconds {
+                print("Skipping notification - cooldown active (\(Int(cooldownSeconds - timeSinceLastNotification)) seconds remaining)")
+                return
+            }
+        }
+
+        let notification = NotificationInsert(user_id: followingId, actor_user_id: followerId, type: "new_follower")
+        try await supabase.from("notifications").insert(notification).execute()
+    }
+    
+    
 
     // MARK: - SocialView Functions
 
@@ -886,18 +1018,26 @@ class SupabaseManager {
     }
 
     func hasCompletedOnboarding(userId: UUID) async throws -> Bool {
-        struct UserPreference: Codable {
-            let id: String
+        // Check if user has a username in their profile
+        struct UserProfile: Codable {
+            let username: String?
         }
 
-        let response: [UserPreference] = try await supabase
-            .from("user_preferences")
-            .select("id")
-            .eq("user_id", value: userId)
+        let profileResponse: [UserProfile] = try await supabase
+            .from("profiles")
+            .select("username")
+            .eq("id", value: userId)
             .execute()
             .value
 
-        return !response.isEmpty
+        // User has completed onboarding if they have a username
+        guard let profile = profileResponse.first,
+              let username = profile.username,
+              !username.isEmpty else {
+            return false
+        }
+
+        return true
     }
 
     // MARK: - ProfileView Functions
@@ -1025,6 +1165,7 @@ class SupabaseManager {
     }
 
     func followUser(followerId: UUID, followingId: UUID) async throws {
+        print("supabase following user")
         struct FollowInsert: Codable {
             let follower_id: String
             let following_id: String
@@ -1039,6 +1180,8 @@ class SupabaseManager {
             .from("followers")
             .insert(followData)
             .execute()
+        print("calling createFollowerNotif")
+        try await createFollowerNotification(followerId: followerId, followingId: followingId)
     }
 
     func unfollowUser(followerId: UUID, followingId: UUID) async throws {
