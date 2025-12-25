@@ -53,8 +53,8 @@ struct CitiesView: View {
                     Button {
                         showRequestCitySheet = true
                     } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2.weight(.bold))
+                        Image(systemName: "plus.circle")
+                            .font(.body.weight(.medium))
                             .foregroundStyle(.primary)
 //                            .foregroundStyle(
 //                                LinearGradient(

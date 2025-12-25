@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SocialView: View {
     @State private var vm = SocialViewModel()
+    @State private var notificationVM = NotificationAlertViewModel()
 
     var body: some View {
         NavigationStack {
@@ -74,7 +75,7 @@ struct SocialView: View {
 //                        )
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     NavigationLink {
                         UserSearchView()
                     } label: {
@@ -90,11 +91,34 @@ struct SocialView: View {
                             .font(.body.weight(.medium))
                     }
                 }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink {
+                        NotificationAlertView(vm: notificationVM)
+                    } label: {
+                        ZStack(alignment: .topTrailing) {
+                            Image(systemName: "bell")
+                                .foregroundStyle(.primary)
+                                .font(.body.weight(.medium))
+
+                            if notificationVM.unreadCount > 0 {
+                                Text("\(notificationVM.unreadCount)")
+                                    .font(.caption2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .padding(4)
+                                    .background(Color.red)
+                                    .clipShape(Circle())
+                                    .offset(x: 8, y: -8)
+                            }
+                        }
+                    }
+                }
             }
         }
         .task {
             await vm.fetchUser()
             await vm.fetchActivityFeed()
+            await notificationVM.fetchUnreadCount()
         }
     }
 
@@ -177,6 +201,7 @@ struct SocialView: View {
             }
         }
     }
+
 }
 
 #Preview {

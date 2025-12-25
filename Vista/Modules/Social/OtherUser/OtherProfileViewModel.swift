@@ -122,10 +122,12 @@ class OtherProfileViewModel {
 
         do {
             if isFollowing {
+                print("unfollowing user")
                 try await SupabaseManager.shared.unfollowUser(followerId: currentUserId, followingId: otherUserId)
                 isFollowing = false
                 followerCount -= 1
             } else {
+                print("following user")
                 try await SupabaseManager.shared.followUser(followerId: currentUserId, followingId: otherUserId)
                 isFollowing = true
                 followerCount += 1
