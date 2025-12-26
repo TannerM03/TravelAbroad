@@ -17,6 +17,7 @@ class OtherProfileViewModel {
     var username: String = ""
     var firstName: String = ""
     var lastName: String = ""
+    var bio: String = ""
     var user: User?
     var profileImageURL: String?
     var userId: UUID?
@@ -41,6 +42,7 @@ class OtherProfileViewModel {
                 username = names[0]
                 firstName = names[1]
                 lastName = names[2]
+                bio = try await SupabaseManager.shared.fetchUserBio(userId: userId)
                 profileImageURL = try await SupabaseManager.shared.fetchProfilePic(userId: userId)
 
                 if let urlString = profileImageURL, let url = URL(string: urlString) {

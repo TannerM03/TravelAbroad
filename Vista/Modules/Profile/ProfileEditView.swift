@@ -14,7 +14,7 @@ struct ProfileEditView: View {
     @Environment(\.dismiss) private var dismiss
 
     enum Field {
-        case username, firstName, lastName
+        case username, bio, firstName, lastName
     }
 
     var body: some View {
@@ -85,6 +85,7 @@ struct ProfileEditView: View {
     private var profileFieldsSection: some View {
         VStack {
             usernameField
+            bioField
             firstNameField
             lastNameField
         }
@@ -104,8 +105,51 @@ struct ProfileEditView: View {
                 .background(Color(.systemGray5))
                 .cornerRadius(12)
                 .onSubmit {
-                    focusedField = .firstName
+                    focusedField = .bio
                 }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+    }
+    
+    private var bioField: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Bio")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+
+                Spacer()
+
+                Text("\(vm.bio.count)/75")
+                    .font(.caption)
+                    .foregroundColor(vm.bio.count > 75 ? .red : .secondary)
+            }
+
+            ZStack(alignment: .topLeading) {
+                if vm.bio.isEmpty {
+                    Text("Tell others about yourself or plug other socials!")
+                        .foregroundColor(Color(.placeholderText))
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
+                }
+
+                TextEditor(text: $vm.bio)
+                    .focused($focusedField, equals: .bio)
+                    .frame(minHeight: 100, maxHeight: 150)
+                    .scrollContentBackground(.hidden)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .onChange(of: vm.bio) { oldValue, newValue in
+                        if newValue.count > 75 {
+                            vm.bio = String(newValue.prefix(75))
+                        }
+                    }
+            }
+            .background(Color(.systemGray5))
+            .cornerRadius(12)
         }
         .padding()
         .background(Color(.systemBackground))

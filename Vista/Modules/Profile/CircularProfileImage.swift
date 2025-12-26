@@ -35,7 +35,7 @@ struct CircularProfileImage: View {
                     .overlay(Circle().stroke(Color.white, lineWidth: 6))
             }
         }
-        .frame(width: 150, height: 150)
+        .frame(width: 125, height: 125)
         .shadow(radius: 4)
     }
 }
