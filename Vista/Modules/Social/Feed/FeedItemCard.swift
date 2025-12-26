@@ -77,6 +77,8 @@ struct FeedItemCard<Destination: View>: View {
                         }
                     }
                     .buttonStyle(.plain)
+                    .contentShape(Rectangle())
+                    .allowsHitTesting(true)
 
                     Spacer()
 
@@ -101,10 +103,9 @@ struct FeedItemCard<Destination: View>: View {
             .padding(.top, feedItem.type == .cityRating ? 4 : 10)
             .padding(.bottom, feedItem.type == .cityRating ? 10 : 10)
 
-            // Image wrapped in NavigationLink for main content
+            // Image and content wrapped in NavigationLink
             NavigationLink(destination: destination) {
                 VStack(alignment: .leading, spacing: 0) {
-
                     // Main image
                     GeometryReader { geometry in
                         if feedItem.type == .spotReview {
@@ -142,64 +143,76 @@ struct FeedItemCard<Destination: View>: View {
                         }
                     }
                     .frame(height: 300)
+
+                    // Content section for spot reviews (inside NavigationLink)
+                    if feedItem.type == .spotReview {
+                        VStack(alignment: .leading, spacing: 10) {
+                            // Spot name on left, category pill on right
+                            HStack {
+                                Text(feedItem.displayName)
+                                    .font(.headline.weight(.semibold))
+                                    .foregroundColor(.primary)
+                                    .lineLimit(1)
+
+                                Spacer()
+
+                                if let category = feedItem.spotCategory {
+                                    Text(category.rawValue.capitalized)
+                                        .foregroundColor(.primary)
+                                        .font(.caption)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 4)
+                                        .background(category.pillColor)
+                                        .cornerRadius(8)
+                                }
+                            }
+
+                            // Rating stars below spot name
+                            HStack(spacing: 2) {
+                                ForEach(0 ..< 5) { index in
+                                    Image(systemName: starIcon(for: index, rating: feedItem.rating))
+                                        .font(.caption)
+                                        .foregroundColor(.yellow)
+                                }
+                                Text(String(format: "%.1f", feedItem.rating))
+                                    .font(.caption.weight(.medium))
+                                    .fontDesign(.rounded)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                                    .fixedSize()
+                            }
+
+                            // Comment (if exists)
+                            if let comment = feedItem.reviewComment, !comment.isEmpty {
+                                Text(comment)
+                                    .font(.subheadline)
+                                    .foregroundColor(.primary)
+                                    .lineLimit(3)
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.top, 10)
+                    }
                 }
             }
             .buttonStyle(.plain)
+            .contentShape(Rectangle())
 
-            // Content section
-            VStack(alignment: .leading, spacing: 10) {
-                if feedItem.type == .spotReview {
-                    // For spot reviews: spot name on left, category pill on right
-                    HStack {
-                        Text(feedItem.displayName)
-                            .font(.headline.weight(.semibold))
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
-
-                        Spacer()
-
-                        if let category = feedItem.spotCategory {
-                            Text(category.rawValue.capitalized)
-                                .foregroundColor(.primary)
-                                .font(.caption)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 4)
-                                .background(category.pillColor)
-                                .cornerRadius(8)
-                        }
-                    }
-
-                    // Rating stars below spot name
-                    HStack(spacing: 2) {
-                        ForEach(0 ..< 5) { index in
-                            Image(systemName: starIcon(for: index, rating: feedItem.rating))
-                                .font(.caption)
-                                .foregroundColor(.yellow)
-                        }
-                        Text(String(format: "%.1f", feedItem.rating))
-                            .font(.caption.weight(.medium))
-                            .fontDesign(.rounded)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                            .fixedSize()
-                    }
-
-                    // Comment (if exists)
-                    if let comment = feedItem.reviewComment, !comment.isEmpty {
-                        Text(comment)
-                            .font(.subheadline)
-                            .foregroundColor(.primary)
-                            .lineLimit(3)
-                    }
-
-                    // Timestamp at bottom right
+            // Timestamp (outside NavigationLink for spot reviews)
+            if feedItem.type == .spotReview {
+                VStack(alignment: .leading, spacing: 10) {
                     HStack {
                         Spacer()
                         Text(feedItem.createdAt.timeAgoOrDateString())
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
-                } else {
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 10)
+            } else {
+                // Content section for city ratings (outside NavigationLink)
+                VStack(alignment: .leading, spacing: 10) {
                     // For city ratings: rating stars and date on same line
                     HStack(spacing: 10) {
                         HStack(spacing: 2) {
@@ -223,9 +236,10 @@ struct FeedItemCard<Destination: View>: View {
                             .foregroundColor(.secondary)
                     }
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+
         }
         .frame(maxWidth: .infinity)
         .background(feedItem.type == .spotReview ? Color(.secondarySystemGroupedBackground) : Color(.tertiarySystemGroupedBackground))
