@@ -990,6 +990,18 @@ class SupabaseManager {
         }
     }
 
+    func changeBio(userId: UUID, bio: String) async throws {
+        do {
+            try await supabase
+                .from("profiles")
+                .update(["bio": bio])
+                .eq("id", value: userId)
+                .execute()
+        } catch {
+            print("error changing bio: \(error.localizedDescription)")
+        }
+    }
+
     func saveUserNames(userId: UUID, username: String, firstName: String, lastName: String) async throws {
         try await supabase
             .from("profiles")
@@ -1098,7 +1110,21 @@ class SupabaseManager {
 
         return [profile.username ?? "", profile.first_name ?? "", profile.last_name ?? ""]
     }
-
+    
+    func fetchUserBio(userId: UUID) async throws -> String {
+        struct Bio: Codable {
+            let bio: String?
+        }
+        let response: Bio = try await supabase.from("profiles")
+            .select("bio")
+            .eq("id", value: userId)
+            .single()
+            .execute()
+            .value
+        print("response bio: \(response.bio ?? "")")
+        return response.bio ?? ""
+    }
+ 
     // fetch username from profiles table by user id
     func fetchProfilePic(userId: UUID) async throws -> String {
         struct Profile: Codable {

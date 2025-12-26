@@ -73,9 +73,9 @@ struct OtherProfileView: View {
     }
 
     private var profileImageSection: some View {
-        HStack(alignment: .center) {
-            Spacer()
-            VStack(alignment: .center, spacing: 12) {
+        VStack(spacing: 16) {
+            HStack(alignment: .top, spacing: 16) {
+                // Profile Image on the left
                 CircularProfileImage(imageState: vm.imageState)
                     .overlay(alignment: .bottomTrailing) {
                         Button {
@@ -85,7 +85,7 @@ struct OtherProfileView: View {
                         } label: {
                             Circle()
                                 .fill(vm.isFollowing ? Color.green : Color.blue)
-                                .frame(width: 40, height: 40)
+                                .frame(width: 30, height: 30)
                                 .overlay {
                                     Image(systemName: vm.isFollowing ? "person.fill.checkmark" : "person.fill.badge.plus")
                                         .font(.system(size: 16))
@@ -96,94 +96,108 @@ struct OtherProfileView: View {
                         .buttonStyle(.plain)
                     }
 
-                HStack(spacing: 25) {
-                    NavigationLink {
-                        if let userId = vm.userId {
-                            FollowListView(userId: userId, listType: .followers)
-                        }
-                    } label: {
-                        VStack(spacing: 4) {
-                            Text("\(vm.followerCount)")
-                                .font(.title3)
-                                .fontWeight(.bold)
-                                .foregroundColor(.primary)
-                            Text("Followers")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .fontWeight(.medium)
-                        }
+                // Followers/Following and Bio
+                VStack(alignment: .center, spacing: 12) {
+                    if vm.bio.isEmpty {
+                        Spacer()
                     }
-                    .buttonStyle(.plain)
 
-                    NavigationLink {
-                        if let userId = vm.userId {
-                            FollowListView(userId: userId, listType: .following)
+                    HStack(spacing: 25) {
+                        NavigationLink {
+                            if let userId = vm.userId {
+                                FollowListView(userId: userId, listType: .followers)
+                            }
+                        } label: {
+                            VStack(spacing: 4) {
+                                Text("\(vm.followerCount)")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+                                Text("Followers")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .fontWeight(.medium)
+                            }
                         }
-                    } label: {
-                        VStack(spacing: 4) {
-                            Text("\(vm.followingCount)")
-                                .font(.title3)
-                                .fontWeight(.bold)
-                                .foregroundColor(.primary)
-                            Text("Following")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .fontWeight(.medium)
+                        .buttonStyle(.plain)
+
+                        NavigationLink {
+                            if let userId = vm.userId {
+                                FollowListView(userId: userId, listType: .following)
+                            }
+                        } label: {
+                            VStack(spacing: 4) {
+                                Text("\(vm.followingCount)")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+                                Text("Following")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .fontWeight(.medium)
+                            }
                         }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
+
+                    bioSection
+
+                    if vm.bio.isEmpty {
+                        Spacer()
+                    }
                 }
-
-                HStack {
-                    VStack(spacing: 4) {
-                        Text("\(vm.countriesVisited)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.primary)
-                        Text("Countries")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .fontWeight(.medium)
-                    }
-                    .frame(maxWidth: .infinity)
-
-                    Rectangle()
-                        .fill(Color.secondary.opacity(0.3))
-                        .frame(width: 1, height: 40)
-
-                    VStack(spacing: 4) {
-                        Text("\(vm.citiesVisited)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.primary)
-                        Text("Cities")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .fontWeight(.medium)
-                    }
-                    .frame(maxWidth: .infinity)
-
-                    Rectangle()
-                        .fill(Color.secondary.opacity(0.3))
-                        .frame(width: 1, height: 40)
-
-                    VStack(spacing: 4) {
-                        Text("\(vm.spotsReviewed)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.primary)
-                        Text("Spots")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .fontWeight(.medium)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .padding(.top, 8)
+                .frame(maxWidth: .infinity)
             }
-            Spacer()
+            .padding(.horizontal, 20)
+
+            // Travel stats below
+            HStack {
+                VStack(spacing: 4) {
+                    Text("\(vm.countriesVisited)")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                    Text("Countries")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fontWeight(.medium)
+                }
+                .frame(maxWidth: .infinity)
+
+                Rectangle()
+                    .fill(Color.secondary.opacity(0.3))
+                    .frame(width: 1, height: 40)
+
+                VStack(spacing: 4) {
+                    Text("\(vm.citiesVisited)")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                    Text("Cities")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fontWeight(.medium)
+                }
+                .frame(maxWidth: .infinity)
+
+                Rectangle()
+                    .fill(Color.secondary.opacity(0.3))
+                    .frame(width: 1, height: 40)
+
+                VStack(spacing: 4) {
+                    Text("\(vm.spotsReviewed)")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                    Text("Spots")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fontWeight(.medium)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .padding(.top, 8)
         }
-//        .padding(.vertical, 8)
     }
 
     private var pickerSection: some View {
@@ -202,6 +216,37 @@ struct OtherProfileView: View {
             OtherUserCitiesGridView(vm: travelHistoryViewModel)
         } else {
             OtherUserSpotsGridView(vm: spotsViewModel)
+        }
+    }
+
+    private var bioSection: some View {
+        Group {
+            if !vm.bio.isEmpty {
+                Text(vm.bio)
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color(.systemGray6).opacity(0.5))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.purple.opacity(0.3), Color.blue.opacity(0.3)]),
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                ),
+                                lineWidth: 1
+                            )
+                    )
+            }
         }
     }
 }
