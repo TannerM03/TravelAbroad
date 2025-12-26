@@ -44,9 +44,21 @@ struct ProfileView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
-                .navigationTitle("\(vm.username)")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        HStack(spacing: 4) {
+                            Text(vm.username)
+                                .font(.headline)
+                                .fontWeight(.bold)
+                            if vm.isPopular {
+                                Image(systemName: "crown.fill")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.yellow)
+                            }
+                        }
+                    }
+
                     ToolbarItem(placement: .topBarTrailing) {
                         NavigationLink {
                             SettingsView(isAuthenticated: $isAuthenticated, vm: vm)

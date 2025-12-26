@@ -59,7 +59,10 @@ struct ProfileCardView: View {
                 .font(.subheadline.weight(.semibold))
                 .fontDesign(.rounded)
                 .lineLimit(1)
-                .foregroundColor(.primary)
+                .foregroundStyle(.primary)
+            Image(systemName: "checkmark.seal.fill")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.blue)
         }
         .padding(.vertical, 20)
         .padding(.horizontal, 40)
@@ -80,6 +83,6 @@ struct ProfileCardView: View {
 }
 
 #Preview {
-    ProfileCardView(profile: OtherProfile(id: UUID(), username: "johndoe", imageUrl: nil))
+    ProfileCardView(profile: OtherProfile(id: UUID(), username: "johndoe", imageUrl: nil, isPopular: true))
         .padding()
 }

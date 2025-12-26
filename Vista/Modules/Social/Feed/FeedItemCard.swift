@@ -74,6 +74,9 @@ struct FeedItemCard<Destination: View>: View {
                             Text(feedItem.username)
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundColor(.primary)
+                            Image(systemName: "crown.fill")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(.yellow)
                         }
                     }
                     .buttonStyle(.plain)

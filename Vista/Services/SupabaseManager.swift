@@ -309,12 +309,13 @@ class SupabaseManager {
             struct ActorProfile: Codable {
                 let username: String
                 let image_url: String?
+                let is_popular: Bool
             }
         }
         
         let response: [NotificationResponse] = try await supabase
             .from("notifications")
-            .select("id, user_id, actor_user_id, type, created_at, read_at, profiles!actor_user_id(username, image_url)")
+            .select("id, user_id, actor_user_id, type, created_at, read_at, profiles!actor_user_id(username, image_url, is_popular)")
             .eq("user_id", value: userId)
             .order("created_at", ascending: false)
             .limit(limit)
@@ -330,7 +331,8 @@ class SupabaseManager {
                 createdAt: notif.created_at,
                 readAt: notif.read_at,
                 actorUsername: notif.profiles.username,
-                actorImageUrl: notif.profiles.image_url
+                actorImageUrl: notif.profiles.image_url,
+                actorIsPopular: notif.profiles.is_popular
             )
         }
     }
@@ -427,7 +429,7 @@ class SupabaseManager {
     func fetchUsers(userId: String) async throws -> [OtherProfile] {
         let response: [OtherProfile] = try await supabase
             .from("profiles")
-            .select("id, username, image_url")
+            .select("id, username, image_url, is_popular")
             .notEquals("id", value: userId)
             .execute()
             .value
@@ -469,6 +471,7 @@ class SupabaseManager {
             struct ProfileData: Codable {
                 let username: String
                 let image_url: String?
+                let is_popular: Bool
             }
 
             struct CityData: Codable {
@@ -480,7 +483,7 @@ class SupabaseManager {
 
         let cityRatings: [CityRatingResponse] = try await supabase
             .from("city_reviews")
-            .select("id, user_id, city_id, overall_rating, created_at, profiles!inner(username, image_url), cities!inner(name, country, image_url)")
+            .select("id, user_id, city_id, overall_rating, created_at, profiles!inner(username, image_url, is_popular), cities!inner(name, country, image_url)")
             .in("user_id", values: followingIds)
             .order("created_at", ascending: false)
             .limit(limit)
@@ -502,6 +505,7 @@ class SupabaseManager {
             struct ProfileData: Codable {
                 let username: String
                 let image_url: String?
+                let is_popular: Bool
             }
 
             struct RecommendationData: Codable {
@@ -524,7 +528,7 @@ class SupabaseManager {
 
         let spotReviews: [SpotReviewResponse] = try await supabase
             .from("comments")
-            .select("id, user_id, rec_id, rating, comment, image_url, created_at, profiles!inner(username, image_url), rec_with_avg_rating!inner(id, name, category, description, location, image_url, avg_rating, city_id, cities!inner(name, country))")
+            .select("id, user_id, rec_id, rating, comment, image_url, created_at, profiles!inner(username, image_url, is_popular), rec_with_avg_rating!inner(id, name, category, description, location, image_url, avg_rating, city_id, cities!inner(name, country))")
             .in("user_id", values: followingIds)
             .order("created_at", ascending: false)
             .limit(limit)
@@ -541,6 +545,7 @@ class SupabaseManager {
                 userImageUrl: rating.profiles.image_url,
                 rating: rating.overall_rating,
                 createdAt: rating.created_at,
+                isUserPopular: rating.profiles.is_popular,
                 cityId: rating.city_id,
                 cityName: rating.cities.name,
                 cityImageUrl: rating.cities.image_url,
@@ -568,6 +573,175 @@ class SupabaseManager {
                 userImageUrl: review.profiles.image_url,
                 rating: Double(review.rating),
                 createdAt: review.created_at,
+                isUserPopular: review.profiles.is_popular,
+                cityId: review.rec_with_avg_rating.city_id,
+                cityName: review.rec_with_avg_rating.cities.name,
+                cityImageUrl: nil,
+                cityCountry: nil,
+                spotId: review.rec_id,
+                spotName: review.rec_with_avg_rating.name,
+                spotImageUrl: review.rec_with_avg_rating.image_url,
+                commentImageUrl: review.image_url,
+                spotCategory: CategoryType(rawValue: review.rec_with_avg_rating.category),
+                spotLocation: review.rec_with_avg_rating.location,
+                spotDescription: review.rec_with_avg_rating.description,
+                spotAvgRating: review.rec_with_avg_rating.avg_rating,
+                spotCityCountry: review.rec_with_avg_rating.cities.country,
+                reviewComment: review.comment
+            )
+        }
+
+        // Combine and sort by date
+        let allFeedItems = (cityFeedItems + spotFeedItems).sorted { $0.createdAt > $1.createdAt }
+
+        // Return limited results
+        return Array(allFeedItems.prefix(limit))
+    }
+    
+    // Fetches activity feed from users that are "popular"
+    func fetchPopularActivityFeed(limit: Int = 50) async throws -> [FeedItem] {
+        // First, get the list of users that are popular
+        struct Popular: Codable {
+            let popular_id: String
+            
+            enum CodingKeys: String, CodingKey {
+                case popular_id = "id"
+            }
+        }
+
+        let popularResponse: [Popular] = try await supabase
+            .from("profiles")
+            .select("id")
+            .eq("is_popular", value: true)
+            .execute()
+            .value
+        print("popularResponse: \(popularResponse)")
+        var popularIds = popularResponse.map { $0.popular_id }
+        
+        print("popularIds: \(popularIds)")
+ 
+        // If not following anyone, return empty array
+        if popularIds.isEmpty {
+            print("empty sorry")
+            return []
+        }
+
+        // Fetch city ratings from followed users
+        struct CityRatingResponse: Codable {
+            let id: String
+            let user_id: String
+            let city_id: String
+            let overall_rating: Double
+            let created_at: Date
+            let profiles: ProfileData
+            let cities: CityData
+
+            struct ProfileData: Codable {
+                let username: String
+                let image_url: String?
+                let is_popular: Bool
+            }
+
+            struct CityData: Codable {
+                let name: String
+                let country: String
+                let image_url: String?
+            }
+        }
+
+        let cityRatings: [CityRatingResponse] = try await supabase
+            .from("city_reviews")
+            .select("id, user_id, city_id, overall_rating, created_at, profiles!inner(username, image_url, is_popular), cities!inner(name, country, image_url)")
+            .in("user_id", values: popularIds)
+            .order("created_at", ascending: false)
+            .limit(limit)
+            .execute()
+            .value
+
+        // Fetch spot reviews from followed users
+        struct SpotReviewResponse: Codable {
+            let id: String
+            let user_id: String
+            let rec_id: String
+            let rating: Int
+            let comment: String?
+            let image_url: String?
+            let created_at: Date
+            let profiles: ProfileData
+            let rec_with_avg_rating: RecommendationData
+
+            struct ProfileData: Codable {
+                let username: String
+                let image_url: String?
+                let is_popular: Bool
+            }
+
+            struct RecommendationData: Codable {
+                let id: String
+                let name: String
+                let category: String
+                let description: String?
+                let location: String?
+                let image_url: String?
+                let avg_rating: Double
+                let city_id: String
+                let cities: CityData
+
+                struct CityData: Codable {
+                    let name: String
+                    let country: String
+                }
+            }
+        }
+
+        let spotReviews: [SpotReviewResponse] = try await supabase
+            .from("comments")
+            .select("id, user_id, rec_id, rating, comment, image_url, created_at, profiles!inner(username, image_url, is_popular), rec_with_avg_rating!inner(id, name, category, description, location, image_url, avg_rating, city_id, cities!inner(name, country))")
+            .in("user_id", values: popularIds)
+            .order("created_at", ascending: false)
+            .limit(limit)
+            .execute()
+            .value
+
+        // Convert city ratings to feed items
+        let cityFeedItems: [FeedItem] = cityRatings.map { rating in
+            FeedItem(
+                id: "\(rating.id)-city",
+                type: .cityRating,
+                userId: rating.user_id,
+                username: rating.profiles.username,
+                userImageUrl: rating.profiles.image_url,
+                rating: rating.overall_rating,
+                createdAt: rating.created_at,
+                isUserPopular: rating.profiles.is_popular,
+                cityId: rating.city_id,
+                cityName: rating.cities.name,
+                cityImageUrl: rating.cities.image_url,
+                cityCountry: rating.cities.country,
+                spotId: nil,
+                spotName: nil,
+                spotImageUrl: nil,
+                commentImageUrl: nil,
+                spotCategory: nil,
+                spotLocation: nil,
+                spotDescription: nil,
+                spotAvgRating: nil,
+                spotCityCountry: nil,
+                reviewComment: nil
+            )
+        }
+
+        // Convert spot reviews to feed items
+        let spotFeedItems: [FeedItem] = spotReviews.map { review in
+            FeedItem(
+                id: "\(review.id)-spot",
+                type: .spotReview,
+                userId: review.user_id,
+                username: review.profiles.username,
+                userImageUrl: review.profiles.image_url,
+                rating: Double(review.rating),
+                createdAt: review.created_at,
+                isUserPopular: review.profiles.is_popular,
                 cityId: review.rec_with_avg_rating.city_id,
                 cityName: review.rec_with_avg_rating.cities.name,
                 cityImageUrl: nil,
@@ -1145,6 +1319,27 @@ class SupabaseManager {
         let profile = try JSONDecoder().decode(Profile.self, from: response.data)
         return profile.imageURL ?? ""
     }
+    
+    // fetch whether or not the user is a "popular creator"
+    func fetchIsPopular(userId: UUID) async throws -> Bool {
+        
+        struct IsPopular: Codable {
+            let isPopular: Bool?
+            
+            enum CodingKeys: String, CodingKey {
+                case isPopular = "is_popular"
+            }
+        }
+        let response: IsPopular = try await supabase
+            .from("profiles")
+            .select("is_popular")
+            .eq("id", value: userId)
+            .single()
+            .execute()
+            .value
+        
+        return response.isPopular ?? false
+    }
 
     func fetchFollowerCount(userId: UUID) async throws -> (followers: Int, following: Int) {
         struct FollowStats: Codable {
@@ -1229,11 +1424,12 @@ class SupabaseManager {
             let id: String
             let username: String
             let image_url: String?
+            let is_popular: Bool
         }
 
         let response: [FollowerWithProfile] = try await supabase
             .from("followers")
-            .select("follower_id, profiles!followers_follower_id_fkey(id, username, image_url)")
+            .select("follower_id, profiles!followers_follower_id_fkey(id, username, image_url, is_popular)")
             .eq("following_id", value: userId)
             .execute()
             .value
@@ -1242,7 +1438,8 @@ class SupabaseManager {
             OtherProfile(
                 id: UUID(uuidString: follower.profiles.id) ?? UUID(),
                 username: follower.profiles.username,
-                imageUrl: follower.profiles.image_url
+                imageUrl: follower.profiles.image_url,
+                isPopular: follower.profiles.is_popular
             )
         }
     }
@@ -1257,11 +1454,12 @@ class SupabaseManager {
             let id: String
             let username: String
             let image_url: String?
+            let is_popular: Bool
         }
 
         let response: [FollowingWithProfile] = try await supabase
             .from("followers")
-            .select("following_id, profiles!followers_following_id_fkey(id, username, image_url)")
+            .select("following_id, profiles!followers_following_id_fkey(id, username, image_url, is_popular)")
             .eq("follower_id", value: userId)
             .execute()
             .value
@@ -1270,7 +1468,8 @@ class SupabaseManager {
             OtherProfile(
                 id: UUID(uuidString: following.profiles.id) ?? UUID(),
                 username: following.profiles.username,
-                imageUrl: following.profiles.image_url
+                imageUrl: following.profiles.image_url,
+                isPopular: following.profiles.is_popular
             )
         }
     }

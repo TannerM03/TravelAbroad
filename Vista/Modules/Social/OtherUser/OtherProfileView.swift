@@ -44,8 +44,21 @@ struct OtherProfileView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
-                .navigationTitle("\(vm.username)")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        HStack(spacing: 4) {
+                            Text(vm.username)
+                                .font(.headline)
+                                .fontWeight(.bold)
+                            if vm.isPopular {
+                                Image(systemName: "crown.fill")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.yellow)
+                            }
+                        }
+                    }
+                }
                 .background(
                     LinearGradient(
                         gradient: Gradient(colors: [Color.purple.opacity(0.1), Color.blue.opacity(0.1), Color.clear]),

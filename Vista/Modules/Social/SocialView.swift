@@ -10,6 +10,16 @@ import SwiftUI
 struct SocialView: View {
     @State private var vm = SocialViewModel()
     @State private var notificationVM = NotificationAlertViewModel()
+    @State private var selectedFeed: FeedType = .following
+
+    enum FeedType: String, CaseIterable {
+        case following = "Following"
+        case popular = "Popular"
+    }
+
+    private var currentFeedItems: [FeedItem] {
+        selectedFeed == .following ? vm.feedItems : vm.popularFeedItems
+    }
 
     var body: some View {
         NavigationStack {
@@ -26,7 +36,7 @@ struct SocialView: View {
                     VStack(spacing: 24) {
 
                         // Feed content
-                        if vm.isLoading && vm.feedItems.isEmpty {
+                        if vm.isLoading && currentFeedItems.isEmpty {
                             // Loading state
                             VStack(spacing: 16) {
                                 ProgressView()
@@ -37,13 +47,13 @@ struct SocialView: View {
                                     .fontDesign(.rounded)
                             }
                             .padding(.vertical, 60)
-                        } else if vm.feedItems.isEmpty {
+                        } else if currentFeedItems.isEmpty {
                             // Empty state
                             emptyStateView
                         } else {
                             // Feed items
                             LazyVStack(spacing: 12) {
-                                ForEach(vm.feedItems) { feedItem in
+                                ForEach(currentFeedItems) { feedItem in
                                     FeedItemCard(
                                         feedItem: feedItem,
                                         destination: destinationView(for: feedItem)
@@ -56,23 +66,45 @@ struct SocialView: View {
                     .padding(.vertical, 24)
                 }
                 .refreshable {
-                    await vm.refreshFeed()
+                    if selectedFeed == .following {
+                        await vm.refreshFeed()
+                    } else {
+                        await vm.fetchPopularFeed()
+                    }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Following")
-                        .font(.title2.weight(.bold))
-                        .fontDesign(.rounded)
-                        .foregroundStyle(.primary)
-//                        .foregroundStyle(
-//                            LinearGradient(
-//                                gradient: Gradient(colors: [Color.purple, Color.blue, Color.teal]),
-//                                startPoint: .leading,
-//                                endPoint: .trailing
-//                            )
-//                        )
+                    Menu {
+                        ForEach(FeedType.allCases, id: \.self) { feedType in
+                            Button(action: {
+                                selectedFeed = feedType
+                                Task {
+                                    if feedType == .popular && vm.popularFeedItems.isEmpty {
+                                        await vm.fetchPopularFeed()
+                                    }
+                                }
+                            }) {
+                                HStack {
+                                    Text(feedType.rawValue)
+                                    if selectedFeed == feedType {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(selectedFeed.rawValue)
+                                .font(.title2.weight(.bold))
+                                .fontDesign(.rounded)
+                                .foregroundStyle(.primary)
+                            Image(systemName: "chevron.down")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.primary)
+                        }
+                    }
                 }
 
                 ToolbarItem(placement: .navigationBarLeading) {

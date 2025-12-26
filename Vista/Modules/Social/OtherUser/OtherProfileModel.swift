@@ -11,10 +11,12 @@ struct OtherProfile: Codable, Identifiable {
     let id: UUID
     let username: String?
     let imageUrl: String?
+    let isPopular: Bool
 
     enum CodingKeys: String, CodingKey {
         case id
         case username
         case imageUrl = "image_url"
+        case isPopular = "is_popular"
     }
 }
