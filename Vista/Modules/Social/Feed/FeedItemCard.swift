@@ -49,34 +49,42 @@ struct FeedItemCard<Destination: View>: View {
                 HStack(alignment: .center, spacing: 10) {
                     NavigationLink(destination: OtherProfileView(selectedUserId: feedItem.userId)) {
                         HStack(spacing: 8) {
-                            // Profile picture
-                            if let imageUrl = feedItem.userImageUrl, let url = URL(string: imageUrl) {
-                                KFImage(url)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 28, height: 28)
-                                    .clipShape(Circle())
-                            } else {
-                                Circle()
-                                    .fill(LinearGradient(
-                                        gradient: Gradient(colors: [Color.purple.opacity(0.6), Color.blue.opacity(0.6)]),
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ))
-                                    .frame(width: 28, height: 28)
-                                    .overlay(
-                                        Text(String(feedItem.username.prefix(1)).uppercased())
-                                            .font(.caption.weight(.bold))
-                                            .foregroundColor(.white)
-                                    )
+                            // Profile picture with checkmark badge
+                            ZStack {
+                                if let imageUrl = feedItem.userImageUrl, let url = URL(string: imageUrl) {
+                                    KFImage(url)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 28, height: 28)
+                                        .clipShape(Circle())
+                                } else {
+                                    Circle()
+                                        .fill(LinearGradient(
+                                            gradient: Gradient(colors: [Color.purple.opacity(0.6), Color.blue.opacity(0.6)]),
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ))
+                                        .frame(width: 28, height: 28)
+                                        .overlay(
+                                            Text(String(feedItem.username.prefix(1)).uppercased())
+                                                .font(.caption.weight(.bold))
+                                                .foregroundColor(.white)
+                                        )
+                                }
+
+                                if feedItem.isUserPopular {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(.white, .blue)
+                                        .background(Circle().fill(.white))
+                                        .offset(x: 10, y: -10)
+                                }
                             }
+                            .frame(width: 28, height: 28)
 
                             Text(feedItem.username)
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundColor(.primary)
-                            Image(systemName: "crown.fill")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundColor(.yellow)
                         }
                     }
                     .buttonStyle(.plain)

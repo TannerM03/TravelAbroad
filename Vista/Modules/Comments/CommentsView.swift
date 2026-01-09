@@ -514,14 +514,49 @@ struct CommentCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 5) {
+            HStack(spacing: 8) {
                 NavigationLink(destination: OtherProfileView(selectedUserId: comment.userId)) {
-                    Text(comment.username ?? "Anonymous")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.blue)
+                    HStack(spacing: 8) {
+                        // Profile picture with checkmark badge
+                        ZStack {
+                            if let imageUrl = comment.profileImageUrl, let url = URL(string: imageUrl) {
+                                KFImage(url)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 32, height: 32)
+                                    .clipShape(Circle())
+                            } else {
+                                Circle()
+                                    .fill(LinearGradient(
+                                        gradient: Gradient(colors: [Color.purple.opacity(0.6), Color.blue.opacity(0.6)]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ))
+                                    .frame(width: 32, height: 32)
+                                    .overlay(
+                                        Text(String(comment.username?.prefix(1) ?? "?").uppercased())
+                                            .font(.caption.weight(.bold))
+                                            .foregroundColor(.white)
+                                    )
+                            }
+
+                            if comment.isPopular {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(.white, .blue)
+                                    .background(Circle().fill(.white))
+                                    .offset(x: 11, y: -11)
+                            }
+                        }
+                        .frame(width: 32, height: 32)
+
+                        Text(comment.username ?? "Anonymous")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                    }
                 }
-                .padding(.trailing, 5)
+                .buttonStyle(.plain)
 
                 Spacer()
 

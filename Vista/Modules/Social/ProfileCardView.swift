@@ -52,17 +52,22 @@ struct ProfileCardView: View {
                         ), lineWidth: 2
                     )
                     .frame(width: 76, height: 76)
+
+                if profile.isPopular {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundStyle(.white, .blue)
+                        .background(Circle().fill(.white))
+                        .offset(x: 26, y: -26)
+                }
             }
             .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
 
             Text(profile.username ?? "Anonymous")
+                .foregroundStyle(.primary)
                 .font(.subheadline.weight(.semibold))
                 .fontDesign(.rounded)
                 .lineLimit(1)
-                .foregroundStyle(.primary)
-            Image(systemName: "checkmark.seal.fill")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.blue)
         }
         .padding(.vertical, 20)
         .padding(.horizontal, 40)

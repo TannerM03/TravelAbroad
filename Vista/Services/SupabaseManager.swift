@@ -1008,7 +1008,7 @@ class SupabaseManager {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
 
-        // Query your comments_with_votes view and join with user's votes
+        // Query your comments_with_votes view
         struct CommentWithVotes: Codable {
             let id: String
             let user_id: String
@@ -1021,8 +1021,6 @@ class SupabaseManager {
             let upvote_count: Int?
             let downvote_count: Int?
             let net_votes: Int?
-
-            // User's vote will come from separate query
         }
 
         // First get comments with vote counts - build query based on sort option
@@ -1057,7 +1055,27 @@ class SupabaseManager {
                 .value
         }
 
-        // Then get user's votes for these comments
+        // Get unique user IDs from comments
+        let userIds = Array(Set(commentsResponse.map { $0.user_id }))
+
+        // Fetch profile data for all users
+        struct ProfileData: Codable {
+            let id: String
+            let image_url: String?
+            let is_popular: Bool?
+        }
+
+        let profiles: [ProfileData] = try await supabase
+            .from("profiles")
+            .select("id, image_url, is_popular")
+            .in("id", values: userIds)
+            .execute()
+            .value
+
+        // Create a lookup dictionary for profiles
+        let profilesDict = Dictionary(uniqueKeysWithValues: profiles.map { ($0.id, $0) })
+
+        // Get comment IDs for user votes
         let commentIds = commentsResponse.map { $0.id }
 
         struct UserVote: Codable {
@@ -1077,7 +1095,8 @@ class SupabaseManager {
         let userVotesDict = Dictionary(uniqueKeysWithValues: userVotes.map { ($0.comment_id, $0.vote_type) })
 
         return commentsResponse.map { commentData in
-            Comment(
+            let profile = profilesDict[commentData.user_id]
+            return Comment(
                 id: commentData.id,
                 userId: commentData.user_id,
                 recId: commentData.rec_id,
@@ -1086,6 +1105,8 @@ class SupabaseManager {
                 createdAt: commentData.created_at,
                 imageUrl: commentData.image_url,
                 username: commentData.username,
+                profileImageUrl: profile?.image_url,
+                isPopular: profile?.is_popular ?? false,
                 upvoteCount: commentData.upvote_count ?? 0,
                 downvoteCount: commentData.downvote_count ?? 0,
                 netVotes: commentData.net_votes ?? 0,

@@ -88,26 +88,37 @@ struct NotificationCard: View {
         NavigationLink(destination: OtherProfileView(selectedUserId: notification.actorUserId.uuidString)) {
             HStack(spacing: 12) {
                 // Profile image
-                if let imageUrl = notification.actorImageUrl, let url = URL(string: imageUrl) {
-                    KFImage(url)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 50, height: 50)
-                        .clipShape(Circle())
-                } else {
-                    Circle()
-                        .fill(LinearGradient(
-                            gradient: Gradient(colors: [Color.purple.opacity(0.6), Color.blue.opacity(0.6)]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ))
-                        .frame(width: 50, height: 50)
-                        .overlay(
-                            Text(String(notification.actorUsername?.prefix(1) ?? "?").uppercased())
-                                .font(.title3.weight(.bold))
-                                .foregroundColor(.white)
-                        )
+                ZStack {
+                    if let imageUrl = notification.actorImageUrl, let url = URL(string: imageUrl) {
+                        KFImage(url)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 50, height: 50)
+                            .clipShape(Circle())
+                    } else {
+                        Circle()
+                            .fill(LinearGradient(
+                                gradient: Gradient(colors: [Color.purple.opacity(0.6), Color.blue.opacity(0.6)]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ))
+                            .frame(width: 50, height: 50)
+                            .overlay(
+                                Text(String(notification.actorUsername?.prefix(1) ?? "?").uppercased())
+                                    .font(.title3.weight(.bold))
+                                    .foregroundColor(.white)
+                            )
+                    }
+
+                    if notification.actorIsPopular {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundStyle(.white, .blue)
+                            .background(Circle().fill(.white))
+                            .offset(x: 18, y: -18)
+                    }
                 }
+                .frame(width: 50, height: 50)
 
                 // Notification content
                 VStack(alignment: .leading, spacing: 4) {
@@ -115,9 +126,6 @@ struct NotificationCard: View {
                         Text(notification.actorUsername ?? "Someone")
                             .font(.subheadline)
                             .fontWeight(.semibold)
-                        Image(systemName: "star.fill")
-                            .font(.subheadline)
-                            .foregroundStyle(.blue)
                         Text("started following you")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
