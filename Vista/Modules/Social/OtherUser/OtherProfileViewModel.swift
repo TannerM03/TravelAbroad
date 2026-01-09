@@ -28,6 +28,7 @@ class OtherProfileViewModel {
     var followerCount: Int = 0
     var followingCount: Int = 0
     var isFollowing: Bool = false
+    var isPopular: Bool = false
 
     private var imageCache: [String: Image] = [:]
 
@@ -44,6 +45,7 @@ class OtherProfileViewModel {
                 lastName = names[2]
                 bio = try await SupabaseManager.shared.fetchUserBio(userId: userId)
                 profileImageURL = try await SupabaseManager.shared.fetchProfilePic(userId: userId)
+                isPopular = try await SupabaseManager.shared.fetchIsPopular(userId: userId)
 
                 if let urlString = profileImageURL, let url = URL(string: urlString) {
                     await loadImageFromURL(url)

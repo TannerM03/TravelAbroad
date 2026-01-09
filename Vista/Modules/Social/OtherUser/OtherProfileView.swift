@@ -44,8 +44,21 @@ struct OtherProfileView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
-                .navigationTitle("\(vm.username)")
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        HStack(spacing: 4) {
+                            Text(vm.username)
+                                .font(.headline)
+                                .fontWeight(.bold)
+                            if vm.isPopular {
+                                Image(systemName: "crown.fill")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.yellow)
+                            }
+                        }
+                    }
+                }
                 .background(
                     LinearGradient(
                         gradient: Gradient(colors: [Color.purple.opacity(0.1), Color.blue.opacity(0.1), Color.clear]),
@@ -77,6 +90,15 @@ struct OtherProfileView: View {
             HStack(alignment: .top, spacing: 16) {
                 // Profile Image on the left
                 CircularProfileImage(imageState: vm.imageState)
+                    .overlay(alignment: .topTrailing) {
+                        if vm.isPopular {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 20))
+                                .foregroundStyle(.white, .blue)
+                                .background(Circle().fill(.white))
+                                .offset(x: -10, y: -5)
+                        }
+                    }
                     .overlay(alignment: .bottomTrailing) {
                         Button {
                             Task {

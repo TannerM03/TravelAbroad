@@ -23,6 +23,7 @@ struct AppNotification: Codable, Identifiable {
     
     let actorUsername: String?
     let actorImageUrl: String?
+    let actorIsPopular: Bool
     
     enum CodingKeys: String, CodingKey  {
         case id
@@ -33,6 +34,7 @@ struct AppNotification: Codable, Identifiable {
         case readAt = "read_at"
         case actorUsername = "actor_username"
         case actorImageUrl = "actor_image_url"
+        case actorIsPopular = "is_popular"
     }
     
     var isRead: Bool {

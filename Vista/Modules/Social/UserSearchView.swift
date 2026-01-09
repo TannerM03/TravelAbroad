@@ -71,6 +71,7 @@ struct UserSearchView: View {
                                 } label: {
                                     ProfileCardView(profile: profile)
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
                         .padding(.horizontal, 20)
