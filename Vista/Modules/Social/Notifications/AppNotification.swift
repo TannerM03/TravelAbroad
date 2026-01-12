@@ -1,5 +1,5 @@
 //
-//  Notification.swift
+//  AppNotification.swift
 //  Vista
 //
 //  Created by Tanner Macpherson on 12/13/25.
@@ -20,12 +20,12 @@ struct AppNotification: Codable, Identifiable {
     let type: AppNotificationType
     let createdAt: Date
     let readAt: Date?
-    
+
     let actorUsername: String?
     let actorImageUrl: String?
     let actorIsPopular: Bool
-    
-    enum CodingKeys: String, CodingKey  {
+
+    enum CodingKeys: String, CodingKey {
         case id
         case userId = "user_id"
         case actorUserId = "actor_id"
@@ -36,14 +36,12 @@ struct AppNotification: Codable, Identifiable {
         case actorImageUrl = "actor_image_url"
         case actorIsPopular = "is_popular"
     }
-    
+
     var isRead: Bool {
         readAt != nil
     }
-    
+
     var timeAgo: String {
         createdAt.timeAgoOrDateString()
     }
 }
-
-

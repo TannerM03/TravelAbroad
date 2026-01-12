@@ -113,7 +113,7 @@ struct ProfileEditView: View {
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
-    
+
     private var bioField: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
@@ -142,7 +142,7 @@ struct ProfileEditView: View {
                     .scrollContentBackground(.hidden)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .onChange(of: vm.bio) { oldValue, newValue in
+                    .onChange(of: vm.bio) { _, newValue in
                         if newValue.count > 75 {
                             vm.bio = String(newValue.prefix(75))
                         }

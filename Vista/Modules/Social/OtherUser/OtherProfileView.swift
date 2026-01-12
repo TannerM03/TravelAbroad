@@ -79,6 +79,7 @@ struct OtherProfileView: View {
             }
         }
     }
+
     private var profileImageSection: some View {
         VStack(spacing: 16) {
             HStack(alignment: .top, spacing: 16) {

@@ -50,7 +50,7 @@ class SocialViewModel {
 
         isLoading = false
     }
-    
+
     func fetchPopularFeed() async {
         isLoading = true
         hasError = false

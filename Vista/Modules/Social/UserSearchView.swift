@@ -23,9 +23,9 @@ struct UserSearchView: View {
             return vm.profiles.filter { profile in
                 let fullName = "\(profile.firstName ?? "") \(profile.lastName ?? "")".trimmingCharacters(in: .whitespaces)
                 return (profile.username?.localizedCaseInsensitiveContains(searchText) ?? false) ||
-                       (profile.firstName?.localizedCaseInsensitiveContains(searchText) ?? false) ||
-                       (profile.lastName?.localizedCaseInsensitiveContains(searchText) ?? false) ||
-                       fullName.localizedCaseInsensitiveContains(searchText)
+                    (profile.firstName?.localizedCaseInsensitiveContains(searchText) ?? false) ||
+                    (profile.lastName?.localizedCaseInsensitiveContains(searchText) ?? false) ||
+                    fullName.localizedCaseInsensitiveContains(searchText)
             }
         }
     }

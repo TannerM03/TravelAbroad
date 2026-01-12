@@ -276,7 +276,6 @@ struct FeedItemCard<Destination: View>: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
             }
-
         }
         .frame(maxWidth: .infinity)
         .background(feedItem.type == .spotReview ? Color(.secondarySystemGroupedBackground) : Color(.tertiarySystemGroupedBackground))
