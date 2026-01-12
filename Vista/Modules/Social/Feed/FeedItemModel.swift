@@ -32,7 +32,7 @@ struct FeedItem: Codable, Identifiable {
     let spotId: String?
     let spotName: String?
     let spotImageUrl: String?
-    let commentImageUrl: String?  // User-uploaded comment image
+    let commentImageUrl: String? // User-uploaded comment image
     let spotCategory: CategoryType?
     let spotLocation: String?
     let spotDescription: String?

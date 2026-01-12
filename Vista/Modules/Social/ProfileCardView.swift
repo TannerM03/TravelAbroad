@@ -99,6 +99,6 @@ struct ProfileCardView: View {
 }
 
 #Preview {
-    ProfileCardView(profile: OtherProfile(id: UUID(), username: "johndoe", imageUrl: nil, isPopular: true))
+    ProfileCardView(profile: OtherProfile(id: UUID(), username: "johndoe", imageUrl: nil, isPopular: true, firstName: "john", lastName: "doe"))
         .padding()
 }

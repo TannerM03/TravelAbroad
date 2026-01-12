@@ -289,14 +289,14 @@ class SupabaseManager {
             .execute()
         return response.count ?? 0
     }
-    
+
     // MARK: - Alert/Notification Functions
-    
+
     func fetchNotifications(limit: Int = 50) async throws -> [AppNotification] {
         guard let userId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "NotificationError", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
         }
-        
+
         struct NotificationResponse: Codable {
             let id: UUID
             let user_id: UUID
@@ -305,14 +305,14 @@ class SupabaseManager {
             let created_at: Date
             let read_at: Date?
             let profiles: ActorProfile
-            
+
             struct ActorProfile: Codable {
                 let username: String
                 let image_url: String?
                 let is_popular: Bool
             }
         }
-        
+
         let response: [NotificationResponse] = try await supabase
             .from("notifications")
             .select("id, user_id, actor_user_id, type, created_at, read_at, profiles!actor_user_id(username, image_url, is_popular)")
@@ -321,7 +321,7 @@ class SupabaseManager {
             .limit(limit)
             .execute()
             .value
-                
+
         return response.map { notif in
             AppNotification(
                 id: notif.id,
@@ -336,7 +336,7 @@ class SupabaseManager {
             )
         }
     }
-    
+
     func fetchUnreadNotificationCount() async throws -> Int {
         guard let userId = supabase.auth.currentUser?.id else {
             return 0
@@ -357,7 +357,7 @@ class SupabaseManager {
 
         return response.count
     }
-    
+
     // Mark notification as read
     func markNotificationAsRead(notificationId: UUID) async throws {
         try await supabase
@@ -378,7 +378,7 @@ class SupabaseManager {
             .is("read_at", value: nil)
             .execute()
     }
-    
+
     func createFollowerNotification(followerId: UUID, followingId: UUID) async throws {
         struct NotificationInsert: Encodable {
             let user_id: UUID
@@ -406,7 +406,7 @@ class SupabaseManager {
         if let _ = recentNotifications.first {
             print(recentNotifications)
         }
-        
+
         // Check if the most recent notification is within the cooldown period
         if let mostRecent = recentNotifications.first {
             let timeSinceLastNotification = Date().timeIntervalSince(mostRecent.created_at)
@@ -421,15 +421,13 @@ class SupabaseManager {
         let notification = NotificationInsert(user_id: followingId, actor_user_id: followerId, type: "new_follower")
         try await supabase.from("notifications").insert(notification).execute()
     }
-    
-    
 
     // MARK: - SocialView Functions
 
     func fetchUsers(userId: String) async throws -> [OtherProfile] {
         let response: [OtherProfile] = try await supabase
             .from("profiles")
-            .select("id, username, image_url, is_popular")
+            .select("id, username, image_url, is_popular, first_name, last_name")
             .notEquals("id", value: userId)
             .execute()
             .value
@@ -452,7 +450,7 @@ class SupabaseManager {
 
         var followingIds = followingResponse.map { $0.following_id }
         followingIds.append(userId.uuidString)
- 
+
         // If not following anyone, return empty array
         if followingIds.isEmpty {
             return []
@@ -597,13 +595,13 @@ class SupabaseManager {
         // Return limited results
         return Array(allFeedItems.prefix(limit))
     }
-    
+
     // Fetches activity feed from users that are "popular"
     func fetchPopularActivityFeed(limit: Int = 50) async throws -> [FeedItem] {
         // First, get the list of users that are popular
         struct Popular: Codable {
             let popular_id: String
-            
+
             enum CodingKeys: String, CodingKey {
                 case popular_id = "id"
             }
@@ -617,9 +615,9 @@ class SupabaseManager {
             .value
         print("popularResponse: \(popularResponse)")
         var popularIds = popularResponse.map { $0.popular_id }
-        
+
         print("popularIds: \(popularIds)")
- 
+
         // If not following anyone, return empty array
         if popularIds.isEmpty {
             print("empty sorry")
@@ -1197,6 +1195,18 @@ class SupabaseManager {
         }
     }
 
+    func updateFeedDefault(userId: UUID, feedDefault: String) async throws {
+        do {
+            try await supabase
+                .from("profiles")
+                .update(["feed_default": feedDefault])
+                .eq("id", value: userId)
+                .execute()
+        } catch {
+            print("error updating feed default: \(error.localizedDescription)")
+        }
+    }
+
     func saveUserNames(userId: UUID, username: String, firstName: String, lastName: String) async throws {
         try await supabase
             .from("profiles")
@@ -1240,7 +1250,8 @@ class SupabaseManager {
         // User has completed onboarding if they have a username
         guard let profile = profileResponse.first,
               let username = profile.username,
-              !username.isEmpty else {
+              !username.isEmpty
+        else {
             return false
         }
 
@@ -1305,7 +1316,7 @@ class SupabaseManager {
 
         return [profile.username ?? "", profile.first_name ?? "", profile.last_name ?? ""]
     }
-    
+
     func fetchUserBio(userId: UUID) async throws -> String {
         struct Bio: Codable {
             let bio: String?
@@ -1319,7 +1330,24 @@ class SupabaseManager {
         print("response bio: \(response.bio ?? "")")
         return response.bio ?? ""
     }
- 
+
+    func fetchFeedDefault(userId: UUID) async throws -> String {
+        struct FeedDefault: Codable {
+            let feedDefault: String?
+
+            enum CodingKeys: String, CodingKey {
+                case feedDefault = "feed_default"
+            }
+        }
+        let response: FeedDefault = try await supabase.from("profiles")
+            .select("feed_default")
+            .eq("id", value: userId)
+            .single()
+            .execute()
+            .value
+        return response.feedDefault ?? "popular"
+    }
+
     // fetch username from profiles table by user id
     func fetchProfilePic(userId: UUID) async throws -> String {
         struct Profile: Codable {
@@ -1340,13 +1368,12 @@ class SupabaseManager {
         let profile = try JSONDecoder().decode(Profile.self, from: response.data)
         return profile.imageURL ?? ""
     }
-    
+
     // fetch whether or not the user is a "popular creator"
     func fetchIsPopular(userId: UUID) async throws -> Bool {
-        
         struct IsPopular: Codable {
             let isPopular: Bool?
-            
+
             enum CodingKeys: String, CodingKey {
                 case isPopular = "is_popular"
             }
@@ -1358,7 +1385,7 @@ class SupabaseManager {
             .single()
             .execute()
             .value
-        
+
         return response.isPopular ?? false
     }
 
@@ -1446,11 +1473,13 @@ class SupabaseManager {
             let username: String
             let image_url: String?
             let is_popular: Bool
+            let first_name: String?
+            let last_name: String?
         }
 
         let response: [FollowerWithProfile] = try await supabase
             .from("followers")
-            .select("follower_id, profiles!followers_follower_id_fkey(id, username, image_url, is_popular)")
+            .select("follower_id, profiles!followers_follower_id_fkey(id, username, image_url, is_popular, first_name, last_name)")
             .eq("following_id", value: userId)
             .execute()
             .value
@@ -1460,7 +1489,9 @@ class SupabaseManager {
                 id: UUID(uuidString: follower.profiles.id) ?? UUID(),
                 username: follower.profiles.username,
                 imageUrl: follower.profiles.image_url,
-                isPopular: follower.profiles.is_popular
+                isPopular: follower.profiles.is_popular,
+                firstName: follower.profiles.first_name,
+                lastName: follower.profiles.last_name
             )
         }
     }
@@ -1476,11 +1507,13 @@ class SupabaseManager {
             let username: String
             let image_url: String?
             let is_popular: Bool
+            let first_name: String?
+            let last_name: String?
         }
 
         let response: [FollowingWithProfile] = try await supabase
             .from("followers")
-            .select("following_id, profiles!followers_following_id_fkey(id, username, image_url, is_popular)")
+            .select("following_id, profiles!followers_following_id_fkey(id, username, image_url, is_popular, first_name, last_name)")
             .eq("follower_id", value: userId)
             .execute()
             .value
@@ -1490,7 +1523,9 @@ class SupabaseManager {
                 id: UUID(uuidString: following.profiles.id) ?? UUID(),
                 username: following.profiles.username,
                 imageUrl: following.profiles.image_url,
-                isPopular: following.profiles.is_popular
+                isPopular: following.profiles.is_popular,
+                firstName: following.profiles.first_name,
+                lastName: following.profiles.last_name
             )
         }
     }
@@ -2109,7 +2144,6 @@ class SupabaseManager {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No active session found"])
         }
 
-
         // Call Supabase Edge Function to delete user account
         // The Edge Function has service role access to delete from both profiles table and auth
         guard let baseURL = URL(string: ConfigManager.shared.supabaseURL) else {
@@ -2140,4 +2174,3 @@ class SupabaseManager {
         }
     }
 }
-

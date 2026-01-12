@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct SocialView: View {
+    var profileViewModel: ProfileViewModel?
     @State private var vm = SocialViewModel()
     @State private var notificationVM = NotificationAlertViewModel()
-    @State private var selectedFeed: FeedType = .following
+    @State private var selectedFeed: FeedType = .popular
 
     enum FeedType: String, CaseIterable {
         case following = "Following"
@@ -34,7 +35,6 @@ struct SocialView: View {
 
                 ScrollView {
                     VStack(spacing: 24) {
-
                         // Feed content
                         if vm.isLoading && currentFeedItems.isEmpty {
                             // Loading state
@@ -81,7 +81,7 @@ struct SocialView: View {
                             Button(action: {
                                 selectedFeed = feedType
                                 Task {
-                                    if feedType == .popular && vm.popularFeedItems.isEmpty {
+                                    if feedType == .popular, vm.popularFeedItems.isEmpty {
                                         await vm.fetchPopularFeed()
                                     }
                                 }
@@ -148,8 +148,14 @@ struct SocialView: View {
             }
         }
         .task {
+            // Set initial feed based on user preference
+            if let feedDefault = profileViewModel?.feedDefault {
+                selectedFeed = feedDefault == "following" ? .following : .popular
+            }
+
             await vm.fetchUser()
             await vm.fetchActivityFeed()
+            await vm.fetchPopularFeed()
             await notificationVM.fetchUnreadCount()
         }
     }
@@ -233,9 +239,8 @@ struct SocialView: View {
             }
         }
     }
-
 }
 
 #Preview {
-    SocialView()
+    SocialView(profileViewModel: ProfileViewModel())
 }

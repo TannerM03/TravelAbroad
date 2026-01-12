@@ -5,8 +5,8 @@
 //  Sign In with Apple button component
 //
 
-import SwiftUI
 import AuthenticationServices
+import SwiftUI
 
 struct AppleSignInButton: View {
     @Bindable var viewModel: AppleSignInViewModel
@@ -19,7 +19,7 @@ struct AppleSignInButton: View {
         } onCompletion: { result in
             Task {
                 switch result {
-                case .success(let authorization):
+                case let .success(authorization):
                     await viewModel.handleSignInWithApple(authorization: authorization)
 
                     // Update parent view bindings
@@ -28,7 +28,7 @@ struct AppleSignInButton: View {
                         shouldShowOnboarding = viewModel.shouldShowOnboarding
                     }
 
-                case .failure(let error):
+                case let .failure(error):
                     viewModel.handleSignInError(error)
                 }
             }

@@ -9,8 +9,8 @@ import Kingfisher
 import SwiftUI
 
 struct FeedImageCarousel: View {
-    let commentImageUrl: String?      // User-uploaded image
-    let spotImageUrl: String?         // Official spot image
+    let commentImageUrl: String? // User-uploaded image
+    let spotImageUrl: String? // Official spot image
     let categoryIcon: String
     let categoryColor: Color
     let width: CGFloat
