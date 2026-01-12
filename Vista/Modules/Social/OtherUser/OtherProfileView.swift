@@ -261,7 +261,7 @@ struct OtherProfileView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .center)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
                             .fill(Color(.systemGray6).opacity(0.5))

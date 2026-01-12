@@ -429,7 +429,7 @@ class SupabaseManager {
     func fetchUsers(userId: String) async throws -> [OtherProfile] {
         let response: [OtherProfile] = try await supabase
             .from("profiles")
-            .select("id, username, image_url, is_popular")
+            .select("id, username, image_url, is_popular, first_name, last_name")
             .notEquals("id", value: userId)
             .execute()
             .value
@@ -1446,11 +1446,13 @@ class SupabaseManager {
             let username: String
             let image_url: String?
             let is_popular: Bool
+            let first_name: String?
+            let last_name: String?
         }
 
         let response: [FollowerWithProfile] = try await supabase
             .from("followers")
-            .select("follower_id, profiles!followers_follower_id_fkey(id, username, image_url, is_popular)")
+            .select("follower_id, profiles!followers_follower_id_fkey(id, username, image_url, is_popular, first_name, last_name)")
             .eq("following_id", value: userId)
             .execute()
             .value
@@ -1460,7 +1462,9 @@ class SupabaseManager {
                 id: UUID(uuidString: follower.profiles.id) ?? UUID(),
                 username: follower.profiles.username,
                 imageUrl: follower.profiles.image_url,
-                isPopular: follower.profiles.is_popular
+                isPopular: follower.profiles.is_popular,
+                firstName: follower.profiles.first_name,
+                lastName: follower.profiles.last_name
             )
         }
     }
@@ -1476,11 +1480,13 @@ class SupabaseManager {
             let username: String
             let image_url: String?
             let is_popular: Bool
+            let first_name: String?
+            let last_name: String?
         }
 
         let response: [FollowingWithProfile] = try await supabase
             .from("followers")
-            .select("following_id, profiles!followers_following_id_fkey(id, username, image_url, is_popular)")
+            .select("following_id, profiles!followers_following_id_fkey(id, username, image_url, is_popular, first_name, last_name)")
             .eq("follower_id", value: userId)
             .execute()
             .value
@@ -1490,7 +1496,9 @@ class SupabaseManager {
                 id: UUID(uuidString: following.profiles.id) ?? UUID(),
                 username: following.profiles.username,
                 imageUrl: following.profiles.image_url,
-                isPopular: following.profiles.is_popular
+                isPopular: following.profiles.is_popular,
+                firstName: following.profiles.first_name,
+                lastName: following.profiles.last_name
             )
         }
     }

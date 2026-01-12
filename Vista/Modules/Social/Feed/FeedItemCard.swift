@@ -117,6 +117,22 @@ struct FeedItemCard<Destination: View>: View {
                                 }
                             }
                         }
+                    } else {
+                        HStack(spacing: 10) {
+                            HStack(spacing: 2) {
+                                ForEach(0 ..< 5) { index in
+                                    Image(systemName: starIcon(for: index, rating: feedItem.rating))
+                                        .font(.caption)
+                                        .foregroundColor(.yellow)
+                                }
+                                Text(String(format: "%.1f", feedItem.rating))
+                                    .font(.caption.weight(.medium))
+                                    .fontDesign(.rounded)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                                    .fixedSize()
+                            }
+                        }
                     }
                 }
             }
@@ -236,19 +252,19 @@ struct FeedItemCard<Destination: View>: View {
                 VStack(alignment: .leading, spacing: 10) {
                     // For city ratings: rating stars and date on same line
                     HStack(spacing: 10) {
-                        HStack(spacing: 2) {
-                            ForEach(0 ..< 5) { index in
-                                Image(systemName: starIcon(for: index, rating: feedItem.rating))
-                                    .font(.caption)
-                                    .foregroundColor(.yellow)
-                            }
-                            Text(String(format: "%.1f", feedItem.rating))
-                                .font(.caption.weight(.medium))
-                                .fontDesign(.rounded)
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                                .fixedSize()
-                        }
+//                        HStack(spacing: 2) {
+//                            ForEach(0 ..< 5) { index in
+//                                Image(systemName: starIcon(for: index, rating: feedItem.rating))
+//                                    .font(.caption)
+//                                    .foregroundColor(.yellow)
+//                            }
+//                            Text(String(format: "%.1f", feedItem.rating))
+//                                .font(.caption.weight(.medium))
+//                                .fontDesign(.rounded)
+//                                .foregroundColor(.secondary)
+//                                .lineLimit(1)
+//                                .fixedSize()
+//                        }
 
                         Spacer()
 
@@ -265,6 +281,25 @@ struct FeedItemCard<Destination: View>: View {
         .frame(maxWidth: .infinity)
         .background(feedItem.type == .spotReview ? Color(.secondarySystemGroupedBackground) : Color(.tertiarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            Group {
+                if feedItem.type == .cityRating {
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 2
+                        )
+                } else {
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(.primary,
+                                lineWidth: 2)
+                }
+            }
+        )
         .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
     }
 
