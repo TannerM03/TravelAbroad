@@ -54,7 +54,7 @@ struct LoginView: View {
         }
     }
 
-    private var titleSection: some View {            
+    private var titleSection: some View {
         Text(vm.isSignUp ? "Create Account" : "Login")
             .font(.largeTitle).bold()
             .padding(.top, 8)

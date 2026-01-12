@@ -29,6 +29,8 @@ struct Comment: Codable, Identifiable {
     let createdAt: Date
     let imageUrl: String?
     let username: String?
+    let profileImageUrl: String?
+    let isPopular: Bool
 
     // Vote properties (will be populated from backend)
     var upvoteCount: Int = 0
@@ -45,6 +47,8 @@ struct Comment: Codable, Identifiable {
         case imageUrl = "image_url"
         case createdAt = "created_at"
         case username
+        case profileImageUrl = "profile_image_url"
+        case isPopular = "is_popular"
         case upvoteCount = "upvote_count"
         case downvoteCount = "downvote_count"
         case netVotes = "net_votes"
@@ -52,7 +56,7 @@ struct Comment: Codable, Identifiable {
     }
 
     // Memberwise initializer for creating Comment instances in code
-    init(id: String, userId: String, recId: String, rating: Int, comment: String?, createdAt: Date, imageUrl: String?, username: String?, upvoteCount: Int = 0, downvoteCount: Int = 0, netVotes: Int = 0, userVote: VoteType? = nil) {
+    init(id: String, userId: String, recId: String, rating: Int, comment: String?, createdAt: Date, imageUrl: String?, username: String?, profileImageUrl: String? = nil, isPopular: Bool = false, upvoteCount: Int = 0, downvoteCount: Int = 0, netVotes: Int = 0, userVote: VoteType? = nil) {
         self.id = id
         self.userId = userId
         self.recId = recId
@@ -61,6 +65,8 @@ struct Comment: Codable, Identifiable {
         self.createdAt = createdAt
         self.imageUrl = imageUrl
         self.username = username
+        self.profileImageUrl = profileImageUrl
+        self.isPopular = isPopular
         self.upvoteCount = upvoteCount
         self.downvoteCount = downvoteCount
         self.netVotes = netVotes
@@ -77,6 +83,8 @@ struct Comment: Codable, Identifiable {
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         imageUrl = try container.decodeIfPresent(String.self, forKey: .imageUrl)
         username = try container.decodeIfPresent(String.self, forKey: .username)
+        profileImageUrl = try container.decodeIfPresent(String.self, forKey: .profileImageUrl)
+        isPopular = try container.decodeIfPresent(Bool.self, forKey: .isPopular) ?? false
 
         // Vote properties with defaults
         upvoteCount = try container.decodeIfPresent(Int.self, forKey: .upvoteCount) ?? 0
@@ -99,6 +107,8 @@ struct Comment: Codable, Identifiable {
         try container.encode(createdAt, forKey: .createdAt)
         try container.encodeIfPresent(imageUrl, forKey: .imageUrl)
         try container.encodeIfPresent(username, forKey: .username)
+        try container.encodeIfPresent(profileImageUrl, forKey: .profileImageUrl)
+        try container.encode(isPopular, forKey: .isPopular)
         try container.encode(upvoteCount, forKey: .upvoteCount)
         try container.encode(downvoteCount, forKey: .downvoteCount)
         try container.encode(netVotes, forKey: .netVotes)

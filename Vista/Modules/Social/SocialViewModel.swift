@@ -14,6 +14,7 @@ import SwiftUI
 @Observable
 class SocialViewModel {
     var feedItems: [FeedItem] = []
+    var popularFeedItems: [FeedItem] = []
     var userId: UUID?
     var isLoading: Bool = false
     var hasError: Bool = false
@@ -45,6 +46,21 @@ class SocialViewModel {
             print("error fetching activity feed in vm: \(error.localizedDescription)")
             hasError = true
             errorMessage = "Failed to load feed"
+        }
+
+        isLoading = false
+    }
+
+    func fetchPopularFeed() async {
+        isLoading = true
+        hasError = false
+
+        do {
+            popularFeedItems = try await SupabaseManager.shared.fetchPopularActivityFeed()
+        } catch {
+            print("error fetch popular activity feed in vm: \(error.localizedDescription)")
+            hasError = true
+            errorMessage = "failed to load popular feed"
         }
 
         isLoading = false

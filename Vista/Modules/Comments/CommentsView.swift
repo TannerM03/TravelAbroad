@@ -514,14 +514,59 @@ struct CommentCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 5) {
+            HStack(spacing: 8) {
                 NavigationLink(destination: OtherProfileView(selectedUserId: comment.userId)) {
-                    Text(comment.username ?? "Anonymous")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.blue)
+                    HStack(spacing: 8) {
+                        // Profile picture with gradient border
+                        Group {
+                            if let imageUrl = comment.profileImageUrl, let url = URL(string: imageUrl) {
+                                KFImage(url)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 32, height: 32)
+                                    .clipShape(Circle())
+                            } else {
+                                Circle()
+                                    .fill(LinearGradient(
+                                        gradient: Gradient(colors: [Color.purple.opacity(0.6), Color.blue.opacity(0.6)]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ))
+                                    .frame(width: 32, height: 32)
+                                    .overlay(
+                                        Text(String(comment.username?.prefix(1) ?? "?").uppercased())
+                                            .font(.caption.weight(.bold))
+                                            .foregroundColor(.white)
+                                    )
+                            }
+                        }
+                        .overlay(
+                            Group {
+                                if comment.isPopular {
+                                    Circle().stroke(Color.white, lineWidth: 1)
+                                    Circle().stroke(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 2
+                                    )
+                                    .padding(1)
+                                    Circle().stroke(Color.white, lineWidth: 0.75)
+                                        .padding(3)
+                                }
+                            }
+                        )
+                        .frame(width: 32, height: 32)
+
+                        Text(comment.username ?? "Anonymous")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                    }
                 }
-                .padding(.trailing, 5)
+                .buttonStyle(.plain)
 
                 Spacer()
 

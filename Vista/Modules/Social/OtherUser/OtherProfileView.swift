@@ -1,33 +1,33 @@
 //
-//  ProfileView.swift
+//  OtherProfileView.swift
 //  TravelAbroad
 //
-//  Created by Tanner Macpherson on 6/18/25.
+//  Created by Tanner Macpherson on 9/15/25.
 //
 
 import PhotosUI
 import Supabase
 import SwiftUI
 
-struct ProfileView: View {
-    @Binding var isAuthenticated: Bool
-    @Bindable var vm: ProfileViewModel
-    @StateObject private var bucketListViewModel = BucketListViewModel()
-    @State private var travelHistoryViewModel = TravelHistoryViewModel()
-    @State private var spotsViewModel = SpotsViewModel()
+struct OtherProfileView: View {
+    let selectedUserId: String
+    @State private var vm: OtherProfileViewModel
+    @State private var travelHistoryViewModel: OtherUserTravelHistoryViewModel
+    @State private var spotsViewModel: OtherUserSpotsViewModel
     @State private var profileImage: Image? = nil
     @State private var selectedUIImage: UIImage? = nil
     @State private var fromProfile = true
     @State private var selectedSegment = 0
 
+    init(selectedUserId: String) {
+        self.selectedUserId = selectedUserId
+        vm = OtherProfileViewModel(userId: selectedUserId)
+        travelHistoryViewModel = OtherUserTravelHistoryViewModel(userId: selectedUserId)
+        spotsViewModel = OtherUserSpotsViewModel(userId: selectedUserId)
+    }
+
     var body: some View {
         ZStack {
-//            LinearGradient(
-//                gradient: Gradient(colors: [Color.purple.opacity(0.1), Color.blue.opacity(0.1), Color.clear]),
-//                startPoint: .topLeading,
-//                endPoint: .bottomTrailing
-//            )
-//            .ignoresSafeArea()
             NavigationStack {
                 ScrollView {
                     VStack(spacing: 0) {
@@ -44,15 +44,13 @@ struct ProfileView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
-                .navigationTitle(vm.username)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        NavigationLink {
-                            SettingsView(isAuthenticated: $isAuthenticated, vm: vm)
-                        } label: {
-                            Image(systemName: "gear")
-                                .foregroundColor(.primary)
+                    ToolbarItem(placement: .principal) {
+                        HStack(spacing: 4) {
+                            Text(vm.username)
+                                .font(.headline)
+                                .fontWeight(.bold)
                         }
                     }
                 }
@@ -69,24 +67,15 @@ struct ProfileView: View {
             if vm.user == nil {
                 await vm.fetchUser()
 
-                // Preload bucket list and travel history data
+                // Preload travel history data
                 if let userId = vm.userId {
-                    await bucketListViewModel.fetchUser()
-                    await travelHistoryViewModel.fetchUser()
-
-                    if bucketListViewModel.cities.isEmpty {
-                        await bucketListViewModel.getCities(userId: userId)
-                    }
                     if travelHistoryViewModel.cities.isEmpty {
                         await travelHistoryViewModel.getCities(userId: userId, showLoading: true)
                     }
+
+                    try? await vm.fetchFollowers()
+                    try? await vm.fetchIsFollowing()
                 }
-            }
-        }
-        .onAppear {
-            Task {
-                try await vm.fetchFollowers()
-                await vm.refreshTravelStats()
             }
         }
     }
@@ -118,21 +107,24 @@ struct ProfileView: View {
 
                     CircularProfileImage(imageState: vm.imageState, isPopular: vm.isPopular)
                         .overlay(alignment: .bottomTrailing) {
-                            PhotosPicker(selection: $vm.imageSelection,
-                                         matching: .images,
-                                         photoLibrary: .shared())
-                            {
-                                Circle()
-                                    .fill(Color.blue)
-                                    .frame(width: 30, height: 30)
-                                    .overlay {
-                                        Image(systemName: "pencil")
-                                            .font(.system(size: 16))
-                                            .foregroundStyle(.white)
+                            if !vm.isSelf {
+                                Button {
+                                    Task {
+                                        try await vm.toggleFollow()
                                     }
-                                    .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                                } label: {
+                                    Circle()
+                                        .fill(vm.isFollowing ? Color.green : Color.blue)
+                                        .frame(width: 30, height: 30)
+                                        .overlay {
+                                            Image(systemName: vm.isFollowing ? "person.fill.checkmark" : "person.fill.badge.plus")
+                                                .font(.system(size: 16))
+                                                .foregroundStyle(.white)
+                                        }
+                                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
                 }
 
@@ -253,9 +245,9 @@ struct ProfileView: View {
     @ViewBuilder
     private var gridSection: some View {
         if selectedSegment == 0 {
-            CitiesGridView(vm: travelHistoryViewModel, profileViewModel: vm)
+            OtherUserCitiesGridView(vm: travelHistoryViewModel)
         } else {
-            SpotsGridView(vm: spotsViewModel, profileViewModel: vm)
+            OtherUserSpotsGridView(vm: spotsViewModel)
         }
     }
 
@@ -286,55 +278,11 @@ struct ProfileView: View {
                                 lineWidth: 1
                             )
                     )
-            } else {
-                NavigationLink {
-                    ProfileEditView(vm: vm)
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "pencil.circle.fill")
-                            .font(.caption)
-                            .foregroundStyle(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                        Text("Add a bio")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundStyle(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(Color(.systemGray6).opacity(0.3))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color.purple.opacity(0.5), Color.blue.opacity(0.5)]),
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                ),
-                                lineWidth: 1.5
-                            )
-                    )
-                }
-                .buttonStyle(.plain)
             }
         }
     }
 }
 
-#Preview {
-    ProfileView(isAuthenticated: .constant(true), vm: ProfileViewModel())
-}
+// #Preview {
+//    ProfileView(isAuthenticated: .constant(true), vm: ProfileViewModel())
+// }

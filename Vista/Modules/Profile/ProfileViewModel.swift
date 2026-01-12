@@ -17,6 +17,7 @@ class ProfileViewModel {
     var username: String = ""
     var firstName: String = ""
     var lastName: String = ""
+    var bio: String = ""
     var user: User?
     var profileImageURL: String?
     var userId: UUID?
@@ -26,6 +27,8 @@ class ProfileViewModel {
     var countriesVisited: Int = 0
     var followingCount: Int = 0
     var followerCount: Int = 0
+    var isPopular: Bool = false
+    var feedDefault: String = "popular"
     var imageSelection: PhotosPickerItem? {
         didSet {
             if let imageSelection {
@@ -60,7 +63,10 @@ class ProfileViewModel {
                 username = names[0]
                 firstName = names[1]
                 lastName = names[2]
+                bio = try await SupabaseManager.shared.fetchUserBio(userId: userId)
                 profileImageURL = try await SupabaseManager.shared.fetchProfilePic(userId: userId)
+                isPopular = try await SupabaseManager.shared.fetchIsPopular(userId: userId)
+                feedDefault = try await SupabaseManager.shared.fetchFeedDefault(userId: userId)
 
                 if let urlString = profileImageURL, let url = URL(string: urlString) {
                     await loadImageFromURL(url)
@@ -161,6 +167,11 @@ class ProfileViewModel {
                         username = newUsername
                     }
                 }
+            }
+        }
+        Task {
+            if let id = userId {
+                try await SupabaseManager.shared.changeBio(userId: id, bio: bio)
             }
         }
         Task {

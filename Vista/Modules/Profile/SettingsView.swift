@@ -38,6 +38,28 @@ struct SettingsView: View {
 //                    }
                 }
 
+                Section("Feed Preferences") {
+                    HStack {
+                        Image(systemName: "newspaper")
+                            .foregroundColor(.blue)
+                            .frame(width: 24)
+                        Text("Default Feed")
+                        Spacer()
+                        Picker("", selection: $vm.feedDefault) {
+                            Text("Popular").tag("popular")
+                            Text("Following").tag("following")
+                        }
+                        .pickerStyle(.menu)
+                        .onChange(of: vm.feedDefault) { _, newValue in
+                            Task {
+                                if let userId = vm.userId {
+                                    try await SupabaseManager.shared.updateFeedDefault(userId: userId, feedDefault: newValue)
+                                }
+                            }
+                        }
+                    }
+                }
+
                 Section {
                     logoutSection
                 }

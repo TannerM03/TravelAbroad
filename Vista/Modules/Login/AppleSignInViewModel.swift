@@ -5,8 +5,8 @@
 //  Created for Sign In with Apple integration
 //
 
-import Foundation
 import AuthenticationServices
+import Foundation
 import Observation
 
 @MainActor
@@ -85,7 +85,8 @@ class AppleSignInViewModel {
 
         // Don't show error for user cancellation
         if let authError = error as? ASAuthorizationError,
-           authError.code == .canceled {
+           authError.code == .canceled
+        {
             return
         }
 

@@ -8,7 +8,19 @@
 import SwiftUI
 
 struct SocialView: View {
+    var profileViewModel: ProfileViewModel?
     @State private var vm = SocialViewModel()
+    @State private var notificationVM = NotificationAlertViewModel()
+    @State private var selectedFeed: FeedType = .popular
+
+    enum FeedType: String, CaseIterable {
+        case following = "Following"
+        case popular = "Popular"
+    }
+
+    private var currentFeedItems: [FeedItem] {
+        selectedFeed == .following ? vm.feedItems : vm.popularFeedItems
+    }
 
     var body: some View {
         NavigationStack {
@@ -23,9 +35,8 @@ struct SocialView: View {
 
                 ScrollView {
                     VStack(spacing: 24) {
-
                         // Feed content
-                        if vm.isLoading && vm.feedItems.isEmpty {
+                        if vm.isLoading && currentFeedItems.isEmpty {
                             // Loading state
                             VStack(spacing: 16) {
                                 ProgressView()
@@ -36,13 +47,13 @@ struct SocialView: View {
                                     .fontDesign(.rounded)
                             }
                             .padding(.vertical, 60)
-                        } else if vm.feedItems.isEmpty {
+                        } else if currentFeedItems.isEmpty {
                             // Empty state
                             emptyStateView
                         } else {
                             // Feed items
                             LazyVStack(spacing: 12) {
-                                ForEach(vm.feedItems) { feedItem in
+                                ForEach(currentFeedItems) { feedItem in
                                     FeedItemCard(
                                         feedItem: feedItem,
                                         destination: destinationView(for: feedItem)
@@ -55,26 +66,48 @@ struct SocialView: View {
                     .padding(.vertical, 24)
                 }
                 .refreshable {
-                    await vm.refreshFeed()
+                    if selectedFeed == .following {
+                        await vm.refreshFeed()
+                    } else {
+                        await vm.fetchPopularFeed()
+                    }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Following")
-                        .font(.title2.weight(.bold))
-                        .fontDesign(.rounded)
-                        .foregroundStyle(.primary)
-//                        .foregroundStyle(
-//                            LinearGradient(
-//                                gradient: Gradient(colors: [Color.purple, Color.blue, Color.teal]),
-//                                startPoint: .leading,
-//                                endPoint: .trailing
-//                            )
-//                        )
+                    Menu {
+                        ForEach(FeedType.allCases, id: \.self) { feedType in
+                            Button(action: {
+                                selectedFeed = feedType
+                                Task {
+                                    if feedType == .popular, vm.popularFeedItems.isEmpty {
+                                        await vm.fetchPopularFeed()
+                                    }
+                                }
+                            }) {
+                                HStack {
+                                    Text(feedType.rawValue)
+                                    if selectedFeed == feedType {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(selectedFeed.rawValue)
+                                .font(.title2.weight(.bold))
+                                .fontDesign(.rounded)
+                                .foregroundStyle(.primary)
+                            Image(systemName: "chevron.down")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.primary)
+                        }
+                    }
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     NavigationLink {
                         UserSearchView()
                     } label: {
@@ -90,11 +123,40 @@ struct SocialView: View {
                             .font(.body.weight(.medium))
                     }
                 }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink {
+                        NotificationAlertView(vm: notificationVM)
+                    } label: {
+                        ZStack(alignment: .topTrailing) {
+                            Image(systemName: "bell")
+                                .foregroundStyle(.primary)
+                                .font(.body.weight(.medium))
+
+                            if notificationVM.unreadCount > 0 {
+                                Text("\(notificationVM.unreadCount)")
+                                    .font(.caption2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .padding(4)
+                                    .background(Color.red)
+                                    .clipShape(Circle())
+                                    .offset(x: 8, y: -8)
+                            }
+                        }
+                    }
+                }
             }
         }
         .task {
+            // Set initial feed based on user preference
+            if let feedDefault = profileViewModel?.feedDefault {
+                selectedFeed = feedDefault == "following" ? .following : .popular
+            }
+
             await vm.fetchUser()
             await vm.fetchActivityFeed()
+            await vm.fetchPopularFeed()
+            await notificationVM.fetchUnreadCount()
         }
     }
 
@@ -180,5 +242,5 @@ struct SocialView: View {
 }
 
 #Preview {
-    SocialView()
+    SocialView(profileViewModel: ProfileViewModel())
 }

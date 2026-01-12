@@ -17,6 +17,7 @@ class OtherProfileViewModel {
     var username: String = ""
     var firstName: String = ""
     var lastName: String = ""
+    var bio: String = ""
     var user: User?
     var profileImageURL: String?
     var userId: UUID?
@@ -27,6 +28,8 @@ class OtherProfileViewModel {
     var followerCount: Int = 0
     var followingCount: Int = 0
     var isFollowing: Bool = false
+    var isPopular: Bool = false
+    var isSelf: Bool = false
 
     private var imageCache: [String: Image] = [:]
 
@@ -37,11 +40,17 @@ class OtherProfileViewModel {
     func fetchUser() async {
         do {
             if let userId = userId {
+                // Check if this profile is the current user's own profile
+                let currentUserId = try await SupabaseManager.shared.supabase.auth.user().id
+                isSelf = (userId == currentUserId)
+
                 let names = try await SupabaseManager.shared.fetchUsernameAndNames(userId: userId)
                 username = names[0]
                 firstName = names[1]
                 lastName = names[2]
+                bio = try await SupabaseManager.shared.fetchUserBio(userId: userId)
                 profileImageURL = try await SupabaseManager.shared.fetchProfilePic(userId: userId)
+                isPopular = try await SupabaseManager.shared.fetchIsPopular(userId: userId)
 
                 if let urlString = profileImageURL, let url = URL(string: urlString) {
                     await loadImageFromURL(url)
@@ -122,10 +131,12 @@ class OtherProfileViewModel {
 
         do {
             if isFollowing {
+                print("unfollowing user")
                 try await SupabaseManager.shared.unfollowUser(followerId: currentUserId, followingId: otherUserId)
                 isFollowing = false
                 followerCount -= 1
             } else {
+                print("following user")
                 try await SupabaseManager.shared.followUser(followerId: currentUserId, followingId: otherUserId)
                 isFollowing = true
                 followerCount += 1

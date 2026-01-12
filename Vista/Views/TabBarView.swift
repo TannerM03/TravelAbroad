@@ -40,7 +40,7 @@ struct TabBarView: View {
                     OtherProfileView(selectedUserId: userId)
                         .id(userId)
                 } else {
-                    SocialView()
+                    SocialView(profileViewModel: profileViewModel)
                 }
             }
             .tabItem {

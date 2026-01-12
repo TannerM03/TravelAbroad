@@ -20,6 +20,7 @@ struct FeedItem: Codable, Identifiable {
     let userImageUrl: String?
     let rating: Double
     let createdAt: Date
+    let isUserPopular: Bool
 
     // City rating specific fields
     let cityId: String?
@@ -31,7 +32,7 @@ struct FeedItem: Codable, Identifiable {
     let spotId: String?
     let spotName: String?
     let spotImageUrl: String?
-    let commentImageUrl: String?  // User-uploaded comment image
+    let commentImageUrl: String? // User-uploaded comment image
     let spotCategory: CategoryType?
     let spotLocation: String?
     let spotDescription: String?
@@ -47,6 +48,7 @@ struct FeedItem: Codable, Identifiable {
         case userImageUrl = "user_image_url"
         case rating
         case createdAt = "created_at"
+        case isUserPopular = "is_popular"
         case cityId = "city_id"
         case cityName = "city_name"
         case cityImageUrl = "city_image_url"
