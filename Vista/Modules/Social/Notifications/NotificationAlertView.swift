@@ -88,7 +88,7 @@ struct NotificationCard: View {
         NavigationLink(destination: OtherProfileView(selectedUserId: notification.actorUserId.uuidString)) {
             HStack(spacing: 12) {
                 // Profile image
-                ZStack {
+                Group {
                     if let imageUrl = notification.actorImageUrl, let url = URL(string: imageUrl) {
                         KFImage(url)
                             .resizable()
@@ -109,15 +109,25 @@ struct NotificationCard: View {
                                     .foregroundColor(.white)
                             )
                     }
-
-                    if notification.actorIsPopular {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 16))
-                            .foregroundStyle(.white, .blue)
-                            .background(Circle().fill(.white))
-                            .offset(x: 18, y: -18)
-                    }
                 }
+                .overlay(
+                    Group {
+                        if notification.actorIsPopular {
+                            Circle().stroke(Color.white, lineWidth: 1)
+                            Circle().stroke(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 3
+                            )
+                            .padding(2)
+                            Circle().stroke(Color.white, lineWidth: 1)
+                                .padding(4)
+                        }
+                    }
+                )
                 .frame(width: 50, height: 50)
 
                 // Notification content

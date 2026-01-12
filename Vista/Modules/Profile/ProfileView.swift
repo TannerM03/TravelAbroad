@@ -95,33 +95,46 @@ struct ProfileView: View {
         VStack(spacing: 16) {
             HStack(alignment: .top, spacing: 16) {
                 // Profile Image on the left
-                CircularProfileImage(imageState: vm.imageState)
-                    .overlay(alignment: .topTrailing) {
-                        if vm.isPopular {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 20))
-                                .foregroundStyle(.white, .blue)
-                                .background(Circle().fill(.white))
-                                .offset(x: -10, y: -5)
-                        }
+                VStack(spacing: 8) {
+                    if vm.isPopular {
+                        Text("Popular Creator")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .fontDesign(.rounded)
+                            .foregroundStyle(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(Color(.systemGray6).opacity(0.8))
+                            )
                     }
-                    .overlay(alignment: .bottomTrailing) {
-                        PhotosPicker(selection: $vm.imageSelection,
-                                     matching: .images,
-                                     photoLibrary: .shared())
-                        {
-                            Circle()
-                                .fill(Color.blue)
-                                .frame(width: 30, height: 30)
-                                .overlay {
-                                    Image(systemName: "pencil")
-                                        .font(.system(size: 16))
-                                        .foregroundStyle(.white)
-                                }
-                                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+
+                    CircularProfileImage(imageState: vm.imageState, isPopular: vm.isPopular)
+                        .overlay(alignment: .bottomTrailing) {
+                            PhotosPicker(selection: $vm.imageSelection,
+                                         matching: .images,
+                                         photoLibrary: .shared())
+                            {
+                                Circle()
+                                    .fill(Color.blue)
+                                    .frame(width: 30, height: 30)
+                                    .overlay {
+                                        Image(systemName: "pencil")
+                                            .font(.system(size: 16))
+                                            .foregroundStyle(.white)
+                                    }
+                                    .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
-                    }
+                }
 
                 // Followers/Following and Bio
                 VStack(alignment: .center, spacing: 12) {
