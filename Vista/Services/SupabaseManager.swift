@@ -1195,6 +1195,18 @@ class SupabaseManager {
         }
     }
 
+    func updateFeedDefault(userId: UUID, feedDefault: String) async throws {
+        do {
+            try await supabase
+                .from("profiles")
+                .update(["feed_default": feedDefault])
+                .eq("id", value: userId)
+                .execute()
+        } catch {
+            print("error updating feed default: \(error.localizedDescription)")
+        }
+    }
+
     func saveUserNames(userId: UUID, username: String, firstName: String, lastName: String) async throws {
         try await supabase
             .from("profiles")
@@ -1317,6 +1329,23 @@ class SupabaseManager {
             .value
         print("response bio: \(response.bio ?? "")")
         return response.bio ?? ""
+    }
+
+    func fetchFeedDefault(userId: UUID) async throws -> String {
+        struct FeedDefault: Codable {
+            let feedDefault: String?
+
+            enum CodingKeys: String, CodingKey {
+                case feedDefault = "feed_default"
+            }
+        }
+        let response: FeedDefault = try await supabase.from("profiles")
+            .select("feed_default")
+            .eq("id", value: userId)
+            .single()
+            .execute()
+            .value
+        return response.feedDefault ?? "popular"
     }
 
     // fetch username from profiles table by user id
