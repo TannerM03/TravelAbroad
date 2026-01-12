@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CircularProfileImage: View {
     let imageState: ImageState
+    let isPopular: Bool
 
     var body: some View {
         Group {
@@ -18,7 +19,26 @@ struct CircularProfileImage: View {
                     .fill(Color.gray.opacity(0.4))
                     .overlay(Image(systemName: "person.fill").foregroundColor(.white))
                     .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.white, lineWidth: 6))
+                    .overlay(
+                        Group {
+                            if isPopular {
+                                Circle().stroke(Color.white, lineWidth: 2)
+                                Circle().stroke(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 4
+                                )
+                                .padding(2)
+                                Circle().stroke(Color.white, lineWidth: 2)
+                                    .padding(6)
+                            } else {
+                                Circle().stroke(Color.white, lineWidth: 6)
+                            }
+                        }
+                    )
             case .loading:
                 ProgressView()
             case let .success(image):
@@ -26,13 +46,51 @@ struct CircularProfileImage: View {
                     .resizable()
                     .scaledToFill()
                     .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.white, lineWidth: 6))
+                    .overlay(
+                        Group {
+                            if isPopular {
+                                Circle().stroke(Color.white, lineWidth: 1)
+                                Circle().stroke(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 4
+                                )
+                                .padding(3)
+                                Circle().stroke(Color.white, lineWidth: 1)
+                                    .padding(6)
+                            } else {
+                                Circle().stroke(Color.white, lineWidth: 6)
+                            }
+                        }
+                    )
             case .failure:
                 Circle()
                     .fill(Color.red.opacity(0.4))
                     .overlay(Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.white))
                     .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.white, lineWidth: 6))
+                    .overlay(
+                        Group {
+                            if isPopular {
+                                Circle().stroke(Color.white, lineWidth: 2)
+                                Circle().stroke(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 4
+                                )
+                                .padding(2)
+                                Circle().stroke(Color.white, lineWidth: 2)
+                                    .padding(6)
+                            } else {
+                                Circle().stroke(Color.white, lineWidth: 6)
+                            }
+                        }
+                    )
             }
         }
         .frame(width: 125, height: 125)
@@ -48,5 +106,5 @@ enum ImageState {
 }
 
 #Preview {
-    CircularProfileImage(imageState: .empty)
+    CircularProfileImage(imageState: .empty, isPopular: false)
 }

@@ -29,6 +29,7 @@ class OtherProfileViewModel {
     var followingCount: Int = 0
     var isFollowing: Bool = false
     var isPopular: Bool = false
+    var isSelf: Bool = false
 
     private var imageCache: [String: Image] = [:]
 
@@ -39,6 +40,10 @@ class OtherProfileViewModel {
     func fetchUser() async {
         do {
             if let userId = userId {
+                // Check if this profile is the current user's own profile
+                let currentUserId = try await SupabaseManager.shared.supabase.auth.user().id
+                isSelf = (userId == currentUserId)
+
                 let names = try await SupabaseManager.shared.fetchUsernameAndNames(userId: userId)
                 username = names[0]
                 firstName = names[1]

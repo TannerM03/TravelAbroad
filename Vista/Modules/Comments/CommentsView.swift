@@ -517,8 +517,8 @@ struct CommentCardView: View {
             HStack(spacing: 8) {
                 NavigationLink(destination: OtherProfileView(selectedUserId: comment.userId)) {
                     HStack(spacing: 8) {
-                        // Profile picture with checkmark badge
-                        ZStack {
+                        // Profile picture with gradient border
+                        Group {
                             if let imageUrl = comment.profileImageUrl, let url = URL(string: imageUrl) {
                                 KFImage(url)
                                     .resizable()
@@ -539,15 +539,25 @@ struct CommentCardView: View {
                                             .foregroundColor(.white)
                                     )
                             }
-
-                            if comment.isPopular {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(.white, .blue)
-                                    .background(Circle().fill(.white))
-                                    .offset(x: 11, y: -11)
-                            }
                         }
+                        .overlay(
+                            Group {
+                                if comment.isPopular {
+                                    Circle().stroke(Color.white, lineWidth: 1)
+                                    Circle().stroke(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 2
+                                    )
+                                    .padding(1)
+                                    Circle().stroke(Color.white, lineWidth: 0.75)
+                                        .padding(3)
+                                }
+                            }
+                        )
                         .frame(width: 32, height: 32)
 
                         Text(comment.username ?? "Anonymous")

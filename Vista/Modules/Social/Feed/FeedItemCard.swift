@@ -49,8 +49,8 @@ struct FeedItemCard<Destination: View>: View {
                 HStack(alignment: .center, spacing: 10) {
                     NavigationLink(destination: OtherProfileView(selectedUserId: feedItem.userId)) {
                         HStack(spacing: 8) {
-                            // Profile picture with checkmark badge
-                            ZStack {
+                            // Profile picture with gradient border
+                            Group {
                                 if let imageUrl = feedItem.userImageUrl, let url = URL(string: imageUrl) {
                                     KFImage(url)
                                         .resizable()
@@ -71,15 +71,25 @@ struct FeedItemCard<Destination: View>: View {
                                                 .foregroundColor(.white)
                                         )
                                 }
-
-                                if feedItem.isUserPopular {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.system(size: 12))
-                                        .foregroundStyle(.white, .blue)
-                                        .background(Circle().fill(.white))
-                                        .offset(x: 10, y: -10)
-                                }
                             }
+                            .overlay(
+                                Group {
+                                    if feedItem.isUserPopular {
+                                        Circle().stroke(Color.white, lineWidth: 1)
+                                        Circle().stroke(
+                                            LinearGradient(
+                                                gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 2
+                                        )
+                                        .padding(1)
+                                        Circle().stroke(Color.white, lineWidth: 0.75)
+                                            .padding(2.75)
+                                    }
+                                }
+                            )
                             .frame(width: 28, height: 28)
 
                             Text(feedItem.username)

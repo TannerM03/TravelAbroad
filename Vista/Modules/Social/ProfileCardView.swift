@@ -13,7 +13,7 @@ struct ProfileCardView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            ZStack {
+            Group {
                 if let imageUrl = profile.imageUrl, let url = URL(string: imageUrl) {
                     KFImage(url)
                         .resizable()
@@ -42,25 +42,36 @@ struct ProfileCardView: View {
                                 .font(.title2)
                         )
                 }
-
-                Circle()
-                    .stroke(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color.white.opacity(0.3), Color.clear]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ), lineWidth: 2
-                    )
-                    .frame(width: 76, height: 76)
-
-                if profile.isPopular {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 18))
-                        .foregroundStyle(.white, .blue)
-                        .background(Circle().fill(.white))
-                        .offset(x: 26, y: -26)
-                }
             }
+            .overlay(
+                Group {
+                    if profile.isPopular {
+                        Circle().stroke(Color.white, lineWidth: 1)
+                        Circle().stroke(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 3
+                        )
+                        .padding(2)
+                        Circle().stroke(Color.white, lineWidth: 1)
+                            .padding(4.5)
+                    } else {
+                        Circle()
+                            .stroke(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.white.opacity(0.3), Color.clear]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ), lineWidth: 2
+                            )
+                            .frame(width: 76, height: 76)
+                    }
+                }
+            )
+            .frame(width: 72, height: 72)
             .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
 
             Text(profile.username ?? "Anonymous")
