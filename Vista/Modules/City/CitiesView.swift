@@ -54,7 +54,8 @@ struct CitiesView: View {
                         showRequestCitySheet = true
                     } label: {
                         Image(systemName: "plus.circle")
-                            .font(.body.weight(.medium))
+                            .font(.body)
+                            .fontWeight(.medium)
                             .foregroundStyle(.primary)
 //                            .foregroundStyle(
 //                                LinearGradient(
@@ -76,6 +77,11 @@ struct CitiesView: View {
         }
         .task {
             if vm.cities.isEmpty {
+                await vm.getCities()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("CityRatingAdded"))) { _ in
+            Task {
                 await vm.getCities()
             }
         }

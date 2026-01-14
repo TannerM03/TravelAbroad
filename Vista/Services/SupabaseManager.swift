@@ -353,7 +353,6 @@ class SupabaseManager {
             .is("read_at", value: nil)
             .execute()
             .value
-        print("response count: \(response.count)")
 
         return response.count
     }
@@ -613,10 +612,7 @@ class SupabaseManager {
             .eq("is_popular", value: true)
             .execute()
             .value
-        print("popularResponse: \(popularResponse)")
-        var popularIds = popularResponse.map { $0.popular_id }
-
-        print("popularIds: \(popularIds)")
+        let popularIds = popularResponse.map { $0.popular_id }
 
         // If not following anyone, return empty array
         if popularIds.isEmpty {
@@ -793,7 +789,7 @@ class SupabaseManager {
     }
 
     // submits a comment
-    func submitComment(recommendationId: String, text: String?, imageUrl: String?, rating: Int) async throws -> Comment {
+    func submitComment(recommendationId: String, text: String?, imageUrl: String?, rating: Double) async throws -> Comment {
         guard let userId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
@@ -801,7 +797,7 @@ class SupabaseManager {
         struct CommentInsert: Codable {
             let user_id: String
             let rec_id: String
-            let rating: Int
+            let rating: Double
             let comment: String?
             let created_at: String
             let image_url: String?
@@ -902,7 +898,7 @@ class SupabaseManager {
         }
 
         struct RatingResponse: Decodable {
-            let rating: Int
+            let rating: Double
         }
 
         let response: [RatingResponse] = try await supabase
@@ -917,7 +913,7 @@ class SupabaseManager {
         return response.first.map { Double($0.rating) }
     }
 
-    func submitRecommendationRating(recommendationId: String, rating: Int) async throws {
+    func submitRecommendationRating(recommendationId: String, rating: Double) async throws {
         guard let userId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
@@ -925,7 +921,7 @@ class SupabaseManager {
         struct RatingInsert: Codable {
             let rec_id: String
             let user_id: String
-            let rating: Int
+            let rating: Double
             let comment: String
         }
 
@@ -1011,7 +1007,7 @@ class SupabaseManager {
             let id: String
             let user_id: String
             let rec_id: String
-            let rating: Int
+            let rating: Double
             let comment: String?
             let created_at: Date
             let image_url: String?
@@ -1327,7 +1323,6 @@ class SupabaseManager {
             .single()
             .execute()
             .value
-        print("response bio: \(response.bio ?? "")")
         return response.bio ?? ""
     }
 
@@ -1658,6 +1653,22 @@ class SupabaseManager {
     }
 
     // MARK: - CityDetailView Functions
+    
+    // recalculate the avg rating for a city
+    func reloadAvgRating(cityId: UUID) async throws -> Double? {
+        struct RatingResponse: Decodable {
+            let avg_rating: Double?
+        }
+
+        let avgRating: RatingResponse = try await supabase.from("city_with_avg_rating")
+            .select("avg_rating")
+            .eq("id", value: cityId)
+            .single()
+            .execute()
+            .value
+        
+        return avgRating.avg_rating
+    }
 
     // get the rating of a specific city from a specific user
     func getCityRatingForUser(cityId: UUID, userId: UUID) async throws -> Double? {
@@ -2029,7 +2040,7 @@ class SupabaseManager {
         struct ReviewedSpotWithVotesResponse: Codable {
             let id: String
             let rec_id: String
-            let rating: Int
+            let rating: Double
             let comment: String?
             let created_at: Date
             let upvote_count: Int?

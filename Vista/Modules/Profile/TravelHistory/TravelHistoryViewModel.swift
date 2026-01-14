@@ -117,6 +117,9 @@ class TravelHistoryViewModel {
 
             // Notify ProfileViewModel to refresh travel stats
             onCityDeleted?()
+
+            // Post notification for CitiesView to refresh
+            NotificationCenter.default.post(name: NSNotification.Name("CityRatingAdded"), object: nil)
         } catch {
             print("Error deleting city rating: \(error)")
         }

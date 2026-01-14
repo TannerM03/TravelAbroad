@@ -312,36 +312,36 @@ struct CommentsView: View {
                 Text("Rate \(recommendation.name)")
                     .font(.title2.weight(.bold))
                     .fontDesign(.rounded)
-                    .foregroundStyle(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color.purple, Color.blue]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity, alignment: .center)
 
                 VStack(spacing: 16) {
                     HStack(spacing: 12) {
-                        ForEach(1 ... 5, id: \.self) { i in
+                        ForEach(1...5, id: \.self) { i in
                             Button(action: {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
                                     userRating = Double(i)
                                 }
                             }) {
-                                Image(systemName: userRating >= Double(i) ? "star.fill" : "star")
-                                    .font(.title.weight(.medium))
-                                    .foregroundColor(.yellow)
+                                Image(systemName: userRating >= Double(i) ? "star.fill" : userRating >= Double(i) - 0.5 ? "star.leadinghalf.filled" : "star")
+                                    .font(.title)
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(.yellow)
                                     .scaleEffect(userRating >= Double(i) ? 1.1 : 1.0)
-                                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: userRating)
                             }
+                            .buttonStyle(.plain)
                         }
                     }
 
-                    Text("\(Int(userRating)) star\(userRating == 1 ? "" : "s")")
-                        .font(.body.weight(.semibold))
+                    Text(String(format: "%.1f", userRating))
+                        .font(.title2)
+                        .fontWeight(.bold)
                         .fontDesign(.rounded)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.primary)
+
+                    Slider(value: $userRating, in: 0...5, step: 0.1)
+                        .accentColor(.yellow)
+                        .padding(.horizontal, 8)
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
             }
@@ -362,10 +362,6 @@ struct CommentsView: View {
                             .font(.subheadline.weight(.semibold))
                             .fontDesign(.rounded)
                             .foregroundColor(.primary)
-                        Text("Tap remove to delete")
-                            .font(.caption.weight(.medium))
-                            .fontDesign(.rounded)
-                            .foregroundColor(.secondary)
                     }
 
                     Spacer()
@@ -392,7 +388,7 @@ struct CommentsView: View {
 
             VStack(spacing: 20) {
                 ZStack(alignment: .topTrailing) {
-                    TextField("Share your thoughts... (optional)", text: $newCommentText, axis: .vertical)
+                    TextField("Share your thoughts...", text: $newCommentText, axis: .vertical)
                         .font(.body.weight(.medium))
                         .fontDesign(.rounded)
                         .padding(16)
@@ -486,10 +482,10 @@ struct CommentsView: View {
                     recommendationId: recommendation.id,
                     text: newCommentText.trimmingCharacters(in: .whitespacesAndNewlines),
                     image: selectedImage,
-                    rating: Int(userRating)
+                    rating: userRating
                 )
             } else {
-                await vm.submitComment(recommendationId: recommendation.id, text: nil, image: selectedImage, rating: Int(userRating))
+                await vm.submitComment(recommendationId: recommendation.id, text: nil, image: selectedImage, rating: userRating)
             }
             confirmReviewSubmitted = true
 

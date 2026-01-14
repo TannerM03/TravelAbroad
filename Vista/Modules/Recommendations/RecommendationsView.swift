@@ -68,9 +68,9 @@ struct RecommendationsView: View {
         .task {
             vm.initializeCity(cityId: cityId, cityName: cityName, imageUrl: imageUrl, userRating: userRating, avgRating: cityRating, isBucketList: isBucketList, onRatingUpdated: onRatingUpdated)
             await vm.getRecs(cityId: UUID(uuidString: cityId)!)
+            await vm.reloadAvgRating()
             await vm.fetchUser()
             await vm.getCoordinates(cityId: UUID(uuidString: cityId)!)
-            checkAndShowRatingTip()
         }
         .alert("Rating Submitted!", isPresented: $vm.showSubmittedAlert) {
             Button("OK", role: .cancel) {}
@@ -169,28 +169,45 @@ struct RecommendationsView: View {
     }
 
     private var ratingButton: some View {
-        Button(action: {
-            vm.showRatingOverlay()
-            if showRatingTip {
-                dismissRatingTip()
+        HStack {
+            Button(action: {
+                vm.showRatingOverlay()
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "star.fill")
+                        .foregroundStyle(.yellow)
+                    Text(String(format: "%.1f", vm.avgRating))
+                }
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .fontDesign(.rounded)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(.ultraThinMaterial)
+                .clipShape(Capsule())
+                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
             }
-        }) {
-            HStack(spacing: 6) {
-                Image(systemName: "star.fill")
-                    .foregroundStyle(.yellow)
-                Text(String(format: "%.1f", vm.avgRating))
+            .buttonStyle(.plain)
+            Button(action: {
+                vm.showRatingOverlay()
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus.circle")
+                        .foregroundStyle(.primary)
+                        .font(.title2)
+                        .fontWeight(.medium)
+                }
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .fontDesign(.rounded)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
+                .background(.ultraThinMaterial)
+                .clipShape(Capsule())
+                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
             }
-            .font(.subheadline)
-            .fontWeight(.semibold)
-            .fontDesign(.rounded)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(.ultraThinMaterial)
-            .clipShape(Capsule())
-            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Rate this city")
     }
 
     private var categoryFilterSection: some View {
@@ -238,13 +255,7 @@ struct RecommendationsView: View {
                     Text("Rate \(vm.cityName)")
                         .font(.title2.weight(.bold))
                         .fontDesign(.rounded)
-                        .foregroundStyle(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.purple, Color.blue]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .foregroundStyle(.primary)
 
                     Text("How would you rate this city?")
                         .font(.title3)
@@ -276,13 +287,7 @@ struct RecommendationsView: View {
                         .font(.title2)
                         .fontWeight(.bold)
                         .fontDesign(.rounded)
-                        .foregroundStyle(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.purple, Color.blue]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .foregroundStyle(.primary)
 
                     Slider(value: Binding(
                         get: { vm.tempRating ?? 5.0 },
@@ -310,6 +315,7 @@ struct RecommendationsView: View {
                     Button("Submit") {
                         Task {
                             await vm.updateCityReview(userId: vm.userId, cityId: UUID(uuidString: vm.cityId)!, rating: vm.tempRating ?? 5.0)
+                            await vm.reloadAvgRating()
                         }
                         vm.showSubmittedAlert = true
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
@@ -345,9 +351,6 @@ struct RecommendationsView: View {
         ZStack {
             Color.clear
                 .ignoresSafeArea()
-                .onTapGesture {
-                    dismissRatingTip()
-                }
 
             VStack {
                 HStack {
@@ -374,30 +377,6 @@ struct RecommendationsView: View {
 
                 Spacer()
             }
-        }
-    }
-
-    private func checkAndShowRatingTip() {
-        let tipCount = UserDefaults.standard.integer(forKey: "ratingTipShownCount")
-        if tipCount < 3 {
-            print(tipCount)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    showRatingTip = true
-                }
-                UserDefaults.standard.set(tipCount + 1, forKey: "ratingTipShownCount")
-
-                // Auto-dismiss after 3 seconds
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                    dismissRatingTip()
-                }
-            }
-        }
-    }
-
-    private func dismissRatingTip() {
-        withAnimation(.easeInOut(duration: 0.3)) {
-            showRatingTip = false
         }
     }
 }

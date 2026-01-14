@@ -73,6 +73,20 @@ class RecommendationsViewModel {
         isFavoriteCity = isBucketList
         self.onRatingUpdated = onRatingUpdated
     }
+    
+    func reloadAvgRating() async {
+        guard let cityUUID = UUID(uuidString: cityId) else {
+            print("Error: Invalid city ID")
+            return
+        }
+        do {
+            if let newAvgRating = try await SupabaseManager.shared.reloadAvgRating(cityId: cityUUID) {
+                avgRating = newAvgRating
+            }
+        } catch {
+            print("Error updating avg rating: \(error.localizedDescription)")
+        }
+    }
 
     func getRecs(cityId: UUID) async {
         isLoading = true

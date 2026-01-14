@@ -148,7 +148,7 @@ struct ReviewCard: View {
         switch review.recommendation.category {
         case .all: return "mappin.and.ellipse.circle"
         case .activities: return "figure.hiking"
-        case .nightlife: return "music.note"
+        case .barsClubs: return "music.note"
         case .restaurants: return "fork.knife"
         case .hostels: return "bed.double"
         case .sights: return "camera"
@@ -225,6 +225,10 @@ struct ReviewCard: View {
                                 .foregroundColor(.yellow)
                                 .font(.caption)
                         }
+                        Text(String(format: "%.1f", review.userRating))
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .padding(.leading, 4)
                         Text("Your Rating")
                             .font(.caption2)
                             .foregroundColor(.secondary)

@@ -18,7 +18,7 @@ class AddRecommendationViewModel {
     var selectedImage: UIImage?
     var description = ""
     var isSubmitting = false
-    var userRating: Int = 0
+    var userRating: Double = 0.0
     var showNoRatingAlert = false
 
     // Properties from AddRecommendationView

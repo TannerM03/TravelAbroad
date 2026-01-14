@@ -24,7 +24,7 @@ struct Comment: Codable, Identifiable {
     let id: String
     let userId: String
     let recId: String
-    let rating: Int
+    let rating: Double
     let comment: String?
     let createdAt: Date
     let imageUrl: String?
@@ -56,7 +56,7 @@ struct Comment: Codable, Identifiable {
     }
 
     // Memberwise initializer for creating Comment instances in code
-    init(id: String, userId: String, recId: String, rating: Int, comment: String?, createdAt: Date, imageUrl: String?, username: String?, profileImageUrl: String? = nil, isPopular: Bool = false, upvoteCount: Int = 0, downvoteCount: Int = 0, netVotes: Int = 0, userVote: VoteType? = nil) {
+    init(id: String, userId: String, recId: String, rating: Double, comment: String?, createdAt: Date, imageUrl: String?, username: String?, profileImageUrl: String? = nil, isPopular: Bool = false, upvoteCount: Int = 0, downvoteCount: Int = 0, netVotes: Int = 0, userVote: VoteType? = nil) {
         self.id = id
         self.userId = userId
         self.recId = recId
@@ -78,7 +78,7 @@ struct Comment: Codable, Identifiable {
         id = try container.decode(String.self, forKey: .id)
         userId = try container.decode(String.self, forKey: .userId)
         recId = try container.decode(String.self, forKey: .recId)
-        rating = try container.decode(Int.self, forKey: .rating)
+        rating = try container.decode(Double.self, forKey: .rating)
         comment = try container.decodeIfPresent(String.self, forKey: .comment)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         imageUrl = try container.decodeIfPresent(String.self, forKey: .imageUrl)
@@ -121,7 +121,7 @@ struct RatingTemporary: Codable {
     let id: String
     let userId: String
     let recommendationId: String
-    let rating: Int
+    let rating: Double
     let comment: String?
     let createdAt: Date
     let imageUrl: String?

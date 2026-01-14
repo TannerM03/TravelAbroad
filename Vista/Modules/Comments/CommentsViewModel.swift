@@ -68,7 +68,7 @@ class CommentsViewModel {
         }
     }
 
-    func submitComment(recommendationId: String, text: String?, image: UIImage?, rating: Int) async {
+    func submitComment(recommendationId: String, text: String?, image: UIImage?, rating: Double) async {
         do {
             var imageUrl: String?
 
@@ -124,7 +124,7 @@ class CommentsViewModel {
         }
     }
 
-    func submitRating(for recommendationId: String, rating: Int) async {
+    func submitRating(for recommendationId: String, rating: Double) async {
         do {
             try await supabaseManager.submitRecommendationRating(recommendationId: recommendationId, rating: rating)
             userRating = Double(rating)

@@ -97,7 +97,7 @@ enum CategoryType: String, Codable, CaseIterable {
     case all
     case sights = "sight"
     case restaurants = "restaurant"
-    case nightlife
+    case barsClubs = "bars/clubs"
     case activities = "activity"
     case hostels = "hostel"
     case other
@@ -108,10 +108,10 @@ extension CategoryType {
         switch self {
         case .all: return Color.white.opacity(0.4)
         case .activities: return Color.green.opacity(0.4)
-        case .nightlife: return Color.purple.opacity(0.4)
-        case .restaurants: return Color.orange.opacity(0.4)
-        case .hostels: return Color.blue.opacity(0.4)
-        case .sights: return Color.pink.opacity(0.4)
+        case .barsClubs: return Color.purple.opacity(0.4)
+        case .restaurants: return Color.pink.opacity(0.4)
+        case .hostels: return Color.orange.opacity(0.4)
+        case .sights: return Color.blue.opacity(0.4)
         case .other: return Color.gray.opacity(0.4)
         }
     }

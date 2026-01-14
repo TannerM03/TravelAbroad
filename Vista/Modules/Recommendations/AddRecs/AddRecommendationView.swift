@@ -211,25 +211,33 @@ struct AddRecommendationView: View {
                 .font(.headline)
                 .fontWeight(.semibold)
 
-            HStack(spacing: 12) {
-                Spacer()
-
-                ForEach(1 ... 5, id: \.self) { i in
-                    Button(action: {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                            print("userRating: \(i)")
-                            viewModel.userRating = i
+            VStack(spacing: 16) {
+                HStack(spacing: 12) {
+                    ForEach(1...5, id: \.self) { i in
+                        Button(action: {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                viewModel.userRating = Double(i)
+                            }
+                        }) {
+                            Image(systemName: viewModel.userRating >= Double(i) ? "star.fill" : viewModel.userRating >= Double(i) - 0.5 ? "star.leadinghalf.filled" : "star")
+                                .font(.title)
+                                .fontWeight(.medium)
+                                .foregroundStyle(.yellow)
+                                .scaleEffect(viewModel.userRating >= Double(i) ? 1.1 : 1.0)
                         }
-                    }) {
-                        Image(systemName: viewModel.userRating >= i ? "star.fill" : "star")
-                            .font(.title.weight(.medium))
-                            .foregroundColor(.yellow)
-                            .scaleEffect(viewModel.userRating >= i ? 1.1 : 1.0)
-                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: viewModel.userRating)
+                        .buttonStyle(.plain)
                     }
                 }
 
-                Spacer()
+                Text(String(format: "%.1f", viewModel.userRating))
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .fontDesign(.rounded)
+                    .foregroundStyle(.primary)
+
+                Slider(value: $viewModel.userRating, in: 0...5, step: 0.1)
+                    .accentColor(.yellow)
+                    .padding(.horizontal, 8)
             }
         }
         .padding(20)
@@ -274,7 +282,7 @@ struct AddRecommendationView: View {
 
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Review (Optional)")
+            Text("Review")
                 .font(.headline)
                 .fontWeight(.semibold)
 

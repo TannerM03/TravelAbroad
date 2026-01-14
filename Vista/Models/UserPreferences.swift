@@ -133,7 +133,7 @@ struct ActivityPreferences: Codable {
             switch self {
             case .cultural: return "Museums & Historical Sites"
             case .foodDining: return "Food & Dining Experiences"
-            case .nightlife: return "Nightlife & Bars"
+            case .nightlife: return "Bars and Clubs"
             case .outdoor: return "Outdoor Activities"
             case .shopping: return "Shopping & Markets"
             case .photography: return "Photography & Instagram Spots"
