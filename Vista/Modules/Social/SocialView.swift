@@ -12,6 +12,7 @@ struct SocialView: View {
     @State private var vm = SocialViewModel()
     @State private var notificationVM = NotificationAlertViewModel()
     @State private var selectedFeed: FeedType = .popular
+    @State private var hasInitialized = false
 
     enum FeedType: String, CaseIterable {
         case following = "Following"
@@ -148,9 +149,12 @@ struct SocialView: View {
             }
         }
         .task {
-            // Set initial feed based on user preference
-            if let feedDefault = profileViewModel?.feedDefault {
-                selectedFeed = feedDefault == "following" ? .following : .popular
+            // Set initial feed based on user preference (only on first launch)
+            if !hasInitialized {
+                if let feedDefault = profileViewModel?.feedDefault {
+                    selectedFeed = feedDefault == "following" ? .following : .popular
+                }
+                hasInitialized = true
             }
 
             await vm.fetchUser()

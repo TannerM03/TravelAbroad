@@ -25,9 +25,13 @@ struct FeedImageCarousel: View {
         else if commentImageUrl == nil, let officialUrl = spotImageUrl {
             singleImageView(url: officialUrl, badgeText: "Official Spot Photo")
         }
-        // Case 3: Both images - carousel
-        else if let userUrl = commentImageUrl, let officialUrl = spotImageUrl {
+        // Case 3: User image and official image but are different, show both
+        else if let userUrl = commentImageUrl, let officialUrl = spotImageUrl, userUrl != officialUrl {
             carouselView(userUrl: userUrl, officialUrl: officialUrl)
+        }
+        // Case 4: User image and spot image are the same, only show user image
+        else if let userUrl = commentImageUrl, let officialUrl = spotImageUrl, userUrl == officialUrl {
+            singleImageView(url: userUrl, badgeText: "User Photo")
         }
         // Edge case: Only user image (shouldn't happen for spots, but handle it)
         else if let userUrl = commentImageUrl {
