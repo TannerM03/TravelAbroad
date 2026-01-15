@@ -89,10 +89,50 @@ class CommentsViewModel {
         }
     }
 
-    func deleteSpotReview(reviewId: String) async {
+    func updateComment(commentId: String, recommendationId: String, text: String?, image: UIImage?, rating: Double, removeImage: Bool) async {
         do {
+            var imageUrl: String?
+
+            if removeImage {
+                // Explicitly set to empty string to clear the image in database
+                imageUrl = ""
+            } else if let image = image {
+                // Upload new image
+                imageUrl = try await supabaseManager.uploadCommentImage(image)
+            }
+            // If removeImage is false and image is nil, keep existing image (don't update imageUrl field)
+
+            let updatedComment = try await supabaseManager.updateComment(
+                commentId: UUID(uuidString: commentId)!,
+                recommendationId: recommendationId,
+                text: text,
+                imageUrl: imageUrl,
+                rating: rating,
+                shouldUpdateImage: removeImage || image != nil
+            )
+
+            // Update the comment in the list
+            if let index = comments.firstIndex(where: { $0.id == commentId }) {
+                comments[index] = updatedComment
+            }
+        } catch {
+            print("Error updating comment: \(error)")
+        }
+    }
+
+    func deleteSpotReview(reviewId: String, onSuccess: @escaping () -> Void) async {
+        var didDelete = false
+        do {
+            if let userId = userId {
+                didDelete = try await SupabaseManager.shared.deleteRecommendationIfNew(userId: userId, spotId: reviewId)
+            }
             try await SupabaseManager.shared.deleteSpotComment(commentId: reviewId)
-            comments.removeAll { $0.id == reviewId }
+            await MainActor.run {
+                comments.removeAll { $0.id == reviewId }
+                if didDelete {
+                    onSuccess()
+                }
+            }
         } catch {
             print("Could not delete spot because of error: \(error.localizedDescription)")
         }

@@ -20,6 +20,8 @@ struct CommentsView: View {
     @State private var confirmReviewSubmitted: Bool = false
     @State private var showDeleteCommentDialogue = false
     @State private var commentToDelete: Comment? = nil
+    @State private var commentToEdit: Comment? = nil
+    @Environment(\.dismiss) var dismiss
 
     var body: some View {
         NavigationStack {
@@ -66,11 +68,23 @@ struct CommentsView: View {
             .alert("Review Submitted!", isPresented: $confirmReviewSubmitted) {
                 Button("OK", role: .cancel) {}
             }
+            .sheet(item: $commentToEdit) { comment in
+                EditCommentView(
+                    comment: comment,
+                    recName: recommendation.name,
+                    recId: recommendation.id,
+                    vm: vm,
+                    onDismiss: { commentToEdit = nil },
+                    confirmReviewSubmitted: $confirmReviewSubmitted
+                )
+            }
             .confirmationDialog("Delete Review", isPresented: $showDeleteCommentDialogue) {
                 Button("Delete Review", role: .destructive) {
                     if let comment = commentToDelete {
                         Task {
-                            await vm.deleteSpotReview(reviewId: comment.id)
+                            await vm.deleteSpotReview(reviewId: comment.id) {
+                                dismiss() // returns to recview if the rec was deleted on comment deletion
+                            }
                             commentToDelete = nil
                         }
                     }
@@ -247,6 +261,7 @@ struct CommentsView: View {
                                 comment: comment,
                                 viewModel: vm,
                                 commentToDelete: $commentToDelete,
+                                commentToEdit: $commentToEdit,
                                 showDeleteCommentDialogue: $showDeleteCommentDialogue
                             )
                         }
@@ -347,9 +362,8 @@ struct CommentsView: View {
             }
             .padding(.horizontal, 24)
             .padding(.top, 24)
-
-            if let selectedImage = selectedImage {
-                HStack(spacing: 12) {
+            HStack(spacing: 12) {
+                if let selectedImage = selectedImage {
                     Image(uiImage: selectedImage)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -366,25 +380,39 @@ struct CommentsView: View {
 
                     Spacer()
 
-                    Button("Remove") {
+                    Button {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
                             self.selectedImage = nil
                         }
+                    }label: {
+                        Image(systemName: "trash")
                     }
-                    .font(.caption.weight(.semibold))
+                    .font(.title3.weight(.semibold))
                     .fontDesign(.rounded)
                     .foregroundColor(.red)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
+                    .padding(12)
                     .background(Color.red.opacity(0.1))
-                    .clipShape(Capsule())
+                    .clipShape(Circle())
                 }
-                .padding(.horizontal, 24)
+                Button(action: { showingImagePicker = true }) {
+                    Image(systemName: "camera.fill")
+                        .font(.title3.weight(.semibold))
+                        .foregroundColor(.white)
+                        .padding(12)
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .clipShape(Circle())
+                }
+            }                .padding(.horizontal, 24)
                 .padding(.vertical, 12)
                 .background(Color(.systemGray6).opacity(0.5))
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .padding(.horizontal, 24)
-            }
 
             VStack(spacing: 20) {
                 ZStack(alignment: .topTrailing) {
@@ -405,23 +433,6 @@ struct CommentsView: View {
                                 }
                             }
                         }
-
-                    Button(action: { showingImagePicker = true }) {
-                        Image(systemName: "camera.fill")
-                            .font(.title3.weight(.semibold))
-                            .foregroundColor(.white)
-                            .padding(12)
-                            .background(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .clipShape(Circle())
-                    }
-                    .padding(.top, 12)
-                    .padding(.trailing, 12)
                 }
 
                 HStack(spacing: 16) {
@@ -506,6 +517,7 @@ struct CommentCardView: View {
     let comment: Comment
     let viewModel: CommentsViewModel
     @Binding var commentToDelete: Comment?
+    @Binding var commentToEdit: Comment?
     @Binding var showDeleteCommentDialogue: Bool
 
     var body: some View {
@@ -567,14 +579,23 @@ struct CommentCardView: View {
                 Spacer()
 
                 if comment.userId.uppercased() == viewModel.userId?.uuidString {
-                    Button {
-                        commentToDelete = comment
-                        showDeleteCommentDialogue = true
+                    Menu {
+                        Button {
+                            commentToEdit = comment
+                        } label: {
+                            Label("Edit Comment", systemImage: "pencil")
+                        }
+                        Button(role: .destructive) {
+                            commentToDelete = comment
+                            showDeleteCommentDialogue = true
+                        } label: {
+                            Label("Delete Comment", systemImage: "trash")
+                        }
                     } label: {
-                        Image(systemName: "trash")
+                        Image(systemName: "ellipsis.circle")
+                            .foregroundStyle(.gray)
                             .font(.subheadline)
-                            .foregroundStyle(.red)
-                            .padding(.leading, 4)
+                            .padding(.horizontal, 4)
                     }
                 }
             }

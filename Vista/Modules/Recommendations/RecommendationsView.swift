@@ -256,13 +256,24 @@ struct RecommendationsView: View {
                         .font(.title2.weight(.bold))
                         .fontDesign(.rounded)
                         .foregroundStyle(.primary)
-
-                    Text("How would you rate this city?")
-                        .font(.title3)
-                        .fontWeight(.medium)
-                        .fontDesign(.rounded)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
+                    // if user hasn't rated yet
+                    if vm.userRating != nil {
+                        //if user has rated
+                        Text("Edit your rating")
+                            .font(.title3)
+                            .fontWeight(.medium)
+                            .fontDesign(.rounded)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    } else {
+                        Text("How would you rate this city?")
+                            .font(.title3)
+                            .fontWeight(.medium)
+                            .fontDesign(.rounded)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    
                 }
 
                 VStack(spacing: 16) {
@@ -273,25 +284,33 @@ struct RecommendationsView: View {
                                     vm.tempRating = Double(i * 2)
                                 }
                             }) {
-                                Image(systemName: (vm.tempRating ?? 5.0) >= Double(i) ? "star.fill" : (vm.tempRating ?? 5.0) >= Double(i) - 0.5 ? "star.lefthalf.fill" : "star")
-                                    .font(.title)
-                                    .fontWeight(.medium)
-                                    .foregroundStyle(.yellow)
-                                    .scaleEffect((vm.tempRating ?? 5.0) >= Double(i) ? 1.1 : 1.0)
-                                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: vm.tempRating)
+                                if vm.userRating != nil {
+                                    Image(systemName: (vm.userRating ?? 5.0) >= Double(i) ? "star.fill" : (vm.userRating ?? 5.0) >= Double(i) - 0.5 ? "star.lefthalf.fill" : "star")
+                                        .font(.title)
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(.yellow)
+                                        .scaleEffect((vm.userRating ?? 5.0) >= Double(i) ? 1.1 : 1.0)
+                                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: vm.userRating)
+                                } else {
+                                    Image(systemName: (vm.tempRating ?? 5.0) >= Double(i) ? "star.fill" : (vm.tempRating ?? 5.0) >= Double(i) - 0.5 ? "star.lefthalf.fill" : "star")
+                                        .font(.title)
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(.yellow)
+                                        .scaleEffect((vm.tempRating ?? 5.0) >= Double(i) ? 1.1 : 1.0)
+                                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: vm.tempRating)
+                                }
                             }
                         }
                     }
 
-                    Text(String(format: "%.1f", vm.tempRating ?? 5.0))
+                    Text(String(format: "%.1f", vm.userRating ?? vm.tempRating ?? 5.0))
                         .font(.title2)
                         .fontWeight(.bold)
                         .fontDesign(.rounded)
                         .foregroundStyle(.primary)
-
                     Slider(value: Binding(
-                        get: { vm.tempRating ?? 5.0 },
-                        set: { vm.tempRating = $0 }
+                        get: { vm.userRating != nil ? (vm.userRating ?? vm.tempRating ?? 5.0) : (vm.tempRating ?? 5.0) },
+                        set: { vm.userRating != nil ? (vm.userRating = $0) : (vm.tempRating = $0) }
                     ), in: 1 ... 5, step: 0.1)
                         .accentColor(.yellow)
                         .padding(.horizontal, 8)
@@ -314,6 +333,9 @@ struct RecommendationsView: View {
 
                     Button("Submit") {
                         Task {
+                            if let userRating = vm.userRating {
+                                vm.tempRating = userRating
+                            }
                             await vm.updateCityReview(userId: vm.userId, cityId: UUID(uuidString: vm.cityId)!, rating: vm.tempRating ?? 5.0)
                             await vm.reloadAvgRating()
                         }

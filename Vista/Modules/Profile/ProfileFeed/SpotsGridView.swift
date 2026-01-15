@@ -12,6 +12,7 @@ struct ReviewedSpot: Identifiable, Codable {
     let id: String
     let recommendation: Recommendation
     let comment: String?
+    let imageUrl: String?
     let userRating: Double
     let cityName: String
     let country: String
@@ -22,10 +23,11 @@ struct ReviewedSpot: Identifiable, Codable {
     var netVotes: Int = 0
     var userVote: VoteType? = nil
 
-    init(commentId: String, recommendation: Recommendation, comment: String?, userRating: Double, cityName: String, country: String, createdAt: Date, upvoteCount: Int = 0, downvoteCount: Int = 0, netVotes: Int = 0, userVote: VoteType? = nil) {
+    init(commentId: String, recommendation: Recommendation, comment: String?, imageUrl: String?, userRating: Double, cityName: String, country: String, createdAt: Date, upvoteCount: Int = 0, downvoteCount: Int = 0, netVotes: Int = 0, userVote: VoteType? = nil) {
         id = commentId
         self.recommendation = recommendation
         self.comment = comment
+        self.imageUrl = imageUrl
         self.userRating = userRating
         self.cityName = cityName
         self.country = country
@@ -40,6 +42,7 @@ struct ReviewedSpot: Identifiable, Codable {
         case id
         case recommendation
         case comment
+        case imageUrl = "image_url"
         case userRating = "rating"
         case cityName
         case country
@@ -55,6 +58,7 @@ struct ReviewedSpot: Identifiable, Codable {
         id = try container.decode(String.self, forKey: .id)
         recommendation = try container.decode(Recommendation.self, forKey: .recommendation)
         comment = try container.decodeIfPresent(String.self, forKey: .comment)
+        imageUrl = try container.decodeIfPresent(String.self, forKey: .imageUrl)
         userRating = try container.decode(Double.self, forKey: .userRating)
         cityName = try container.decode(String.self, forKey: .cityName)
         country = try container.decode(String.self, forKey: .country)
@@ -74,6 +78,7 @@ struct ReviewedSpot: Identifiable, Codable {
         try container.encode(id, forKey: .id)
         try container.encode(recommendation, forKey: .recommendation)
         try container.encodeIfPresent(comment, forKey: .comment)
+        try container.encodeIfPresent(imageUrl, forKey: .imageUrl)
         try container.encode(userRating, forKey: .userRating)
         try container.encode(cityName, forKey: .cityName)
         try container.encode(country, forKey: .country)
@@ -143,6 +148,8 @@ struct ReviewCard: View {
     @Bindable var vm: SpotsViewModel
     @Bindable var profileVm: ProfileViewModel
     @State private var showDeleteCommentDialogue: Bool = false
+    @State private var commentToEdit: Comment? = nil
+    @State private var confirmReviewSubmitted: Bool = false
 
     private var categoryIcon: String {
         switch review.recommendation.category {
@@ -154,6 +161,20 @@ struct ReviewCard: View {
         case .sights: return "camera"
         case .other: return "location"
         }
+    }
+
+    // Helper to convert ReviewedSpot to Comment for editing
+    private func makeComment(from review: ReviewedSpot) -> Comment {
+        return Comment(
+            id: review.id,
+            userId: vm.userId?.uuidString ?? "",
+            recId: review.recommendation.id,
+            rating: review.userRating,
+            comment: review.comment,
+            createdAt: review.createdAt,
+            imageUrl: review.imageUrl,
+            username: nil
+        )
     }
 
     var body: some View {
@@ -172,14 +193,24 @@ struct ReviewCard: View {
                     Text(review.cityName)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                    Button {
-                        showDeleteCommentDialogue = true
+                    Menu {
+                        Button {
+                            commentToEdit = makeComment(from: review)
+                        } label: {
+                            Label("Edit Comment", systemImage: "pencil")
+                        }
+                        Button(role: .destructive) {
+                            showDeleteCommentDialogue = true
+                        } label: {
+                            Label("Delete Comment", systemImage: "trash")
+                        }
                     } label: {
-                        Image(systemName: "trash")
+                        Image(systemName: "ellipsis.circle")
+                            .foregroundStyle(.gray)
                             .font(.subheadline)
-                            .foregroundStyle(.red)
-                            .padding(.leading, 4)
+                            .padding(.horizontal, 4)
                     }
+                    
                 }
             }
             .padding(.bottom, 12)
@@ -305,6 +336,27 @@ struct ReviewCard: View {
             }
         } message: {
             Text("Are you sure you want to delete your review for \(review.recommendation.name)?")
+        }
+        .sheet(item: $commentToEdit) { comment in
+            EditCommentView(
+                comment: comment,
+                recName: review.recommendation.name,
+                recId: review.recommendation.id,
+                vm: CommentsViewModel(),
+                onDismiss: {
+                    commentToEdit = nil
+                    // Refresh the spots list after editing
+                    Task {
+                        if let userId = vm.userId {
+                            await vm.getReviewedSpots(userId: userId, showLoading: false)
+                        }
+                    }
+                },
+                confirmReviewSubmitted: $confirmReviewSubmitted
+            )
+        }
+        .alert("Review Updated!", isPresented: $confirmReviewSubmitted) {
+            Button("OK", role: .cancel) {}
         }
     }
 }

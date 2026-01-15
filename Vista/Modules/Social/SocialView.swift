@@ -34,43 +34,55 @@ struct SocialView: View {
                 )
                 .ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Feed content
-                        if vm.isLoading && currentFeedItems.isEmpty {
-                            // Loading state
-                            VStack(spacing: 16) {
-                                ProgressView()
-                                    .scaleEffect(1.2)
-                                Text("Loading feed...")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                    .fontDesign(.rounded)
-                            }
-                            .padding(.vertical, 60)
-                        } else if currentFeedItems.isEmpty {
-                            // Empty state
-                            emptyStateView
-                        } else {
-                            // Feed items
-                            LazyVStack(spacing: 12) {
-                                ForEach(currentFeedItems) { feedItem in
-                                    FeedItemCard(
-                                        feedItem: feedItem,
-                                        destination: destinationView(for: feedItem)
-                                    )
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 24) {
+                            // Invisible anchor at top for scrolling
+                            Color.clear
+                                .frame(height: 0)
+                                .id("top")
+
+                            // Feed content
+                            if vm.isLoading && currentFeedItems.isEmpty {
+                                // Loading state
+                                VStack(spacing: 16) {
+                                    ProgressView()
+                                        .scaleEffect(1.2)
+                                    Text("Loading feed...")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                        .fontDesign(.rounded)
                                 }
+                                .padding(.vertical, 60)
+                            } else if currentFeedItems.isEmpty {
+                                // Empty state
+                                emptyStateView
+                            } else {
+                                // Feed items
+                                LazyVStack(spacing: 12) {
+                                    ForEach(currentFeedItems) { feedItem in
+                                        FeedItemCard(
+                                            feedItem: feedItem,
+                                            destination: destinationView(for: feedItem)
+                                        )
+                                    }
+                                }
+                                .padding(.horizontal, 20)
                             }
-                            .padding(.horizontal, 20)
+                        }
+                        .padding(.vertical, 24)
+                    }
+                    .refreshable {
+                        if selectedFeed == .following {
+                            await vm.refreshFeed()
+                        } else {
+                            await vm.fetchPopularFeed()
                         }
                     }
-                    .padding(.vertical, 24)
-                }
-                .refreshable {
-                    if selectedFeed == .following {
-                        await vm.refreshFeed()
-                    } else {
-                        await vm.fetchPopularFeed()
+                    .onChange(of: selectedFeed) { _, _ in
+                        withAnimation {
+                            proxy.scrollTo("top", anchor: .top)
+                        }
                     }
                 }
             }
@@ -82,8 +94,10 @@ struct SocialView: View {
                             Button(action: {
                                 selectedFeed = feedType
                                 Task {
-                                    if feedType == .popular, vm.popularFeedItems.isEmpty {
+                                    if feedType == .popular {
                                         await vm.fetchPopularFeed()
+                                    } else {
+                                        await vm.refreshFeed()
                                     }
                                 }
                             }) {

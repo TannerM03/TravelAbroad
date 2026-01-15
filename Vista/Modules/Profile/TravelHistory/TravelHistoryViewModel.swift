@@ -119,7 +119,11 @@ class TravelHistoryViewModel {
             onCityDeleted?()
 
             // Post notification for CitiesView to refresh
-            NotificationCenter.default.post(name: NSNotification.Name("CityRatingAdded"), object: nil)
+            NotificationCenter.default.post(
+                name: NSNotification.Name("CityRatingAdded"),
+                object: nil,
+                userInfo: ["cityId": cityId.uuidString, "isDeleted": true]
+            )
         } catch {
             print("Error deleting city rating: \(error)")
         }
