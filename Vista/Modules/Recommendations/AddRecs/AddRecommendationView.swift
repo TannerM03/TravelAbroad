@@ -288,11 +288,6 @@ struct AddRecommendationView: View {
 
             TextField("Share your thoughts!", text: $viewModel.description, axis: .vertical)
                 .textFieldStyle(PlainTextFieldStyle())
-                .focused($isKeyboardShowing)
-                .onSubmit {
-                    isKeyboardShowing = false
-                }
-                .submitLabel(.done)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .background(Color(.systemGray6))
