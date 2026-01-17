@@ -437,7 +437,7 @@ class SupabaseManager {
     }
 
     // Fetches activity feed from users that the current user follows
-    func fetchFollowingActivityFeed(userId: UUID, limit: Int = 50) async throws -> [FeedItem] {
+    func fetchFollowingActivityFeed(userId: UUID, limit: Int = 50, selfInFollowing: Bool = true) async throws -> [FeedItem] {
         // First, get the list of users that the current user follows
         struct Following: Codable {
             let following_id: String
@@ -451,7 +451,22 @@ class SupabaseManager {
             .value
 
         var followingIds = followingResponse.map { $0.following_id }
-        followingIds.append(userId.uuidString)
+        
+        // only include the user's own feed if they have this selected in settings
+        struct SelfInFollowing: Codable {
+            let show_self_in_following: Bool
+        }
+        let prefResponse: SelfInFollowing = try await supabase
+            .from("profiles")
+            .select("show_self_in_following")
+            .eq("id", value: userId)
+            .single()
+            .execute()
+            .value
+        print("prefResponse: \(prefResponse)")
+        if prefResponse.show_self_in_following {
+            followingIds.append(userId.uuidString)
+        }
 
         // If not following anyone, return empty array
         if followingIds.isEmpty {
@@ -1264,18 +1279,6 @@ class SupabaseManager {
         }
     }
 
-    func updateFeedDefault(userId: UUID, feedDefault: String) async throws {
-        do {
-            try await supabase
-                .from("profiles")
-                .update(["feed_default": feedDefault])
-                .eq("id", value: userId)
-                .execute()
-        } catch {
-            print("error updating feed default: \(error.localizedDescription)")
-        }
-    }
-
     func saveUserNames(userId: UUID, username: String, firstName: String, lastName: String) async throws {
         try await supabase
             .from("profiles")
@@ -1414,6 +1417,47 @@ class SupabaseManager {
             .execute()
             .value
         return response.feedDefault ?? "popular"
+    }
+    
+    func updateFeedDefault(userId: UUID, feedDefault: String) async throws {
+        do {
+            try await supabase
+                .from("profiles")
+                .update(["feed_default": feedDefault])
+                .eq("id", value: userId)
+                .execute()
+        } catch {
+            print("error updating feed default: \(error.localizedDescription)")
+        }
+    }
+    
+    func fetchFollowingFeedPrefDefault(userId: UUID) async throws -> Bool {
+        struct FollowPrefDefault: Codable {
+            let defaultPref: Bool
+
+            enum CodingKeys: String, CodingKey {
+                case defaultPref = "show_self_in_following"
+            }
+        }
+        let response: FollowPrefDefault = try await supabase.from("profiles")
+            .select("show_self_in_following")
+            .eq("id", value: userId)
+            .single()
+            .execute()
+            .value
+        return response.defaultPref
+    }
+    
+    func updateFollowingFeedPreference(userId: UUID, followingFeedPref: Bool) async throws {
+        do {
+            try await supabase
+                .from("profiles")
+                .update(["show_self_in_following": followingFeedPref])
+                .eq("id", value: userId)
+                .execute()
+        } catch {
+            print("Error updating following feed preferences: \(error.localizedDescription)")
+        }
     }
 
     // fetch username from profiles table by user id
