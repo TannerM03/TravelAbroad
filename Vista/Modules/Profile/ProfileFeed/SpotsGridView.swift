@@ -13,6 +13,8 @@ struct ReviewedSpot: Identifiable, Codable {
     let recommendation: Recommendation
     let comment: String?
     let imageUrl: String?
+    let imageUrl2: String?
+    let imageUrl3: String?
     let userRating: Double
     let cityName: String
     let country: String
@@ -23,11 +25,13 @@ struct ReviewedSpot: Identifiable, Codable {
     var netVotes: Int = 0
     var userVote: VoteType? = nil
 
-    init(commentId: String, recommendation: Recommendation, comment: String?, imageUrl: String?, userRating: Double, cityName: String, country: String, createdAt: Date, upvoteCount: Int = 0, downvoteCount: Int = 0, netVotes: Int = 0, userVote: VoteType? = nil) {
+    init(commentId: String, recommendation: Recommendation, comment: String?, imageUrl: String?, imageUrl2: String? = nil, imageUrl3: String? = nil, userRating: Double, cityName: String, country: String, createdAt: Date, upvoteCount: Int = 0, downvoteCount: Int = 0, netVotes: Int = 0, userVote: VoteType? = nil) {
         id = commentId
         self.recommendation = recommendation
         self.comment = comment
         self.imageUrl = imageUrl
+        self.imageUrl2 = imageUrl2
+        self.imageUrl3 = imageUrl3
         self.userRating = userRating
         self.cityName = cityName
         self.country = country
@@ -43,6 +47,8 @@ struct ReviewedSpot: Identifiable, Codable {
         case recommendation
         case comment
         case imageUrl = "image_url"
+        case imageUrl2 = "image_url_2"
+        case imageUrl3 = "image_url_3"
         case userRating = "rating"
         case cityName
         case country
@@ -59,6 +65,8 @@ struct ReviewedSpot: Identifiable, Codable {
         recommendation = try container.decode(Recommendation.self, forKey: .recommendation)
         comment = try container.decodeIfPresent(String.self, forKey: .comment)
         imageUrl = try container.decodeIfPresent(String.self, forKey: .imageUrl)
+        imageUrl2 = try container.decodeIfPresent(String.self, forKey: .imageUrl2)
+        imageUrl3 = try container.decodeIfPresent(String.self, forKey: .imageUrl3)
         userRating = try container.decode(Double.self, forKey: .userRating)
         cityName = try container.decode(String.self, forKey: .cityName)
         country = try container.decode(String.self, forKey: .country)
@@ -173,6 +181,8 @@ struct ReviewCard: View {
             comment: review.comment,
             createdAt: review.createdAt,
             imageUrl: review.imageUrl,
+            imageUrl2: review.imageUrl2,
+            imageUrl3: review.imageUrl3,
             username: nil
         )
     }

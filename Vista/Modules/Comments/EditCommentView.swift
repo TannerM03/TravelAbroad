@@ -17,9 +17,14 @@ struct EditCommentView: View {
 
     @State private var userRating: Double
     @State private var selectedImage: UIImage?
+    @State private var selectedImage2: UIImage?
+    @State private var selectedImage3: UIImage?
     @State private var commentText: String
     @State private var showingImagePicker = false
+    @State private var activeImageSlot: Int = 1
     @State private var imageRemoved = false
+    @State private var imageRemoved2 = false
+    @State private var imageRemoved3 = false
     @FocusState private var isTextFieldFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
@@ -80,6 +85,7 @@ struct EditCommentView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 24)
 
+                // First Image
                 HStack(spacing: 12) {
                     if let selectedImage = selectedImage {
                         Image(uiImage: selectedImage)
@@ -90,7 +96,7 @@ struct EditCommentView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 12))
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Image attached")
+                            Text("Image 1 attached")
                                 .font(.subheadline.weight(.semibold))
                                 .fontDesign(.rounded)
                                 .foregroundColor(.primary)
@@ -100,10 +106,9 @@ struct EditCommentView: View {
 
                         Button {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                                self.selectedImage = nil
-                                self.imageRemoved = true
+                                deleteFirstImage()
                             }
-                        }label: {
+                        } label: {
                             Image(systemName: "trash")
                         }
                         .font(.title3.weight(.semibold))
@@ -113,19 +118,38 @@ struct EditCommentView: View {
                         .background(Color.red.opacity(0.1))
                         .clipShape(Circle())
                     }
-                    Button(action: { showingImagePicker = true }) {
-                        Image(systemName: "camera.fill")
-                            .font(.title3.weight(.semibold))
-                            .foregroundColor(.white)
-                            .padding(12)
-                            .background(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
-                                    startPoint: .leading,
-                                    endPoint: .trailing
+
+                    // Show camera button initially, or green plus if first image is selected but not 3 images yet
+                    if selectedImage == nil {
+                        Button(action: {
+                            activeImageSlot = 1
+                            showingImagePicker = true
+                        }) {
+                            Image(systemName: "camera.fill")
+                                .font(.title3.weight(.semibold))
+                                .foregroundColor(.white)
+                                .padding(12)
+                                .background(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
                                 )
-                            )
-                            .clipShape(Circle())
+                                .clipShape(Circle())
+                        }
+                    } else if selectedImage2 == nil {
+                        Button(action: {
+                            activeImageSlot = 2
+                            showingImagePicker = true
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.title3.weight(.semibold))
+                                .foregroundColor(.white)
+                                .padding(12)
+                                .background(Color.green)
+                                .clipShape(Circle())
+                        }
                     }
                 }
                 .padding(.horizontal, 24)
@@ -133,6 +157,101 @@ struct EditCommentView: View {
                 .background(Color(.systemGray6).opacity(0.5))
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .padding(.horizontal, 24)
+
+                // Second Image (only show if first image exists)
+                if selectedImage != nil && selectedImage2 != nil {
+                    HStack(spacing: 12) {
+                        Image(uiImage: selectedImage2!)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 60, height: 60)
+                            .clipped()
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Image 2 attached")
+                                .font(.subheadline.weight(.semibold))
+                                .fontDesign(.rounded)
+                                .foregroundColor(.primary)
+                        }
+
+                        Spacer()
+
+                        Button {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                deleteSecondImage()
+                            }
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                        .font(.title3.weight(.semibold))
+                        .fontDesign(.rounded)
+                        .foregroundColor(.red)
+                        .padding(12)
+                        .background(Color.red.opacity(0.1))
+                        .clipShape(Circle())
+
+                        // Show green plus if less than 3 images
+                        if selectedImage3 == nil {
+                            Button(action: {
+                                activeImageSlot = 3
+                                showingImagePicker = true
+                            }) {
+                                Image(systemName: "plus")
+                                    .font(.title3.weight(.semibold))
+                                    .foregroundColor(.white)
+                                    .padding(12)
+                                    .background(.green)
+                                    .clipShape(Circle())
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Color(.systemGray6).opacity(0.5))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .padding(.horizontal, 24)
+                }
+
+                // Third Image (only show if second image exists)
+                if selectedImage != nil && selectedImage2 != nil && selectedImage3 != nil {
+                    HStack(spacing: 12) {
+                        Image(uiImage: selectedImage3!)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 60, height: 60)
+                            .clipped()
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Image 3 attached")
+                                .font(.subheadline.weight(.semibold))
+                                .fontDesign(.rounded)
+                                .foregroundColor(.primary)
+                        }
+
+                        Spacer()
+
+                        Button {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                deleteThirdImage()
+                            }
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                        .font(.title3.weight(.semibold))
+                        .fontDesign(.rounded)
+                        .foregroundColor(.red)
+                        .padding(12)
+                        .background(Color.red.opacity(0.1))
+                        .clipShape(Circle())
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Color(.systemGray6).opacity(0.5))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .padding(.horizontal, 24)
+                }
 
 
                 VStack(spacing: 20) {
@@ -203,49 +322,129 @@ struct EditCommentView: View {
                 }
             }
             .sheet(isPresented: $showingImagePicker) {
-                ImagePicker(image: $selectedImage)
-            }
-            .onChange(of: selectedImage) { oldValue, newValue in
-                // If user picks a new image, reset the imageRemoved flag
-                if newValue != nil {
-                    imageRemoved = false
+                if activeImageSlot == 1 {
+                    ImagePicker(image: $selectedImage)
+                } else if activeImageSlot == 2 {
+                    ImagePicker(image: $selectedImage2)
+                } else {
+                    ImagePicker(image: $selectedImage3)
                 }
             }
             .task {
-                // Load existing image if it exists
-                if let imageUrlString = comment.imageUrl,
-                   let imageUrl = URL(string: imageUrlString) {
-                    Task {
-                        do {
-                            let (data, _) = try await URLSession.shared.data(from: imageUrl)
-                            if let image = UIImage(data: data) {
-                                await MainActor.run {
-                                    selectedImage = image
-                                }
-                            }
-                        } catch {
-                            print("Error loading image: \(error)")
-                        }
-                    }
-                }
+                await loadExistingImages()
             }
         }
     }
+    private func deleteFirstImage() {
+        if self.selectedImage2 != nil, self.selectedImage3 != nil {
+            self.selectedImage = self.selectedImage2
+            self.selectedImage2 = self.selectedImage3
+            self.selectedImage3 = nil
+            self.imageRemoved = false
+            self.imageRemoved2 = false
+            self.imageRemoved3 = true
+        } else if self.selectedImage2 != nil {
+            self.selectedImage = self.selectedImage2
+            self.selectedImage2 = nil
+            self.imageRemoved = false
+            self.imageRemoved2 = true
+        } else {
+            self.selectedImage = nil
+            self.imageRemoved = true
+        }
+    }
+
+    private func deleteSecondImage() {
+        if let _ = self.selectedImage3 {
+            self.selectedImage2 = self.selectedImage3
+            self.selectedImage3 = nil
+            self.imageRemoved2 = false
+            self.imageRemoved3 = true
+        } else {
+            self.selectedImage2 = nil
+            self.imageRemoved2 = true
+        }
+    }
+
+    private func deleteThirdImage() {
+        self.selectedImage3 = nil
+        self.imageRemoved3 = true
+    }
+
+    private func loadExistingImages() async {
+        // Load image 1
+        if let imageUrlString = comment.imageUrl,
+           let imageUrl = URL(string: imageUrlString) {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: imageUrl)
+                if let image = UIImage(data: data) {
+                    await MainActor.run {
+                        selectedImage = image
+                        imageRemoved = false
+                    }
+                }
+            } catch {
+                print("Error loading image 1: \(error)")
+            }
+        }
+
+        // Load image 2
+        if let imageUrlString = comment.imageUrl2,
+           let imageUrl = URL(string: imageUrlString) {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: imageUrl)
+                if let image = UIImage(data: data) {
+                    await MainActor.run {
+                        selectedImage2 = image
+                        imageRemoved2 = false
+                    }
+                }
+            } catch {
+                print("Error loading image 2: \(error)")
+            }
+        }
+
+        // Load image 3
+        if let imageUrlString = comment.imageUrl3,
+           let imageUrl = URL(string: imageUrlString) {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: imageUrl)
+                if let image = UIImage(data: data) {
+                    await MainActor.run {
+                        selectedImage3 = image
+                        imageRemoved3 = false
+                    }
+                }
+            } catch {
+                print("Error loading image 3: \(error)")
+            }
+        }
+    }
+
     private func editRatingAndComment() {
         Task {
             let textToUpdate = !commentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 ? commentText.trimmingCharacters(in: .whitespacesAndNewlines)
                 : nil
 
+            // If there's a new image, don't mark it as removed
+            let shouldRemoveImage1 = imageRemoved && selectedImage == nil
+            let shouldRemoveImage2 = imageRemoved2 && selectedImage2 == nil
+            let shouldRemoveImage3 = imageRemoved3 && selectedImage3 == nil
+
             await vm.updateComment(
                 commentId: comment.id,
                 recommendationId: recId,
                 text: textToUpdate,
                 image: selectedImage,
+                image2: selectedImage2,
+                image3: selectedImage3,
                 rating: userRating,
-                removeImage: imageRemoved
+                removeImage: shouldRemoveImage1,
+                removeImage2: shouldRemoveImage2,
+                removeImage3: shouldRemoveImage3
             )
-            
+
             await vm.refreshRecommendationData()
 
             await MainActor.run {

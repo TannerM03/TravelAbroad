@@ -158,14 +158,11 @@ class SupabaseManager {
         location: String?,
         imageUrl: String?,
     ) async throws -> Recommendation {
-        print("Supabase: Creating recommendation - Name: '\(name)', Category: \(category.rawValue), City: \(cityId)")
 
         guard let userId = supabase.auth.currentUser?.id else {
             print("❌ Supabase: No authenticated user found for recommendation creation")
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
-
-        print("✅ Supabase: User authenticated - ID: \(userId.uuidString)")
 
         struct RecommendationInsert: Codable {
             let user_id: String
@@ -187,8 +184,6 @@ class SupabaseManager {
             image_url: imageUrl,
         )
 
-        print("Supabase: Prepared recommendation data - Image URL: \(imageUrl ?? "none")")
-
         struct RecommendationResponse: Codable {
             let id: String
             let user_id: String
@@ -208,8 +203,6 @@ class SupabaseManager {
                 .single()
                 .execute()
                 .value
-
-            print("✅ Supabase: Successfully created recommendation with ID: \(response.id)")
 
             // Convert the response to a Recommendation object
             let recommendation = Recommendation(
@@ -784,7 +777,7 @@ class SupabaseManager {
     func fetchComments(for recommendationId: String) async throws -> [Comment] {
         let response: [RatingTemporary] = try await supabase
             .from("comments")
-            .select("id, user_id, rec_id, rating, comment, created_at, image_url, profiles(username)")
+            .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
             .eq("rec_id", value: recommendationId)
             .order("created_at", ascending: false)
             .execute()
@@ -801,16 +794,19 @@ class SupabaseManager {
                 comment: review.comment,
                 createdAt: review.createdAt,
                 imageUrl: review.imageUrl,
-                username: review.profiles?.username,
+                imageUrl2: review.imageUrl2,
+                imageUrl3: review.imageUrl3,
+                username: review.profiles?.username
             )
         }
     }
 
     // submits a comment
-    func submitComment(recommendationId: String, text: String?, imageUrl: String?, rating: Double) async throws -> Comment {
+    func submitComment(recommendationId: String, text: String?, imageUrl: String?, imageUrl2: String?, imageUrl3: String?, rating: Double) async throws -> Comment {
         guard let userId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
+        print("creating comment supabase")
 
         struct CommentInsert: Codable {
             let user_id: String
@@ -819,6 +815,8 @@ class SupabaseManager {
             let comment: String?
             let created_at: String
             let image_url: String?
+            let image_url_2: String?
+            let image_url_3: String?
         }
 
         let commentData = CommentInsert(
@@ -828,12 +826,15 @@ class SupabaseManager {
             comment: text,
             created_at: ISO8601DateFormatter().string(from: Date()),
             image_url: imageUrl,
+            image_url_2: imageUrl2,
+            image_url_3: imageUrl3
         )
+        print("commentData: \(commentData)")
 
         let response: RatingTemporary = try await supabase
             .from("comments")
             .insert(commentData)
-            .select("id, user_id, rec_id, rating, comment, created_at, image_url, profiles(username)")
+            .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
             .single()
             .execute()
             .value
@@ -846,7 +847,9 @@ class SupabaseManager {
             comment: response.comment,
             createdAt: response.createdAt,
             imageUrl: response.imageUrl,
-            username: response.profiles?.username,
+            imageUrl2: response.imageUrl2,
+            imageUrl3: response.imageUrl3,
+            username: response.profiles?.username
         )
 
         // If comment has an image, check if recommendation needs an image
@@ -857,52 +860,144 @@ class SupabaseManager {
         return newComment
     }
     
-    func updateComment(commentId: UUID, recommendationId: String, text: String?, imageUrl: String?, rating: Double, shouldUpdateImage: Bool) async throws -> Comment {
+    func updateComment(commentId: UUID, recommendationId: String, text: String?, imageUrl: String?, imageUrl2: String?, imageUrl3: String?, rating: Double, shouldUpdateImage: Bool, shouldUpdateImage2: Bool, shouldUpdateImage3: Bool) async throws -> Comment {
         guard let userId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
 
         let response: RatingTemporary
 
-        if shouldUpdateImage {
-            // Update with image field
-            struct CommentUpdateWithImage: Codable {
+        // Determine which images to update
+        let updateAllImages = shouldUpdateImage && shouldUpdateImage2 && shouldUpdateImage3
+        let updateImage1And2 = shouldUpdateImage && shouldUpdateImage2 && !shouldUpdateImage3
+        let updateImage1And3 = shouldUpdateImage && !shouldUpdateImage2 && shouldUpdateImage3
+        let updateImage2And3 = !shouldUpdateImage && shouldUpdateImage2 && shouldUpdateImage3
+        let updateOnlyImage1 = shouldUpdateImage && !shouldUpdateImage2 && !shouldUpdateImage3
+        let updateOnlyImage2 = !shouldUpdateImage && shouldUpdateImage2 && !shouldUpdateImage3
+        let updateOnlyImage3 = !shouldUpdateImage && !shouldUpdateImage2 && shouldUpdateImage3
+
+        if updateAllImages {
+            struct CommentUpdate: Codable {
+                let rating: Double
+                let comment: String?
+                let image_url: String?
+                let image_url_2: String?
+                let image_url_3: String?
+            }
+
+            response = try await supabase
+                .from("comments")
+                .update(CommentUpdate(rating: rating, comment: text, image_url: imageUrl, image_url_2: imageUrl2, image_url_3: imageUrl3))
+                .eq("id", value: commentId.uuidString)
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+                .single()
+                .execute()
+                .value
+        } else if updateImage1And2 {
+            struct CommentUpdate: Codable {
+                let rating: Double
+                let comment: String?
+                let image_url: String?
+                let image_url_2: String?
+            }
+
+            response = try await supabase
+                .from("comments")
+                .update(CommentUpdate(rating: rating, comment: text, image_url: imageUrl, image_url_2: imageUrl2))
+                .eq("id", value: commentId.uuidString)
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+                .single()
+                .execute()
+                .value
+        } else if updateImage1And3 {
+            struct CommentUpdate: Codable {
+                let rating: Double
+                let comment: String?
+                let image_url: String?
+                let image_url_3: String?
+            }
+
+            response = try await supabase
+                .from("comments")
+                .update(CommentUpdate(rating: rating, comment: text, image_url: imageUrl, image_url_3: imageUrl3))
+                .eq("id", value: commentId.uuidString)
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+                .single()
+                .execute()
+                .value
+        } else if updateImage2And3 {
+            struct CommentUpdate: Codable {
+                let rating: Double
+                let comment: String?
+                let image_url_2: String?
+                let image_url_3: String?
+            }
+
+            response = try await supabase
+                .from("comments")
+                .update(CommentUpdate(rating: rating, comment: text, image_url_2: imageUrl2, image_url_3: imageUrl3))
+                .eq("id", value: commentId.uuidString)
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+                .single()
+                .execute()
+                .value
+        } else if updateOnlyImage1 {
+            struct CommentUpdate: Codable {
                 let rating: Double
                 let comment: String?
                 let image_url: String?
             }
 
-            let commentData = CommentUpdateWithImage(
-                rating: rating,
-                comment: text,
-                image_url: imageUrl
-            )
+            response = try await supabase
+                .from("comments")
+                .update(CommentUpdate(rating: rating, comment: text, image_url: imageUrl))
+                .eq("id", value: commentId.uuidString)
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+                .single()
+                .execute()
+                .value
+        } else if updateOnlyImage2 {
+            struct CommentUpdate: Codable {
+                let rating: Double
+                let comment: String?
+                let image_url_2: String?
+            }
 
             response = try await supabase
                 .from("comments")
-                .update(commentData)
+                .update(CommentUpdate(rating: rating, comment: text, image_url_2: imageUrl2))
                 .eq("id", value: commentId.uuidString)
-                .select("id, user_id, rec_id, rating, comment, created_at, image_url, profiles(username)")
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+                .single()
+                .execute()
+                .value
+        } else if updateOnlyImage3 {
+            struct CommentUpdate: Codable {
+                let rating: Double
+                let comment: String?
+                let image_url_3: String?
+            }
+
+            response = try await supabase
+                .from("comments")
+                .update(CommentUpdate(rating: rating, comment: text, image_url_3: imageUrl3))
+                .eq("id", value: commentId.uuidString)
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
                 .single()
                 .execute()
                 .value
         } else {
-            // Update without touching image field
-            struct CommentUpdateNoImage: Codable {
+            // Update without touching any image fields
+            struct CommentUpdate: Codable {
                 let rating: Double
                 let comment: String?
             }
 
-            let commentData = CommentUpdateNoImage(
-                rating: rating,
-                comment: text
-            )
-
             response = try await supabase
                 .from("comments")
-                .update(commentData)
+                .update(CommentUpdate(rating: rating, comment: text))
                 .eq("id", value: commentId.uuidString)
-                .select("id, user_id, rec_id, rating, comment, created_at, image_url, profiles(username)")
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
                 .single()
                 .execute()
                 .value
@@ -916,6 +1011,8 @@ class SupabaseManager {
             comment: response.comment,
             createdAt: response.createdAt,
             imageUrl: response.imageUrl,
+            imageUrl2: response.imageUrl2,
+            imageUrl3: response.imageUrl3,
             username: response.profiles?.username
         )
 
@@ -1099,6 +1196,8 @@ class SupabaseManager {
             let comment: String?
             let created_at: Date
             let image_url: String?
+            let image_url_2: String?
+            let image_url_3: String?
             let username: String?
             let upvote_count: Int?
             let downvote_count: Int?
@@ -1186,6 +1285,8 @@ class SupabaseManager {
                 comment: commentData.comment,
                 createdAt: commentData.created_at,
                 imageUrl: commentData.image_url,
+                imageUrl2: commentData.image_url_2,
+                imageUrl3: commentData.image_url_3,
                 username: commentData.username,
                 profileImageUrl: profile?.image_url,
                 isPopular: profile?.is_popular ?? false,
@@ -2079,6 +2180,8 @@ class SupabaseManager {
             let rating: Int
             let comment: String?
             let image_url: String?
+            let image_url_2: String?
+            let image_url_3: String?
             let created_at: Date
             let rec_with_avg_rating: RecommendationWithCityName
 
@@ -2096,6 +2199,8 @@ class SupabaseManager {
                 case rating
                 case comment
                 case image_url
+                case image_url_2
+                case image_url_3
                 case created_at
                 case rec_with_avg_rating
             }
@@ -2128,7 +2233,7 @@ class SupabaseManager {
 
         let response: [ReviewedSpotResponse] = try await supabase
             .from("comments")
-            .select("id, rec_id, rating, comment, image_url, created_at, rec_with_avg_rating!inner(*, cities!inner(name, country))")
+            .select("id, rec_id, rating, comment, image_url, image_url_2, image_url_3, created_at, rec_with_avg_rating!inner(*, cities!inner(name, country))")
             .eq("user_id", value: userId)
             .order("created_at", ascending: false)
             .execute()
@@ -2147,7 +2252,7 @@ class SupabaseManager {
                 avgRating: item.rec_with_avg_rating.avgRating,
                 aiSummary: nil
             )
-            return ReviewedSpot(commentId: item.id, recommendation: recommendation, comment: item.comment, imageUrl: item.image_url, userRating: Double(item.rating), cityName: item.cityName, country: item.country, createdAt: item.created_at)
+            return ReviewedSpot(commentId: item.id, recommendation: recommendation, comment: item.comment, imageUrl: item.image_url, imageUrl2: item.image_url_2, imageUrl3: item.image_url_3, userRating: Double(item.rating), cityName: item.cityName, country: item.country, createdAt: item.created_at)
         }
     }
 
@@ -2162,6 +2267,8 @@ class SupabaseManager {
             let rating: Double
             let comment: String?
             let image_url: String?
+            let image_url_2: String?
+            let image_url_3: String?
             let created_at: Date
             let upvote_count: Int?
             let downvote_count: Int?
@@ -2182,6 +2289,8 @@ class SupabaseManager {
                 case rating
                 case comment
                 case image_url
+                case image_url_2
+                case image_url_3
                 case created_at
                 case upvote_count
                 case downvote_count
@@ -2217,7 +2326,7 @@ class SupabaseManager {
 
         let response: [ReviewedSpotWithVotesResponse] = try await supabase
             .from("comments_with_votes")
-            .select("id, rec_id, rating, comment, image_url, created_at, upvote_count, downvote_count, net_votes, rec_with_avg_rating!inner(*, cities!inner(name, country))")
+            .select("id, rec_id, rating, comment, image_url, image_url_2, image_url_3, created_at, upvote_count, downvote_count, net_votes, rec_with_avg_rating!inner(*, cities!inner(name, country))")
             .eq("user_id", value: userId)
             .order("created_at", ascending: false)
             .execute()
@@ -2258,6 +2367,8 @@ class SupabaseManager {
                 recommendation: recommendation,
                 comment: item.comment,
                 imageUrl: item.image_url,
+                imageUrl2: item.image_url_2,
+                imageUrl3: item.image_url_3,
                 userRating: Double(item.rating),
                 cityName: item.cityName,
                 country: item.country,

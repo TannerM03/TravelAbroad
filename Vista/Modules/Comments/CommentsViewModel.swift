@@ -68,20 +68,39 @@ class CommentsViewModel {
         }
     }
 
-    func submitComment(recommendationId: String, text: String?, image: UIImage?, rating: Double) async {
+    func submitComment(recommendationId: String, text: String?, image: UIImage?, image2: UIImage?, image3: UIImage?, rating: Double) async {
         do {
             var imageUrl: String?
+            var imageUrl2: String?
+            var imageUrl3: String?
 
             if let image = image {
                 imageUrl = try await supabaseManager.uploadCommentImage(image)
+                print("DEBUG: Uploaded image 1: \(imageUrl ?? "nil")")
             }
+
+            if let image2 = image2 {
+                imageUrl2 = try await supabaseManager.uploadCommentImage(image2)
+                print("DEBUG: Uploaded image 2: \(imageUrl2 ?? "nil")")
+            }
+
+            if let image3 = image3 {
+                imageUrl3 = try await supabaseManager.uploadCommentImage(image3)
+                print("DEBUG: Uploaded image 3: \(imageUrl3 ?? "nil")")
+            }
+
+            print("DEBUG: Submitting comment with URLs - 1: \(imageUrl ?? "nil"), 2: \(imageUrl2 ?? "nil"), 3: \(imageUrl3 ?? "nil")")
 
             let newComment = try await supabaseManager.submitComment(
                 recommendationId: recommendationId,
                 text: text,
                 imageUrl: imageUrl,
+                imageUrl2: imageUrl2,
+                imageUrl3: imageUrl3,
                 rating: rating
             )
+
+            print("DEBUG: Received comment back - imageUrl: \(newComment.imageUrl ?? "nil"), imageUrl2: \(newComment.imageUrl2 ?? "nil"), imageUrl3: \(newComment.imageUrl3 ?? "nil")")
 
             comments.insert(newComment, at: 0)
         } catch {
@@ -89,26 +108,44 @@ class CommentsViewModel {
         }
     }
 
-    func updateComment(commentId: String, recommendationId: String, text: String?, image: UIImage?, rating: Double, removeImage: Bool) async {
+    func updateComment(commentId: String, recommendationId: String, text: String?, image: UIImage?, image2: UIImage?, image3: UIImage?, rating: Double, removeImage: Bool, removeImage2: Bool, removeImage3: Bool) async {
         do {
             var imageUrl: String?
+            var imageUrl2: String?
+            var imageUrl3: String?
 
+            // Handle image 1
             if removeImage {
-                // Explicitly set to empty string to clear the image in database
                 imageUrl = ""
             } else if let image = image {
-                // Upload new image
                 imageUrl = try await supabaseManager.uploadCommentImage(image)
             }
-            // If removeImage is false and image is nil, keep existing image (don't update imageUrl field)
+
+            // Handle image 2
+            if removeImage2 {
+                imageUrl2 = ""
+            } else if let image2 = image2 {
+                imageUrl2 = try await supabaseManager.uploadCommentImage(image2)
+            }
+
+            // Handle image 3
+            if removeImage3 {
+                imageUrl3 = ""
+            } else if let image3 = image3 {
+                imageUrl3 = try await supabaseManager.uploadCommentImage(image3)
+            }
 
             let updatedComment = try await supabaseManager.updateComment(
                 commentId: UUID(uuidString: commentId)!,
                 recommendationId: recommendationId,
                 text: text,
                 imageUrl: imageUrl,
+                imageUrl2: imageUrl2,
+                imageUrl3: imageUrl3,
                 rating: rating,
-                shouldUpdateImage: removeImage || image != nil
+                shouldUpdateImage: removeImage || image != nil,
+                shouldUpdateImage2: removeImage2 || image2 != nil,
+                shouldUpdateImage3: removeImage3 || image3 != nil
             )
 
             // Update the comment in the list

@@ -28,6 +28,8 @@ struct Comment: Codable, Identifiable {
     let comment: String?
     let createdAt: Date
     let imageUrl: String?
+    let imageUrl2: String?
+    let imageUrl3: String?
     let username: String?
     let profileImageUrl: String?
     let isPopular: Bool
@@ -45,6 +47,8 @@ struct Comment: Codable, Identifiable {
         case rating
         case comment
         case imageUrl = "image_url"
+        case imageUrl2 = "image_url_2"
+        case imageUrl3 = "image_url_3"
         case createdAt = "created_at"
         case username
         case profileImageUrl = "profile_image_url"
@@ -56,7 +60,7 @@ struct Comment: Codable, Identifiable {
     }
 
     // Memberwise initializer for creating Comment instances in code
-    init(id: String, userId: String, recId: String, rating: Double, comment: String?, createdAt: Date, imageUrl: String?, username: String?, profileImageUrl: String? = nil, isPopular: Bool = false, upvoteCount: Int = 0, downvoteCount: Int = 0, netVotes: Int = 0, userVote: VoteType? = nil) {
+    init(id: String, userId: String, recId: String, rating: Double, comment: String?, createdAt: Date, imageUrl: String?, imageUrl2: String? = nil, imageUrl3: String? = nil, username: String?, profileImageUrl: String? = nil, isPopular: Bool = false, upvoteCount: Int = 0, downvoteCount: Int = 0, netVotes: Int = 0, userVote: VoteType? = nil) {
         self.id = id
         self.userId = userId
         self.recId = recId
@@ -64,6 +68,8 @@ struct Comment: Codable, Identifiable {
         self.comment = comment
         self.createdAt = createdAt
         self.imageUrl = imageUrl
+        self.imageUrl2 = imageUrl2
+        self.imageUrl3 = imageUrl3
         self.username = username
         self.profileImageUrl = profileImageUrl
         self.isPopular = isPopular
@@ -82,6 +88,8 @@ struct Comment: Codable, Identifiable {
         comment = try container.decodeIfPresent(String.self, forKey: .comment)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         imageUrl = try container.decodeIfPresent(String.self, forKey: .imageUrl)
+        imageUrl2 = try container.decodeIfPresent(String.self, forKey: .imageUrl2)
+        imageUrl3 = try container.decodeIfPresent(String.self, forKey: .imageUrl3)
         username = try container.decodeIfPresent(String.self, forKey: .username)
         profileImageUrl = try container.decodeIfPresent(String.self, forKey: .profileImageUrl)
         isPopular = try container.decodeIfPresent(Bool.self, forKey: .isPopular) ?? false
@@ -106,6 +114,8 @@ struct Comment: Codable, Identifiable {
         try container.encodeIfPresent(comment, forKey: .comment)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encodeIfPresent(imageUrl, forKey: .imageUrl)
+        try container.encodeIfPresent(imageUrl2, forKey: .imageUrl2)
+        try container.encodeIfPresent(imageUrl3, forKey: .imageUrl3)
         try container.encodeIfPresent(username, forKey: .username)
         try container.encodeIfPresent(profileImageUrl, forKey: .profileImageUrl)
         try container.encode(isPopular, forKey: .isPopular)
@@ -125,6 +135,8 @@ struct RatingTemporary: Codable {
     let comment: String?
     let createdAt: Date
     let imageUrl: String?
+    let imageUrl2: String?
+    let imageUrl3: String?
     let profiles: TempProfile?
 
     enum CodingKeys: String, CodingKey {
@@ -133,6 +145,8 @@ struct RatingTemporary: Codable {
         case recommendationId = "rec_id"
         case comment
         case imageUrl = "image_url"
+        case imageUrl2 = "image_url_2"
+        case imageUrl3 = "image_url_3"
         case createdAt = "created_at"
         case profiles
         case rating

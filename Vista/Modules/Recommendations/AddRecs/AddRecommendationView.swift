@@ -28,6 +28,7 @@ struct AddRecommendationView: View {
 
     @FocusState private var isKeyboardShowing: Bool
     @State private var showingImagePicker = false
+    @State private var activeImageSlot: Int = 1
 
     var body: some View {
         NavigationView {
@@ -73,7 +74,13 @@ struct AddRecommendationView: View {
                 Text("Please select a star rating before submitting your recommendation.")
             }
             .sheet(isPresented: $showingImagePicker) {
-                ImagePicker(image: $viewModel.selectedImage)
+                if activeImageSlot == 1 {
+                    ImagePicker(image: $viewModel.selectedImage)
+                } else if activeImageSlot == 2 {
+                    ImagePicker(image: $viewModel.selectedImage2)
+                } else {
+                    ImagePicker(image: $viewModel.selectedImage3)
+                }
             }
         }
     }
@@ -159,21 +166,64 @@ struct AddRecommendationView: View {
 
     private var imageSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Photo")
-                .font(.headline)
-                .fontWeight(.semibold)
+            HStack {
+                Text("Photo")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                Spacer()
+                // Plus and trash button when first image is set
+                if viewModel.selectedImage != nil {
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            if let _ = viewModel.selectedImage2 {
+                                viewModel.selectedImage = viewModel.selectedImage2
+                                viewModel.selectedImage2 = viewModel.selectedImage3
+                            } else {
+                                viewModel.selectedImage = nil
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .font(.callout.weight(.semibold))
+                    .fontDesign(.rounded)
+                    .foregroundColor(.red)
+                    .padding(8)
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(Circle())
+                    .padding(.horizontal, 6)
+                    if viewModel.selectedImage2 == nil {
+                        Button {
+                            activeImageSlot = 2
+                            showingImagePicker = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.callout.weight(.semibold))
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(Color.green)
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                        }
+                    }
+                }
+            }.zIndex(1)
 
+            // First large image
             Button {
+                activeImageSlot = 1
                 showingImagePicker = true
             } label: {
                 if let image = viewModel.selectedImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(maxWidth: .infinity, maxHeight: 200)
-                        .clipped()
-                        .cornerRadius(16)
-                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    ZStack(alignment: .bottomTrailing) {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(maxWidth: .infinity, maxHeight: 200)
+                            .clipped()
+                            .cornerRadius(16)
+                            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    }
                 } else {
                     Rectangle()
                         .fill(
@@ -198,6 +248,104 @@ struct AddRecommendationView: View {
                 }
             }
             .buttonStyle(PlainButtonStyle())
+
+            // Second image (only show if first image exists)
+            if viewModel.selectedImage != nil && viewModel.selectedImage2 != nil {
+                HStack(spacing: 12) {
+                    Image(uiImage: viewModel.selectedImage2!)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 60, height: 60)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Image 2 attached")
+                            .font(.subheadline.weight(.semibold))
+                            .fontDesign(.rounded)
+                            .foregroundColor(.primary)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            if let _ = viewModel.selectedImage3 {
+                                viewModel.selectedImage2 = viewModel.selectedImage3
+                                viewModel.selectedImage3 = nil
+                            } else {
+                                viewModel.selectedImage2 = nil
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .font(.callout.weight(.semibold))
+                    .fontDesign(.rounded)
+                    .foregroundColor(.red)
+                    .padding(8)
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(Circle())
+
+                    // Show green plus if less than 3 images
+                    if viewModel.selectedImage3 == nil {
+                        Button(action: {
+                            activeImageSlot = 3
+                            showingImagePicker = true
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.callout.weight(.semibold))
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(.green)
+                                .clipShape(Circle())
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color(.systemGray6).opacity(0.5))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
+
+            // Third image (only show if second image exists)
+            if viewModel.selectedImage != nil && viewModel.selectedImage2 != nil && viewModel.selectedImage3 != nil {
+                HStack(spacing: 12) {
+                    Image(uiImage: viewModel.selectedImage3!)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 60, height: 60)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Image 3 attached")
+                            .font(.subheadline.weight(.semibold))
+                            .fontDesign(.rounded)
+                            .foregroundColor(.primary)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            viewModel.selectedImage3 = nil
+                        }
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .font(.callout.weight(.semibold))
+                    .fontDesign(.rounded)
+                    .foregroundColor(.red)
+                    .padding(8)
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(Circle())
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color(.systemGray6).opacity(0.5))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
         }
         .padding(20)
         .background(Color(.systemBackground))
@@ -290,7 +438,7 @@ struct AddRecommendationView: View {
                 .textFieldStyle(PlainTextFieldStyle())
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background(Color(.systemGray6))
+                .background(Color(.systemGray5))
                 .cornerRadius(12)
                 .lineLimit(3 ... 6)
         }

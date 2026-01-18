@@ -14,6 +14,9 @@ struct CommentsView: View {
     @State private var newCommentText = ""
     @State private var showingImagePicker = false
     @State private var selectedImage: UIImage?
+    @State private var selectedImage2: UIImage?
+    @State private var selectedImage3: UIImage?
+    @State private var activeImageSlot: Int = 1 // Tracks which image we're selecting (1, 2, or 3)
     @State private var showLeaveRating = false
     @State private var userRating: Double = 5.0
     @FocusState private var isTextFieldFocused: Bool
@@ -54,6 +57,8 @@ struct CommentsView: View {
                                 showLeaveRating = false
                                 newCommentText = ""
                                 selectedImage = nil
+                                selectedImage2 = nil
+                                selectedImage3 = nil
                             }
                         }
                 }
@@ -114,7 +119,7 @@ struct CommentsView: View {
             }
         }
         .sheet(isPresented: $showingImagePicker) {
-            ImagePicker(image: $selectedImage)
+            ImagePicker(image: activeImageSlot == 1 ? $selectedImage : activeImageSlot == 2 ? $selectedImage2 : $selectedImage3)
         }
     }
 
@@ -239,7 +244,7 @@ struct CommentsView: View {
                 sortPickerSection
             }
 
-            if vm.comments.filter({ $0.comment != nil && !$0.comment!.isEmpty }).isEmpty {
+            if vm.comments.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "bubble.left")
                         .font(.largeTitle)
@@ -256,7 +261,7 @@ struct CommentsView: View {
             } else {
                 LazyVStack(spacing: 12) {
                     ForEach(vm.comments) { comment in
-                        if comment.comment != nil || comment.imageUrl != nil {
+//                        if comment.comment != nil || comment.imageUrl != nil {
                             CommentCardView(
                                 comment: comment,
                                 viewModel: vm,
@@ -264,7 +269,7 @@ struct CommentsView: View {
                                 commentToEdit: $commentToEdit,
                                 showDeleteCommentDialogue: $showDeleteCommentDialogue
                             )
-                        }
+//                        }
                     }
                 }
             }
@@ -362,6 +367,7 @@ struct CommentsView: View {
             }
             .padding(.horizontal, 24)
             .padding(.top, 24)
+            // First Image
             HStack(spacing: 12) {
                 if let selectedImage = selectedImage {
                     Image(uiImage: selectedImage)
@@ -372,7 +378,7 @@ struct CommentsView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12))
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Image attached")
+                        Text("Image 1 attached")
                             .font(.subheadline.weight(.semibold))
                             .fontDesign(.rounded)
                             .foregroundColor(.primary)
@@ -382,9 +388,18 @@ struct CommentsView: View {
 
                     Button {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                            self.selectedImage = nil
+                            if self.selectedImage2 != nil, self.selectedImage3 != nil {
+                                self.selectedImage = self.selectedImage2
+                                self.selectedImage2 = self.selectedImage3
+                                self.selectedImage3 = nil
+                            } else if self.selectedImage2 != nil {
+                                self.selectedImage = self.selectedImage2
+                                self.selectedImage2 = nil
+                            } else {
+                                self.selectedImage = nil
+                            }
                         }
-                    }label: {
+                    } label: {
                         Image(systemName: "trash")
                     }
                     .font(.title3.weight(.semibold))
@@ -394,25 +409,146 @@ struct CommentsView: View {
                     .background(Color.red.opacity(0.1))
                     .clipShape(Circle())
                 }
-                Button(action: { showingImagePicker = true }) {
-                    Image(systemName: "camera.fill")
-                        .font(.title3.weight(.semibold))
-                        .foregroundColor(.white)
-                        .padding(12)
-                        .background(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.purple, Color.blue]),
-                                startPoint: .leading,
-                                endPoint: .trailing
+
+                // Show camera button initially, or green plus if first image is selected but not 3 images yet
+                if selectedImage == nil {
+                    Button(action: {
+                        activeImageSlot = 1
+                        showingImagePicker = true
+                    }) {
+                        Image(systemName: "camera.fill")
+                            .font(.title3.weight(.semibold))
+                            .foregroundColor(.white)
+                            .padding(12)
+                            .background(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
                             )
-                        )
-                        .clipShape(Circle())
+                            .clipShape(Circle())
+                    }
+                } else if selectedImage2 == nil {
+                    Button(action: {
+                        activeImageSlot = 2
+                        showingImagePicker = true
+                    }) {
+                        Image(systemName: "plus")
+                            .font(.title3.weight(.semibold))
+                            .foregroundColor(.white)
+                            .padding(12)
+                            .background(Color.green)
+                            .clipShape(Circle())
+                    }
                 }
-            }                .padding(.horizontal, 24)
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 12)
+            .background(Color(.systemGray6).opacity(0.5))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .padding(.horizontal, 24)
+
+            // Second Image (only show if first image exists)
+            if selectedImage != nil && selectedImage2 != nil {
+                HStack(spacing: 12) {
+                    Image(uiImage: selectedImage2!)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 60, height: 60)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Image 2 attached")
+                            .font(.subheadline.weight(.semibold))
+                            .fontDesign(.rounded)
+                            .foregroundColor(.primary)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            if let _ = self.selectedImage3 {
+                                self.selectedImage2 = self.selectedImage3
+                                self.selectedImage3 = nil
+                            } else {
+                                self.selectedImage2 = nil
+                            }
+                            
+                        }
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .font(.title3.weight(.semibold))
+                    .fontDesign(.rounded)
+                    .foregroundColor(.red)
+                    .padding(12)
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(Circle())
+
+                    // Show camera button or green plus if less than 3 images
+                    if selectedImage3 == nil {
+                        Button(action: {
+                            activeImageSlot = 3
+                            showingImagePicker = true
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.title3.weight(.semibold))
+                                .foregroundColor(.white)
+                                .padding(12)
+                                .background(.green)
+                                .clipShape(Circle())
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
                 .padding(.vertical, 12)
                 .background(Color(.systemGray6).opacity(0.5))
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .padding(.horizontal, 24)
+            }
+
+            // Third Image (only show if second image exists)
+            if selectedImage != nil && selectedImage2 != nil && selectedImage3 != nil {
+                HStack(spacing: 12) {
+                    Image(uiImage: selectedImage3!)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 60, height: 60)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Image 3 attached")
+                            .font(.subheadline.weight(.semibold))
+                            .fontDesign(.rounded)
+                            .foregroundColor(.primary)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            self.selectedImage3 = nil
+                        }
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .font(.title3.weight(.semibold))
+                    .fontDesign(.rounded)
+                    .foregroundColor(.red)
+                    .padding(12)
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(Circle())
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(Color(.systemGray6).opacity(0.5))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .padding(.horizontal, 24)
+            }
 
             VStack(spacing: 20) {
                 ZStack(alignment: .topTrailing) {
@@ -441,6 +577,8 @@ struct CommentsView: View {
                             showLeaveRating = false
                             newCommentText = ""
                             selectedImage = nil
+                            selectedImage2 = nil
+                            selectedImage3 = nil
                         }
                     }
                     .font(.body.weight(.semibold))
@@ -493,10 +631,12 @@ struct CommentsView: View {
                     recommendationId: recommendation.id,
                     text: newCommentText.trimmingCharacters(in: .whitespacesAndNewlines),
                     image: selectedImage,
+                    image2: selectedImage2,
+                    image3: selectedImage3,
                     rating: userRating
                 )
             } else {
-                await vm.submitComment(recommendationId: recommendation.id, text: nil, image: selectedImage, rating: userRating)
+                await vm.submitComment(recommendationId: recommendation.id, text: nil, image: selectedImage, image2: selectedImage2, image3: selectedImage3, rating: userRating)
             }
             confirmReviewSubmitted = true
 
@@ -508,6 +648,8 @@ struct CommentsView: View {
                 }
                 newCommentText = ""
                 selectedImage = nil
+                selectedImage2 = nil
+                selectedImage3 = nil
             }
         }
     }
@@ -519,6 +661,8 @@ struct CommentCardView: View {
     @Binding var commentToDelete: Comment?
     @Binding var commentToEdit: Comment?
     @Binding var showDeleteCommentDialogue: Bool
+    @State private var selectedImageURL: String?
+    @State private var selectedIndex: Int?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -597,8 +741,10 @@ struct CommentCardView: View {
                             .font(.subheadline)
                             .padding(.horizontal, 4)
                     }
+                    .zIndex(1)
                 }
             }
+            .zIndex(1)
 
             HStack(spacing: 2) {
                 // Star rating
@@ -607,16 +753,10 @@ struct CommentCardView: View {
                         .foregroundColor(.yellow)
                         .font(.caption)
                 }
-//                ForEach(1 ... 5, id: \.self) { star in
-//                    Image(systemName: star <= Int(review.userRating) ? "star.fill" : "star")
-//                        .foregroundColor(.yellow)
-//                        .font(.caption)
-//                }
-//                ForEach(Array(0 ..< comment.rating), id: \.self) { _ in
-//                    Image(systemName: "star.fill")
-//                        .foregroundColor(.yellow)
-//                        .font(.caption)
-//                }
+                Text(String(format: "%.1f", comment.rating))
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .padding(.leading, 4)
             }
 
             if let commentText = comment.comment {
@@ -624,12 +764,37 @@ struct CommentCardView: View {
                     .font(.body)
             }
 
-            if let imageUrl = comment.imageUrl, let url = URL(string: imageUrl) {
-                KFImage(url)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxHeight: 200)
-                    .cornerRadius(8)
+            // Display images - up to 3
+            let imageURLs = [comment.imageUrl, comment.imageUrl2, comment.imageUrl3].compactMap { $0 }
+            if !imageURLs.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(imageURLs.indices, id: \.self) { index in
+                            let imagePath = imageURLs[index]
+                            
+                            if let url = URL(string: imagePath) {
+                                KFImage(url)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 100, height: 100)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                                    .onTapGesture {
+                                        self.selectedIndex = index
+                                    }
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                // Full screen viewer trigger
+                .fullScreenCover(item: Binding(
+                    get: { selectedIndex.map { _ in IdentifiableURL(url: "") } }, // Dummy URL, we use index
+                    set: { if $0 == nil { selectedIndex = nil } }
+                )) { _ in
+                    if let index = selectedIndex {
+                        FullScreenImageViewer(urls: imageURLs, currentIndex: index)
+                    }
+                }
             }
             HStack {
                 Text(comment.createdAt.timeAgoOrDateString())
