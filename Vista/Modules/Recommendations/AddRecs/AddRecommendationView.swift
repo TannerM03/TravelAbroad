@@ -435,12 +435,21 @@ struct AddRecommendationView: View {
                 .fontWeight(.semibold)
 
             TextField("Share your thoughts!", text: $viewModel.description, axis: .vertical)
+                .focused($isKeyboardShowing)
                 .textFieldStyle(PlainTextFieldStyle())
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .background(Color(.systemGray5))
                 .cornerRadius(12)
                 .lineLimit(3 ... 6)
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            isKeyboardShowing = false
+                        }
+                    }
+                }
         }
         .padding(20)
         .background(Color(.systemBackground))

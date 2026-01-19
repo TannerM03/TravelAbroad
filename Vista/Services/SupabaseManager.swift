@@ -506,6 +506,8 @@ class SupabaseManager {
             let rating: Int
             let comment: String?
             let image_url: String?
+            let image_url_2: String?
+            let image_url_3: String?
             let created_at: Date
             let profiles: ProfileData
             let rec_with_avg_rating: RecommendationData
@@ -536,7 +538,7 @@ class SupabaseManager {
 
         let spotReviews: [SpotReviewResponse] = try await supabase
             .from("comments")
-            .select("id, user_id, rec_id, rating, comment, image_url, created_at, profiles!inner(username, image_url, is_popular), rec_with_avg_rating!inner(id, name, category, description, location, image_url, avg_rating, city_id, cities!inner(name, country))")
+            .select("id, user_id, rec_id, rating, comment, image_url, image_url_2, image_url_3, created_at, profiles!inner(username, image_url, is_popular), rec_with_avg_rating!inner(id, name, category, description, location, image_url, avg_rating, city_id, cities!inner(name, country))")
             .in("user_id", values: followingIds)
             .order("created_at", ascending: false)
             .limit(limit)
@@ -562,6 +564,8 @@ class SupabaseManager {
                 spotName: nil,
                 spotImageUrl: nil,
                 commentImageUrl: nil,
+                commentImageUrl2: nil,
+                commentImageUrl3: nil,
                 spotCategory: nil,
                 spotLocation: nil,
                 spotDescription: nil,
@@ -590,6 +594,8 @@ class SupabaseManager {
                 spotName: review.rec_with_avg_rating.name,
                 spotImageUrl: review.rec_with_avg_rating.image_url,
                 commentImageUrl: review.image_url,
+                commentImageUrl2: review.image_url_2,
+                commentImageUrl3: review.image_url_3,
                 spotCategory: CategoryType(rawValue: review.rec_with_avg_rating.category),
                 spotLocation: review.rec_with_avg_rating.location,
                 spotDescription: review.rec_with_avg_rating.description,
@@ -671,6 +677,8 @@ class SupabaseManager {
             let rating: Int
             let comment: String?
             let image_url: String?
+            let image_url_2: String?
+            let image_url_3: String?
             let created_at: Date
             let profiles: ProfileData
             let rec_with_avg_rating: RecommendationData
@@ -701,7 +709,7 @@ class SupabaseManager {
 
         let spotReviews: [SpotReviewResponse] = try await supabase
             .from("comments")
-            .select("id, user_id, rec_id, rating, comment, image_url, created_at, profiles!inner(username, image_url, is_popular), rec_with_avg_rating!inner(id, name, category, description, location, image_url, avg_rating, city_id, cities!inner(name, country))")
+            .select("id, user_id, rec_id, rating, comment, image_url, image_url_2, image_url_3, created_at, profiles!inner(username, image_url, is_popular), rec_with_avg_rating!inner(id, name, category, description, location, image_url, avg_rating, city_id, cities!inner(name, country))")
             .in("user_id", values: popularIds)
             .order("created_at", ascending: false)
             .limit(limit)
@@ -727,6 +735,8 @@ class SupabaseManager {
                 spotName: nil,
                 spotImageUrl: nil,
                 commentImageUrl: nil,
+                commentImageUrl2: nil,
+                commentImageUrl3: nil,
                 spotCategory: nil,
                 spotLocation: nil,
                 spotDescription: nil,
@@ -755,6 +765,8 @@ class SupabaseManager {
                 spotName: review.rec_with_avg_rating.name,
                 spotImageUrl: review.rec_with_avg_rating.image_url,
                 commentImageUrl: review.image_url,
+                commentImageUrl2: review.image_url_2,
+                commentImageUrl3: review.image_url_3,
                 spotCategory: CategoryType(rawValue: review.rec_with_avg_rating.category),
                 spotLocation: review.rec_with_avg_rating.location,
                 spotDescription: review.rec_with_avg_rating.description,
@@ -777,7 +789,7 @@ class SupabaseManager {
     func fetchComments(for recommendationId: String) async throws -> [Comment] {
         let response: [RatingTemporary] = try await supabase
             .from("comments")
-            .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+            .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username, image_url, is_popular)")
             .eq("rec_id", value: recommendationId)
             .order("created_at", ascending: false)
             .execute()
@@ -796,7 +808,9 @@ class SupabaseManager {
                 imageUrl: review.imageUrl,
                 imageUrl2: review.imageUrl2,
                 imageUrl3: review.imageUrl3,
-                username: review.profiles?.username
+                username: review.profiles?.username,
+                profileImageUrl: review.profiles?.imageUrl,
+                isPopular: review.profiles?.isPopular ?? false
             )
         }
     }
@@ -834,7 +848,7 @@ class SupabaseManager {
         let response: RatingTemporary = try await supabase
             .from("comments")
             .insert(commentData)
-            .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+            .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username, image_url, is_popular)")
             .single()
             .execute()
             .value
@@ -849,7 +863,9 @@ class SupabaseManager {
             imageUrl: response.imageUrl,
             imageUrl2: response.imageUrl2,
             imageUrl3: response.imageUrl3,
-            username: response.profiles?.username
+            username: response.profiles?.username,
+            profileImageUrl: response.profiles?.imageUrl,
+            isPopular: response.profiles?.isPopular ?? false
         )
 
         // If comment has an image, check if recommendation needs an image
@@ -889,7 +905,7 @@ class SupabaseManager {
                 .from("comments")
                 .update(CommentUpdate(rating: rating, comment: text, image_url: imageUrl, image_url_2: imageUrl2, image_url_3: imageUrl3))
                 .eq("id", value: commentId.uuidString)
-                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username, image_url, is_popular)")
                 .single()
                 .execute()
                 .value
@@ -905,7 +921,7 @@ class SupabaseManager {
                 .from("comments")
                 .update(CommentUpdate(rating: rating, comment: text, image_url: imageUrl, image_url_2: imageUrl2))
                 .eq("id", value: commentId.uuidString)
-                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username, image_url, is_popular)")
                 .single()
                 .execute()
                 .value
@@ -921,7 +937,7 @@ class SupabaseManager {
                 .from("comments")
                 .update(CommentUpdate(rating: rating, comment: text, image_url: imageUrl, image_url_3: imageUrl3))
                 .eq("id", value: commentId.uuidString)
-                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username, image_url, is_popular)")
                 .single()
                 .execute()
                 .value
@@ -937,7 +953,7 @@ class SupabaseManager {
                 .from("comments")
                 .update(CommentUpdate(rating: rating, comment: text, image_url_2: imageUrl2, image_url_3: imageUrl3))
                 .eq("id", value: commentId.uuidString)
-                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username, image_url, is_popular)")
                 .single()
                 .execute()
                 .value
@@ -952,7 +968,7 @@ class SupabaseManager {
                 .from("comments")
                 .update(CommentUpdate(rating: rating, comment: text, image_url: imageUrl))
                 .eq("id", value: commentId.uuidString)
-                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username, image_url, is_popular)")
                 .single()
                 .execute()
                 .value
@@ -967,7 +983,7 @@ class SupabaseManager {
                 .from("comments")
                 .update(CommentUpdate(rating: rating, comment: text, image_url_2: imageUrl2))
                 .eq("id", value: commentId.uuidString)
-                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username, image_url, is_popular)")
                 .single()
                 .execute()
                 .value
@@ -982,7 +998,7 @@ class SupabaseManager {
                 .from("comments")
                 .update(CommentUpdate(rating: rating, comment: text, image_url_3: imageUrl3))
                 .eq("id", value: commentId.uuidString)
-                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username, image_url, is_popular)")
                 .single()
                 .execute()
                 .value
@@ -997,7 +1013,7 @@ class SupabaseManager {
                 .from("comments")
                 .update(CommentUpdate(rating: rating, comment: text))
                 .eq("id", value: commentId.uuidString)
-                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username)")
+                .select("id, user_id, rec_id, rating, comment, created_at, image_url, image_url_2, image_url_3, profiles(username, image_url, is_popular)")
                 .single()
                 .execute()
                 .value
@@ -1013,7 +1029,9 @@ class SupabaseManager {
             imageUrl: response.imageUrl,
             imageUrl2: response.imageUrl2,
             imageUrl3: response.imageUrl3,
-            username: response.profiles?.username
+            username: response.profiles?.username,
+            profileImageUrl: response.profiles?.imageUrl,
+            isPopular: response.profiles?.isPopular ?? false
         )
 
         // If comment has an image, check if recommendation needs an image

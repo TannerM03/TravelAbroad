@@ -25,6 +25,7 @@ struct EditCommentView: View {
     @State private var imageRemoved = false
     @State private var imageRemoved2 = false
     @State private var imageRemoved3 = false
+    @State private var isSubmitting = false
     @FocusState private var isTextFieldFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
@@ -278,11 +279,19 @@ struct EditCommentView: View {
                     HStack(spacing: 16) {
 
                         Button(action: editRatingAndComment) {
-                            Text("Submit Changes")
-                                .font(.body.weight(.bold))
-                                .fontDesign(.rounded)
-                                .foregroundColor(.white)
+                            HStack(spacing: 8) {
+                                if isSubmitting {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.8)
+                                }
+                                Text(isSubmitting ? "Updating..." : "Submit Changes")
+                                    .font(.body.weight(.bold))
+                                    .fontDesign(.rounded)
+                                    .foregroundColor(.white)
+                            }
                         }
+                        .disabled(isSubmitting)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 14)
                         .background(
@@ -292,6 +301,7 @@ struct EditCommentView: View {
                                 endPoint: .trailing
                             )
                         )
+                        .opacity(isSubmitting ? 0.6 : 1.0)
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                         .shadow(color: .purple.opacity(0.3), radius: 8, x: 0, y: 4)
                     }
@@ -422,6 +432,8 @@ struct EditCommentView: View {
     }
 
     private func editRatingAndComment() {
+        isSubmitting = true
+
         Task {
             let textToUpdate = !commentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 ? commentText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -448,6 +460,7 @@ struct EditCommentView: View {
             await vm.refreshRecommendationData()
 
             await MainActor.run {
+                isSubmitting = false
                 withAnimation(.easeInOut(duration: 0.3)) {
                     onDismiss()
                 }

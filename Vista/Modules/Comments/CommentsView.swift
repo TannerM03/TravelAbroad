@@ -24,6 +24,7 @@ struct CommentsView: View {
     @State private var showDeleteCommentDialogue = false
     @State private var commentToDelete: Comment? = nil
     @State private var commentToEdit: Comment? = nil
+    @State private var isSubmitting = false
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -592,11 +593,19 @@ struct CommentsView: View {
                     Spacer()
 
                     Button(action: submitRatingAndComment) {
-                        Text("Submit Review")
-                            .font(.body.weight(.bold))
-                            .fontDesign(.rounded)
-                            .foregroundColor(.white)
+                        HStack(spacing: 8) {
+                            if isSubmitting {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .scaleEffect(0.8)
+                            }
+                            Text(isSubmitting ? "Submitting..." : "Submit Review")
+                                .font(.body.weight(.bold))
+                                .fontDesign(.rounded)
+                                .foregroundColor(.white)
+                        }
                     }
+                    .disabled(isSubmitting)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 14)
                     .background(
@@ -606,6 +615,7 @@ struct CommentsView: View {
                             endPoint: .trailing
                         )
                     )
+                    .opacity(isSubmitting ? 0.6 : 1.0)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .shadow(color: .purple.opacity(0.3), radius: 8, x: 0, y: 4)
                 }
@@ -625,6 +635,8 @@ struct CommentsView: View {
     }
 
     private func submitRatingAndComment() {
+        isSubmitting = true
+
         Task {
             if !newCommentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 await vm.submitComment(
@@ -643,6 +655,7 @@ struct CommentsView: View {
             await vm.refreshRecommendationData()
 
             await MainActor.run {
+                isSubmitting = false
                 withAnimation(.easeInOut(duration: 0.3)) {
                     showLeaveRating = false
                 }
@@ -765,7 +778,9 @@ struct CommentCardView: View {
             }
 
             // Display images - up to 3
-            let imageURLs = [comment.imageUrl, comment.imageUrl2, comment.imageUrl3].compactMap { $0 }
+            let imageURLs = [comment.imageUrl, comment.imageUrl2, comment.imageUrl3]
+                .compactMap { $0 }
+                .filter { !$0.isEmpty }
             if !imageURLs.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {

@@ -155,4 +155,12 @@ struct RatingTemporary: Codable {
 
 struct TempProfile: Codable {
     let username: String
+    let imageUrl: String?
+    let isPopular: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case username
+        case imageUrl = "image_url"
+        case isPopular = "is_popular"
+    }
 }

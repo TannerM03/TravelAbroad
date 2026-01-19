@@ -32,7 +32,9 @@ struct FeedItem: Codable, Identifiable {
     let spotId: String?
     let spotName: String?
     let spotImageUrl: String?
-    let commentImageUrl: String? // User-uploaded comment image
+    let commentImageUrl: String? // User-uploaded comment images
+    let commentImageUrl2: String?
+    let commentImageUrl3: String?
     let spotCategory: CategoryType?
     let spotLocation: String?
     let spotDescription: String?
@@ -57,6 +59,8 @@ struct FeedItem: Codable, Identifiable {
         case spotName = "spot_name"
         case spotImageUrl = "spot_image_url"
         case commentImageUrl = "comment_image_url"
+        case commentImageUrl2 = "comment_image_url_2"
+        case commentImageUrl3 = "comment_image_url_3"
         case spotCategory = "spot_category"
         case spotLocation = "spot_location"
         case spotDescription = "spot_description"
@@ -66,6 +70,19 @@ struct FeedItem: Codable, Identifiable {
     }
 
     // Convenience computed properties
+    
+    var commentImageUrls: [String]? {
+        if let one = commentImageUrl, let two = commentImageUrl2, let three = commentImageUrl3 {
+            return [one, two, three]
+        } else if let one = commentImageUrl, let two = commentImageUrl2 {
+            return [one, two]
+        } else if let one = commentImageUrl {
+            return [one]
+        } else {
+            return nil
+        }
+    }
+    
     var displayName: String {
         switch type {
         case .cityRating:

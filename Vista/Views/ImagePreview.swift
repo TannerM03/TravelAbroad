@@ -34,21 +34,31 @@ struct FullScreenImageViewer: View {
                         }
                     }
                 }
-                .tabViewStyle(.page(indexDisplayMode: .always)) // Enables swiping
+                .tabViewStyle(.page(indexDisplayMode: urls.count > 1 ? .always : .never))
                 
                 // 2. The Navigation Buttons
-                HStack {
-                    if currentIndex > 0 {
-                        buttonOverlay(icon: "chevron.left") { currentIndex -= 1 }
+                if urls.count > 1 {
+                    HStack {
+                        if currentIndex > 0 {
+                            buttonOverlay(icon: "chevron.left") {
+                                withAnimation(.easeInOut) {
+                                    currentIndex -= 1
+                                }
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        if currentIndex < urls.count - 1 {
+                            buttonOverlay(icon: "chevron.right") {
+                                withAnimation(.easeInOut) {
+                                    currentIndex += 1
+                                }
+                            }
+                        }
                     }
-                    
-                    Spacer()
-                    
-                    if currentIndex < urls.count - 1 {
-                        buttonOverlay(icon: "chevron.right") { currentIndex += 1 }
-                    }
+                    .padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 20)
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {

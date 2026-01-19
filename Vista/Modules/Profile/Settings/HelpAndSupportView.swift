@@ -27,7 +27,7 @@ struct HelpAndSupportView: View {
             } header: {
                 Text("Contact Email Address")
             } footer: {
-                Text("Vista is run by a college student. Please be patient and expect responses within 2 business days. I'll do my best to accommodate your requests and resolve any issues as quickly as possible. Thank you for your understanding!")
+                Text("SideQuest is run by a college student. Please be patient and expect responses within 2 business days. I'll do my best to accommodate your requests and resolve any issues as quickly as possible. Thank you for your understanding!")
                     .font(.caption)
             }
         }

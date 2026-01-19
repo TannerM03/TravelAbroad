@@ -148,7 +148,7 @@ struct FeedItemCard<Destination: View>: View {
                         if feedItem.type == .spotReview {
                             // Use carousel for spot reviews
                             FeedImageCarousel(
-                                commentImageUrl: feedItem.commentImageUrl,
+                                commentImageUrls: feedItem.commentImageUrls,
                                 spotImageUrl: feedItem.spotImageUrl,
                                 categoryIcon: categoryIcon,
                                 categoryColor: feedItem.spotCategory?.pillColor ?? .gray,

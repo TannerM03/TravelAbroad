@@ -327,7 +327,7 @@ enum OnboardingStep: Int, CaseIterable {
 
     var title: String {
         switch self {
-        case .welcome: return "Welcome to Vista!"
+        case .welcome: return "Welcome to SideQuest!"
         case .names: return "Tell us about yourself"
         case .travelStyle: return "Your Travel Style"
         case .activityPreferences: return "Activity Preferences"
