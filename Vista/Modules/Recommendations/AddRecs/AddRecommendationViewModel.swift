@@ -51,6 +51,8 @@ class AddRecommendationViewModel {
             return
         }
 
+        // Clear any previous error
+        errorMessage = nil
         isSubmitting = true
 
         Task {
@@ -96,6 +98,7 @@ class AddRecommendationViewModel {
                 dismiss?()
             } catch {
                 isSubmitting = false
+                errorMessage = error.localizedDescription
                 print("AddRecommendation: Error creating recommendation: \(error.localizedDescription)")
             }
         }

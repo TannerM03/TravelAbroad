@@ -88,6 +88,16 @@ struct RecommendationsView: View {
                 }
             }
         }
+        .onChange(of: vm.selectedCategory) { _, _ in
+            Task {
+                await vm.getRecs(cityId: UUID(uuidString: cityId)!)
+            }
+        }
+        .onChange(of: vm.userSearch) { _, _ in
+            Task {
+                await vm.getRecs(cityId: UUID(uuidString: cityId)!)
+            }
+        }
     }
 
     private var cityImageSection: some View {
@@ -181,10 +191,11 @@ struct RecommendationsView: View {
                         .fontWeight(.semibold)
                         .fontDesign(.rounded)
 //                    Image(systemName: "person.2.fill")
-                    Text("avg")
+                    Text("avg.")
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary)
                         .padding(.leading, -3)
+                        .padding(.top, 2)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
@@ -241,8 +252,54 @@ struct RecommendationsView: View {
 
     private var recommendationsListSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(vm.searchedRecs) { rec in
-                RecommendationsCardView(rec: rec)
+            if vm.isLoading && vm.recommendations.isEmpty {
+                HStack {
+                    Spacer()
+                    ProgressView("Loading recommendations...")
+                    Spacer()
+                }
+                .padding(.top, 40)
+            } else if !vm.isLoading && vm.recommendations.isEmpty {
+                HStack {
+                    Spacer()
+                    Text("No recommendations found.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding(.top, 40)
+            } else {
+                ForEach(vm.recommendations) { rec in
+                    RecommendationsCardView(rec: rec)
+                }
+
+                // Load More Button
+                if vm.hasMoreRecs && vm.userSearch.isEmpty {
+                    Button(action: {
+                        Task {
+                            await vm.loadMoreRecs(cityId: UUID(uuidString: cityId)!)
+                        }
+                    }) {
+                        HStack(spacing: 8) {
+                            if vm.isLoadingMore {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .scaleEffect(0.8)
+                            }
+                            Text(vm.isLoadingMore ? "Loading..." : "Load More Recommendations")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundColor(.primary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(12)
+                    }
+                    .disabled(vm.isLoadingMore)
+                    .padding(.top, 8)
+                    .padding(.horizontal, 18)
+                }
             }
         }.padding(.bottom, 100)
     }
@@ -263,7 +320,7 @@ struct RecommendationsView: View {
                         .foregroundStyle(.primary)
                     // if user hasn't rated yet
                     if vm.userRating != nil {
-                        //if user has rated
+                        // if user has rated
                         Text("Edit your rating")
                             .font(.title3)
                             .fontWeight(.medium)
@@ -278,7 +335,6 @@ struct RecommendationsView: View {
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                     }
-                    
                 }
 
                 VStack(spacing: 16) {

@@ -115,14 +115,90 @@ class SupabaseManager {
     // MARK: - RecommendationsView Functions
 
     // fetches the recommended place (restaurants, hostels, bars, etc.) for whichever city is specified in with the cityId parameter. Also has avg rating
-    func fetchRecommendations(cityId: UUID) async throws -> [Recommendation] {
-        let recs: [Recommendation] = try await supabase
+    func fetchRecommendations(
+        cityId: UUID,
+        category: CategoryType? = nil,
+        searchQuery: String? = nil,
+        limit: Int? = nil,
+        offset: Int = 0
+    ) async throws -> [Recommendation] {
+        let baseQuery = supabase
             .from("rec_with_avg_rating")
             .select()
             .eq("city_id", value: cityId)
-            .order("avg_rating", ascending: false)
-            .execute()
-            .value
+
+        let recs: [Recommendation]
+
+        // Build query based on filters
+        if let category = category, category != .all {
+            if let searchQuery = searchQuery, !searchQuery.isEmpty {
+                // Category + Search
+                if let limit = limit {
+                    recs = try await baseQuery
+                        .eq("category", value: category.rawValue)
+                        .ilike("name", pattern: "%\(searchQuery)%")
+                        .order("avg_rating", ascending: false)
+                        .range(from: offset, to: offset + limit - 1)
+                        .execute()
+                        .value
+                } else {
+                    recs = try await baseQuery
+                        .eq("category", value: category.rawValue)
+                        .ilike("name", pattern: "%\(searchQuery)%")
+                        .order("avg_rating", ascending: false)
+                        .execute()
+                        .value
+                }
+            } else {
+                // Category only
+                if let limit = limit {
+                    recs = try await baseQuery
+                        .eq("category", value: category.rawValue)
+                        .order("avg_rating", ascending: false)
+                        .range(from: offset, to: offset + limit - 1)
+                        .execute()
+                        .value
+                } else {
+                    recs = try await baseQuery
+                        .eq("category", value: category.rawValue)
+                        .order("avg_rating", ascending: false)
+                        .execute()
+                        .value
+                }
+            }
+        } else {
+            if let searchQuery = searchQuery, !searchQuery.isEmpty {
+                // Search only
+                if let limit = limit {
+                    recs = try await baseQuery
+                        .ilike("name", pattern: "%\(searchQuery)%")
+                        .order("avg_rating", ascending: false)
+                        .range(from: offset, to: offset + limit - 1)
+                        .execute()
+                        .value
+                } else {
+                    recs = try await baseQuery
+                        .ilike("name", pattern: "%\(searchQuery)%")
+                        .order("avg_rating", ascending: false)
+                        .execute()
+                        .value
+                }
+            } else {
+                // No filters
+                if let limit = limit {
+                    recs = try await baseQuery
+                        .order("avg_rating", ascending: false)
+                        .range(from: offset, to: offset + limit - 1)
+                        .execute()
+                        .value
+                } else {
+                    recs = try await baseQuery
+                        .order("avg_rating", ascending: false)
+                        .execute()
+                        .value
+                }
+            }
+        }
 
         return recs
     }
@@ -158,7 +234,6 @@ class SupabaseManager {
         location: String?,
         imageUrl: String?,
     ) async throws -> Recommendation {
-
         guard let userId = supabase.auth.currentUser?.id else {
             print("❌ Supabase: No authenticated user found for recommendation creation")
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
@@ -419,18 +494,41 @@ class SupabaseManager {
 
     // MARK: - SocialView Functions
 
-    func fetchUsers(userId: String) async throws -> [OtherProfile] {
-        let response: [OtherProfile] = try await supabase
+    func fetchUsers(userId: String, searchQuery: String? = nil, limit: Int = 30, offset: Int = 0) async throws -> [OtherProfile] {
+        var query = supabase
             .from("profiles")
             .select("id, username, image_url, is_popular, first_name, last_name")
             .notEquals("id", value: userId)
+
+        // Add search filter if query provided - search across username, first name, and last name
+        if let searchQuery = searchQuery, !searchQuery.isEmpty {
+            let trimmedQuery = searchQuery.trimmingCharacters(in: .whitespaces)
+
+            // Check if query contains a space (likely a full name search)
+            if trimmedQuery.contains(" ") {
+                let parts = trimmedQuery.split(separator: " ", maxSplits: 1).map(String.init)
+                if parts.count == 2 {
+                    let first = parts[0]
+                    let second = parts[1]
+                    // Search for "first last" or "last first" combinations, plus username match
+                    query = query.or("and(first_name.ilike.%\(first)%,last_name.ilike.%\(second)%),and(first_name.ilike.%\(second)%,last_name.ilike.%\(first)%),username.ilike.%\(trimmedQuery)%")
+                }
+            } else {
+                // Single word - search all fields
+                query = query.or("username.ilike.%\(trimmedQuery)%,first_name.ilike.%\(trimmedQuery)%,last_name.ilike.%\(trimmedQuery)%")
+            }
+        }
+
+        let response: [OtherProfile] = try await query
+            .order("username", ascending: true)
+            .range(from: offset, to: offset + limit - 1)
             .execute()
             .value
         return response
     }
 
     // Fetches activity feed from users that the current user follows
-    func fetchFollowingActivityFeed(userId: UUID, limit: Int = 50, selfInFollowing: Bool = true) async throws -> [FeedItem] {
+    func fetchFollowingActivityFeed(userId: UUID, limit: Int = 50, offset: Int = 0, selfInFollowing _: Bool = true) async throws -> [FeedItem] {
         // First, get the list of users that the current user follows
         struct Following: Codable {
             let following_id: String
@@ -444,7 +542,7 @@ class SupabaseManager {
             .value
 
         var followingIds = followingResponse.map { $0.following_id }
-        
+
         // only include the user's own feed if they have this selected in settings
         struct SelfInFollowing: Codable {
             let show_self_in_following: Bool
@@ -494,7 +592,7 @@ class SupabaseManager {
             .select("id, user_id, city_id, overall_rating, created_at, profiles!inner(username, image_url, is_popular), cities!inner(name, country, image_url)")
             .in("user_id", values: followingIds)
             .order("created_at", ascending: false)
-            .limit(limit)
+            .range(from: offset, to: offset + limit - 1)
             .execute()
             .value
 
@@ -541,7 +639,7 @@ class SupabaseManager {
             .select("id, user_id, rec_id, rating, comment, image_url, image_url_2, image_url_3, created_at, profiles!inner(username, image_url, is_popular), rec_with_avg_rating!inner(id, name, category, description, location, image_url, avg_rating, city_id, cities!inner(name, country))")
             .in("user_id", values: followingIds)
             .order("created_at", ascending: false)
-            .limit(limit)
+            .range(from: offset, to: offset + limit - 1)
             .execute()
             .value
 
@@ -613,7 +711,7 @@ class SupabaseManager {
     }
 
     // Fetches activity feed from users that are "popular"
-    func fetchPopularActivityFeed(limit: Int = 50) async throws -> [FeedItem] {
+    func fetchPopularActivityFeed(limit: Int = 50, offset: Int = 0) async throws -> [FeedItem] {
         // First, get the list of users that are popular
         struct Popular: Codable {
             let popular_id: String
@@ -665,7 +763,7 @@ class SupabaseManager {
             .select("id, user_id, city_id, overall_rating, created_at, profiles!inner(username, image_url, is_popular), cities!inner(name, country, image_url)")
             .in("user_id", values: popularIds)
             .order("created_at", ascending: false)
-            .limit(limit)
+            .range(from: offset, to: offset + limit - 1)
             .execute()
             .value
 
@@ -712,7 +810,7 @@ class SupabaseManager {
             .select("id, user_id, rec_id, rating, comment, image_url, image_url_2, image_url_3, created_at, profiles!inner(username, image_url, is_popular), rec_with_avg_rating!inner(id, name, category, description, location, image_url, avg_rating, city_id, cities!inner(name, country))")
             .in("user_id", values: popularIds)
             .order("created_at", ascending: false)
-            .limit(limit)
+            .range(from: offset, to: offset + limit - 1)
             .execute()
             .value
 
@@ -875,10 +973,45 @@ class SupabaseManager {
 
         return newComment
     }
-    
+
     func updateComment(commentId: UUID, recommendationId: String, text: String?, imageUrl: String?, imageUrl2: String?, imageUrl3: String?, rating: Double, shouldUpdateImage: Bool, shouldUpdateImage2: Bool, shouldUpdateImage3: Bool) async throws -> Comment {
         guard let userId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
+        }
+
+        // Fetch existing comment to get old image URLs for cleanup
+        struct ExistingComment: Codable {
+            let image_url: String?
+            let image_url_2: String?
+            let image_url_3: String?
+        }
+
+        let existingComment: ExistingComment = try await supabase
+            .from("comments")
+            .select("image_url, image_url_2, image_url_3")
+            .eq("id", value: commentId.uuidString)
+            .single()
+            .execute()
+            .value
+
+        // Delete old images from storage if they're being replaced
+        let bucket = supabase.storage.from("comment-images")
+        var filesToDelete: [String] = []
+
+        if shouldUpdateImage, let oldUrl = existingComment.image_url, let fileName = URL(string: oldUrl)?.lastPathComponent {
+            filesToDelete.append(fileName)
+        }
+        if shouldUpdateImage2, let oldUrl = existingComment.image_url_2, let fileName = URL(string: oldUrl)?.lastPathComponent {
+            filesToDelete.append(fileName)
+        }
+        if shouldUpdateImage3, let oldUrl = existingComment.image_url_3, let fileName = URL(string: oldUrl)?.lastPathComponent {
+            filesToDelete.append(fileName)
+        }
+
+        // Delete old files from storage
+        if !filesToDelete.isEmpty {
+            try await bucket.remove(paths: filesToDelete)
+            print("Deleted \(filesToDelete.count) old image(s) from storage during update")
         }
 
         let response: RatingTemporary
@@ -1072,6 +1205,12 @@ class SupabaseManager {
             throw NSError(domain: "ImageError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image to JPEG"])
         }
 
+        // Validate image size (max 10MB)
+        let maxSizeBytes = 10 * 1024 * 1024
+        if imageData.count > maxSizeBytes {
+            throw NSError(domain: "ImageError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Image too large. Maximum size is 10MB"])
+        }
+
         let fileName = "comment_\(UUID().uuidString).jpg"
 
         let bucket = supabase.storage.from("comment-images")
@@ -1084,6 +1223,12 @@ class SupabaseManager {
     func uploadRecommendationImage(_ image: UIImage) async throws -> String {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             throw NSError(domain: "ImageError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image to JPEG"])
+        }
+
+        // Validate image size (max 10MB)
+        let maxSizeBytes = 10 * 1024 * 1024
+        if imageData.count > maxSizeBytes {
+            throw NSError(domain: "ImageError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Image too large. Maximum size is 10MB"])
         }
 
         let fileName = "rec_\(UUID().uuidString).jpg"
@@ -1200,7 +1345,7 @@ class SupabaseManager {
     }
 
     // Fetch comments with vote counts and user's vote status
-    func fetchCommentsWithVotes(for recommendationId: String, sortBy: CommentSortOption) async throws -> [Comment] {
+    func fetchCommentsWithVotes(for recommendationId: String, sortBy: CommentSortOption, limit: Int = 20, offset: Int = 0) async throws -> [Comment] {
         guard let userId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
@@ -1233,6 +1378,7 @@ class SupabaseManager {
                 .eq("rec_id", value: recommendationId)
                 .order("upvote_count", ascending: false)
                 .order("created_at", ascending: false)
+                .range(from: offset, to: offset + limit - 1)
                 .execute()
                 .value
         case .recent:
@@ -1241,6 +1387,7 @@ class SupabaseManager {
                 .select("*")
                 .eq("rec_id", value: recommendationId)
                 .order("created_at", ascending: false)
+                .range(from: offset, to: offset + limit - 1)
                 .execute()
                 .value
         case .downvotes:
@@ -1248,8 +1395,9 @@ class SupabaseManager {
                 .from("comments_with_votes")
                 .select("*")
                 .eq("rec_id", value: recommendationId)
-                .order("downvote_count", ascending: false)
+                .order("net_votes", ascending: true)
                 .order("created_at", ascending: false)
+                .range(from: offset, to: offset + limit - 1)
                 .execute()
                 .value
         }
@@ -1458,6 +1606,13 @@ class SupabaseManager {
             return
         }
 
+        // Validate image size (max 10MB)
+        let maxSizeBytes = 10 * 1024 * 1024
+        guard imageData.count <= maxSizeBytes else {
+            print("Image too large. Maximum size is 10MB")
+            return
+        }
+
         let fileName = UUID().uuidString + ".jpg"
 
         Task {
@@ -1537,7 +1692,7 @@ class SupabaseManager {
             .value
         return response.feedDefault ?? "popular"
     }
-    
+
     func updateFeedDefault(userId: UUID, feedDefault: String) async throws {
         do {
             try await supabase
@@ -1549,7 +1704,7 @@ class SupabaseManager {
             print("error updating feed default: \(error.localizedDescription)")
         }
     }
-    
+
     func fetchFollowingFeedPrefDefault(userId: UUID) async throws -> Bool {
         struct FollowPrefDefault: Codable {
             let defaultPref: Bool
@@ -1566,7 +1721,7 @@ class SupabaseManager {
             .value
         return response.defaultPref
     }
-    
+
     func updateFollowingFeedPreference(userId: UUID, followingFeedPref: Bool) async throws {
         do {
             try await supabase
@@ -1879,17 +2034,55 @@ class SupabaseManager {
 
     func deleteSpotComment(commentId: String) async throws {
         do {
+            // First, fetch the comment to get image URLs before deletion
+            struct CommentImages: Codable {
+                let image_url: String?
+                let image_url_2: String?
+                let image_url_3: String?
+            }
+
+            let comment: CommentImages = try await supabase
+                .from("comments")
+                .select("image_url, image_url_2, image_url_3")
+                .eq("id", value: commentId)
+                .single()
+                .execute()
+                .value
+
+            // Delete images from storage if they exist
+            let bucket = supabase.storage.from("comment-images")
+            var filesToDelete: [String] = []
+
+            // Extract filenames from URLs (e.g., "comment_UUID.jpg")
+            if let url1 = comment.image_url, let fileName = URL(string: url1)?.lastPathComponent {
+                filesToDelete.append(fileName)
+            }
+            if let url2 = comment.image_url_2, let fileName = URL(string: url2)?.lastPathComponent {
+                filesToDelete.append(fileName)
+            }
+            if let url3 = comment.image_url_3, let fileName = URL(string: url3)?.lastPathComponent {
+                filesToDelete.append(fileName)
+            }
+
+            // Delete files from storage
+            if !filesToDelete.isEmpty {
+                try await bucket.remove(paths: filesToDelete)
+                print("Deleted \(filesToDelete.count) image(s) from storage")
+            }
+
+            // Now delete the database record
             try await supabase.from("comments")
                 .delete()
                 .eq("id", value: commentId)
                 .execute()
         } catch {
             print("supabase delete spot error: \(error.localizedDescription)")
+            throw error
         }
     }
 
     // MARK: - CityDetailView Functions
-    
+
     // recalculate the avg rating for a city
     func reloadAvgRating(cityId: UUID) async throws -> Double? {
         struct RatingResponse: Decodable {
@@ -1902,7 +2095,7 @@ class SupabaseManager {
             .single()
             .execute()
             .value
-        
+
         return avgRating.avg_rating
     }
 
@@ -2274,7 +2467,7 @@ class SupabaseManager {
         }
     }
 
-    func fetchUserReviewedSpotsWithVotes(userId: UUID) async throws -> [ReviewedSpot] {
+    func fetchUserReviewedSpotsWithVotes(userId: UUID, limit: Int = 20, offset: Int = 0) async throws -> [ReviewedSpot] {
         guard let currentUserId = supabase.auth.currentUser?.id else {
             throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
         }
@@ -2347,6 +2540,7 @@ class SupabaseManager {
             .select("id, rec_id, rating, comment, image_url, image_url_2, image_url_3, created_at, upvote_count, downvote_count, net_votes, rec_with_avg_rating!inner(*, cities!inner(name, country))")
             .eq("user_id", value: userId)
             .order("created_at", ascending: false)
+            .range(from: offset, to: offset + limit - 1)
             .execute()
             .value
 

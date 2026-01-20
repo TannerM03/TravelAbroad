@@ -66,6 +66,53 @@ struct SocialView: View {
                                             destination: destinationView(for: feedItem)
                                         )
                                     }
+
+                                    // Load More button
+                                    if selectedFeed == .following && vm.hasMoreFollowing {
+                                        Button(action: {
+                                            Task {
+                                                await vm.loadMoreFollowingFeed()
+                                            }
+                                        }) {
+                                            HStack(spacing: 8) {
+                                                if vm.isLoadingMoreFollowing {
+                                                    ProgressView()
+                                                        .scaleEffect(0.8)
+                                                }
+                                                Text(vm.isLoadingMoreFollowing ? "Loading..." : "Load More")
+                                                    .font(.subheadline)
+                                                    .fontWeight(.semibold)
+                                            }
+                                            .foregroundColor(.primary)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .background(.ultraThinMaterial)
+                                            .cornerRadius(12)
+                                        }
+                                        .disabled(vm.isLoadingMoreFollowing)
+                                    } else if selectedFeed == .popular && vm.hasMorePopular {
+                                        Button(action: {
+                                            Task {
+                                                await vm.loadMorePopularFeed()
+                                            }
+                                        }) {
+                                            HStack(spacing: 8) {
+                                                if vm.isLoadingMorePopular {
+                                                    ProgressView()
+                                                        .scaleEffect(0.8)
+                                                }
+                                                Text(vm.isLoadingMorePopular ? "Loading..." : "Load More")
+                                                    .font(.subheadline)
+                                                    .fontWeight(.semibold)
+                                            }
+                                            .foregroundColor(.primary)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .background(.ultraThinMaterial)
+                                            .cornerRadius(12)
+                                        }
+                                        .disabled(vm.isLoadingMorePopular)
+                                    }
                                 }
                                 .padding(.horizontal, 20)
                             }

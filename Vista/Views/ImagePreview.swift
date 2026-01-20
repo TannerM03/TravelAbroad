@@ -5,8 +5,8 @@
 //  Created by Tanner Macpherson on 1/18/26.
 //
 
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 struct IdentifiableURL: Identifiable {
     let id = UUID()
@@ -22,10 +22,10 @@ struct FullScreenImageViewer: View {
         NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea()
-                
+
                 // 1. The Paging View
                 TabView(selection: $currentIndex) {
-                    ForEach(0..<urls.count, id: \.self) { index in
+                    ForEach(0 ..< urls.count, id: \.self) { index in
                         if let imageURL = URL(string: urls[index]) {
                             KFImage(imageURL)
                                 .resizable()
@@ -35,7 +35,7 @@ struct FullScreenImageViewer: View {
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: urls.count > 1 ? .always : .never))
-                
+
                 // 2. The Navigation Buttons
                 if urls.count > 1 {
                     HStack {
@@ -46,9 +46,9 @@ struct FullScreenImageViewer: View {
                                 }
                             }
                         }
-                        
+
                         Spacer()
-                        
+
                         if currentIndex < urls.count - 1 {
                             buttonOverlay(icon: "chevron.right") {
                                 withAnimation(.easeInOut) {
@@ -69,7 +69,7 @@ struct FullScreenImageViewer: View {
             }
         }
     }
-    
+
     // Helper for the arrow buttons
     private func buttonOverlay(icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {

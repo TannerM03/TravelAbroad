@@ -25,6 +25,7 @@ struct CommentsView: View {
     @State private var commentToDelete: Comment? = nil
     @State private var commentToEdit: Comment? = nil
     @State private var isSubmitting = false
+    @State private var errorMessage: String? = nil
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -263,14 +264,41 @@ struct CommentsView: View {
                 LazyVStack(spacing: 12) {
                     ForEach(vm.comments) { comment in
 //                        if comment.comment != nil || comment.imageUrl != nil {
-                            CommentCardView(
-                                comment: comment,
-                                viewModel: vm,
-                                commentToDelete: $commentToDelete,
-                                commentToEdit: $commentToEdit,
-                                showDeleteCommentDialogue: $showDeleteCommentDialogue
-                            )
+                        CommentCardView(
+                            comment: comment,
+                            viewModel: vm,
+                            commentToDelete: $commentToDelete,
+                            commentToEdit: $commentToEdit,
+                            showDeleteCommentDialogue: $showDeleteCommentDialogue
+                        )
 //                        }
+                    }
+
+                    // Load More Button
+                    if vm.hasMoreComments {
+                        Button(action: {
+                            Task {
+                                await vm.loadMoreComments(for: recommendation.id)
+                            }
+                        }) {
+                            HStack(spacing: 8) {
+                                if vm.isLoadingMore {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle())
+                                        .scaleEffect(0.8)
+                                }
+                                Text(vm.isLoadingMore ? "Loading..." : "Load More Comments")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(.primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(12)
+                        }
+                        .disabled(vm.isLoadingMore)
+                        .padding(.top, 8)
                     }
                 }
             }
@@ -338,7 +366,7 @@ struct CommentsView: View {
 
                 VStack(spacing: 16) {
                     HStack(spacing: 12) {
-                        ForEach(1...5, id: \.self) { i in
+                        ForEach(1 ... 5, id: \.self) { i in
                             Button(action: {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
                                     userRating = Double(i)
@@ -360,7 +388,7 @@ struct CommentsView: View {
                         .fontDesign(.rounded)
                         .foregroundStyle(.primary)
 
-                    Slider(value: $userRating, in: 0...5, step: 0.1)
+                    Slider(value: $userRating, in: 0 ... 5, step: 0.1)
                         .accentColor(.yellow)
                         .padding(.horizontal, 8)
                 }
@@ -477,7 +505,6 @@ struct CommentsView: View {
                             } else {
                                 self.selectedImage2 = nil
                             }
-                            
                         }
                     } label: {
                         Image(systemName: "trash")
@@ -572,6 +599,15 @@ struct CommentsView: View {
                         }
                 }
 
+                // Error message display
+                if let errorMessage = errorMessage {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .padding(.horizontal, 24)
+                        .multilineTextAlignment(.center)
+                }
+
                 HStack(spacing: 16) {
                     Button("Cancel") {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
@@ -635,34 +671,42 @@ struct CommentsView: View {
     }
 
     private func submitRatingAndComment() {
+        errorMessage = nil
         isSubmitting = true
 
         Task {
-            if !newCommentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                await vm.submitComment(
-                    recommendationId: recommendation.id,
-                    text: newCommentText.trimmingCharacters(in: .whitespacesAndNewlines),
-                    image: selectedImage,
-                    image2: selectedImage2,
-                    image3: selectedImage3,
-                    rating: userRating
-                )
-            } else {
-                await vm.submitComment(recommendationId: recommendation.id, text: nil, image: selectedImage, image2: selectedImage2, image3: selectedImage3, rating: userRating)
-            }
-            confirmReviewSubmitted = true
-
-            await vm.refreshRecommendationData()
-
-            await MainActor.run {
-                isSubmitting = false
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    showLeaveRating = false
+            do {
+                if !newCommentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    try await vm.submitComment(
+                        recommendationId: recommendation.id,
+                        text: newCommentText.trimmingCharacters(in: .whitespacesAndNewlines),
+                        image: selectedImage,
+                        image2: selectedImage2,
+                        image3: selectedImage3,
+                        rating: userRating
+                    )
+                } else {
+                    try await vm.submitComment(recommendationId: recommendation.id, text: nil, image: selectedImage, image2: selectedImage2, image3: selectedImage3, rating: userRating)
                 }
-                newCommentText = ""
-                selectedImage = nil
-                selectedImage2 = nil
-                selectedImage3 = nil
+                confirmReviewSubmitted = true
+
+                await vm.refreshRecommendationData()
+
+                await MainActor.run {
+                    isSubmitting = false
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showLeaveRating = false
+                    }
+                    newCommentText = ""
+                    selectedImage = nil
+                    selectedImage2 = nil
+                    selectedImage3 = nil
+                }
+            } catch {
+                await MainActor.run {
+                    isSubmitting = false
+                    errorMessage = error.localizedDescription
+                }
             }
         }
     }
@@ -786,7 +830,7 @@ struct CommentCardView: View {
                     HStack(spacing: 12) {
                         ForEach(imageURLs.indices, id: \.self) { index in
                             let imagePath = imageURLs[index]
-                            
+
                             if let url = URL(string: imagePath) {
                                 KFImage(url)
                                     .resizable()

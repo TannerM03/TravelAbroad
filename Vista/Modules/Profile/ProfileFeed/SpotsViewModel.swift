@@ -14,6 +14,10 @@ import Supabase
 class SpotsViewModel {
     var reviews: [ReviewedSpot] = []
     var isLoading = false
+    var isLoadingMore = false
+    var hasMoreSpots = true
+    var currentPage = 0
+    let pageSize = 20
     var userId: UUID?
     var user: User?
 
@@ -31,12 +35,26 @@ class SpotsViewModel {
             isLoading = true
         }
 
+        currentPage = 0
+        hasMoreSpots = true
+
         do {
-            reviews = try await SupabaseManager.shared.fetchUserReviewedSpotsWithVotes(userId: userId)
+            let fetchedSpots = try await SupabaseManager.shared.fetchUserReviewedSpotsWithVotes(
+                userId: userId,
+                limit: pageSize,
+                offset: 0
+            )
+            reviews = fetchedSpots
+
+            // If we got less than pageSize, there are no more spots
+            if fetchedSpots.count < pageSize {
+                hasMoreSpots = false
+            }
         } catch {
             print("Failed to fetch reviewed spots with votes: \(error)")
             do {
                 reviews = try await SupabaseManager.shared.fetchUserReviewedSpots(userId: userId)
+                hasMoreSpots = false // Fallback doesn't support pagination
             } catch {
                 print("Failed to fetch reviewed spots: \(error)")
             }
@@ -45,6 +63,33 @@ class SpotsViewModel {
         if showLoading {
             isLoading = false
         }
+    }
+
+    func loadMoreSpots(userId: UUID) async {
+        guard !isLoadingMore, hasMoreSpots else { return }
+
+        isLoadingMore = true
+        currentPage += 1
+
+        do {
+            let fetchedSpots = try await SupabaseManager.shared.fetchUserReviewedSpotsWithVotes(
+                userId: userId,
+                limit: pageSize,
+                offset: currentPage * pageSize
+            )
+
+            reviews.append(contentsOf: fetchedSpots)
+
+            // If we got less than pageSize, there are no more spots
+            if fetchedSpots.count < pageSize {
+                hasMoreSpots = false
+            }
+        } catch {
+            print("Error loading more spots: \(error)")
+            currentPage -= 1 // Revert page increment on error
+        }
+
+        isLoadingMore = false
     }
 
     func deleteSpot(spot: ReviewedSpot) async {

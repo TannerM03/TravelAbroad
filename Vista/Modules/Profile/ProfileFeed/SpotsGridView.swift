@@ -136,15 +136,46 @@ struct SpotsGridView: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            // Load More Button
+            if vm.hasMoreSpots {
+                Button(action: {
+                    if let userId = vm.userId {
+                        Task {
+                            await vm.loadMoreSpots(userId: userId)
+                        }
+                    }
+                }) {
+                    HStack(spacing: 8) {
+                        if vm.isLoadingMore {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .scaleEffect(0.8)
+                        }
+                        if !vm.reviews.isEmpty {
+                            Text(vm.isLoadingMore ? "Loading..." : "Load More Spots")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .foregroundColor(.primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(12)
+                }
+                .disabled(vm.isLoadingMore)
+                .padding(.top, 8)
+            }
         }
         .padding(.horizontal, 16)
     }
 
     private var overlayContentSection: some View {
         Group {
-            if vm.isLoading {
+            if vm.isLoading && vm.reviews.isEmpty {
                 ProgressView("Loading Spots...")
-            } else if vm.reviews.isEmpty {
+            } else if !vm.isLoading && vm.reviews.isEmpty {
                 Text("Review your first spot to see them here!")
             }
         }
@@ -220,7 +251,6 @@ struct ReviewCard: View {
                             .font(.subheadline)
                             .padding(.horizontal, 4)
                     }
-                    
                 }
             }
             .padding(.bottom, 12)

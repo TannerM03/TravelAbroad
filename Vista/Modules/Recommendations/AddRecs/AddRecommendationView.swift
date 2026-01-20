@@ -361,7 +361,7 @@ struct AddRecommendationView: View {
 
             VStack(spacing: 16) {
                 HStack(spacing: 12) {
-                    ForEach(1...5, id: \.self) { i in
+                    ForEach(1 ... 5, id: \.self) { i in
                         Button(action: {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
                                 viewModel.userRating = Double(i)
@@ -383,7 +383,7 @@ struct AddRecommendationView: View {
                     .fontDesign(.rounded)
                     .foregroundStyle(.primary)
 
-                Slider(value: $viewModel.userRating, in: 0...5, step: 0.1)
+                Slider(value: $viewModel.userRating, in: 0 ... 5, step: 0.1)
                     .accentColor(.yellow)
                     .padding(.horizontal, 8)
             }
@@ -458,38 +458,49 @@ struct AddRecommendationView: View {
     }
 
     private var submitSection: some View {
-        Button {
-            viewModel.submitRecommendation()
-        } label: {
-            HStack(spacing: 12) {
-                if viewModel.isSubmitting {
-                    ProgressView()
-                        .scaleEffect(0.9)
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                } else {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 18, weight: .medium))
-                }
-                Text(viewModel.isSubmitting ? "Adding Recommendation..." : "Add Recommendation")
-                    .font(.headline)
-                    .fontWeight(.semibold)
+        VStack(spacing: 12) {
+            // Error message display
+            if let errorMessage = viewModel.errorMessage {
+                Text(errorMessage)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .padding(.horizontal, 24)
+                    .multilineTextAlignment(.center)
             }
-            .frame(maxWidth: .infinity, minHeight: 54)
-            .foregroundColor(.white)
-            .background(
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.purple, Color.blue]),
-                    startPoint: .leading,
-                    endPoint: .trailing
+
+            Button {
+                viewModel.submitRecommendation()
+            } label: {
+                HStack(spacing: 12) {
+                    if viewModel.isSubmitting {
+                        ProgressView()
+                            .scaleEffect(0.9)
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    } else {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 18, weight: .medium))
+                    }
+                    Text(viewModel.isSubmitting ? "Adding Recommendation..." : "Add Recommendation")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity, minHeight: 54)
+                .foregroundColor(.white)
+                .background(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.purple, Color.blue]),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
                 )
-            )
-            .cornerRadius(16)
-            .shadow(color: .purple.opacity(0.3), radius: 8, x: 0, y: 4)
-            .scaleEffect(viewModel.isSubmitting ? 0.98 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: viewModel.isSubmitting)
+                .cornerRadius(16)
+                .shadow(color: .purple.opacity(0.3), radius: 8, x: 0, y: 4)
+                .scaleEffect(viewModel.isSubmitting ? 0.98 : 1.0)
+                .animation(.easeInOut(duration: 0.1), value: viewModel.isSubmitting)
+            }
+            .disabled(viewModel.selectedCategory == CategoryType.all || viewModel.isSubmitting || viewModel.placeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .buttonStyle(PlainButtonStyle())
         }
-        .disabled(viewModel.selectedCategory == CategoryType.all || viewModel.isSubmitting || viewModel.placeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        .buttonStyle(PlainButtonStyle())
         .padding(.horizontal, 20)
     }
 }

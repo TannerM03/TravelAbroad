@@ -26,6 +26,7 @@ struct EditCommentView: View {
     @State private var imageRemoved2 = false
     @State private var imageRemoved3 = false
     @State private var isSubmitting = false
+    @State private var errorMessage: String? = nil
     @FocusState private var isTextFieldFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
@@ -35,14 +36,14 @@ struct EditCommentView: View {
         self.recId = recId
         self.vm = vm
         self.onDismiss = onDismiss
-        self._confirmReviewSubmitted = confirmReviewSubmitted
+        _confirmReviewSubmitted = confirmReviewSubmitted
 
         // Initialize state with comment data
-        self._userRating = State(initialValue: comment.rating)
-        self._commentText = State(initialValue: comment.comment ?? "")
-        self._selectedImage = State(initialValue: nil)
+        _userRating = State(initialValue: comment.rating)
+        _commentText = State(initialValue: comment.comment ?? "")
+        _selectedImage = State(initialValue: nil)
     }
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -55,7 +56,7 @@ struct EditCommentView: View {
 
                     VStack(spacing: 16) {
                         HStack(spacing: 12) {
-                            ForEach(1...5, id: \.self) { i in
+                            ForEach(1 ... 5, id: \.self) { i in
                                 Button(action: {
                                     withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
                                         userRating = Double(i)
@@ -77,7 +78,7 @@ struct EditCommentView: View {
                             .fontDesign(.rounded)
                             .foregroundStyle(.primary)
 
-                        Slider(value: $userRating, in: 0...5, step: 0.1)
+                        Slider(value: $userRating, in: 0 ... 5, step: 0.1)
                             .accentColor(.yellow)
                             .padding(.horizontal, 8)
                     }
@@ -254,7 +255,6 @@ struct EditCommentView: View {
                     .padding(.horizontal, 24)
                 }
 
-
                 VStack(spacing: 20) {
                     ZStack(alignment: .topTrailing) {
                         TextField("Share your thoughts...", text: $commentText, axis: .vertical)
@@ -276,8 +276,16 @@ struct EditCommentView: View {
                             }
                     }
 
-                    HStack(spacing: 16) {
+                    // Error message display
+                    if let errorMessage = errorMessage {
+                        Text(errorMessage)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .padding(.horizontal, 24)
+                            .multilineTextAlignment(.center)
+                    }
 
+                    HStack(spacing: 16) {
                         Button(action: editRatingAndComment) {
                             HStack(spacing: 8) {
                                 if isSubmitting {
@@ -345,46 +353,48 @@ struct EditCommentView: View {
             }
         }
     }
+
     private func deleteFirstImage() {
-        if self.selectedImage2 != nil, self.selectedImage3 != nil {
-            self.selectedImage = self.selectedImage2
-            self.selectedImage2 = self.selectedImage3
-            self.selectedImage3 = nil
-            self.imageRemoved = false
-            self.imageRemoved2 = false
-            self.imageRemoved3 = true
-        } else if self.selectedImage2 != nil {
-            self.selectedImage = self.selectedImage2
-            self.selectedImage2 = nil
-            self.imageRemoved = false
-            self.imageRemoved2 = true
+        if selectedImage2 != nil, selectedImage3 != nil {
+            selectedImage = selectedImage2
+            selectedImage2 = selectedImage3
+            selectedImage3 = nil
+            imageRemoved = false
+            imageRemoved2 = false
+            imageRemoved3 = true
+        } else if selectedImage2 != nil {
+            selectedImage = selectedImage2
+            selectedImage2 = nil
+            imageRemoved = false
+            imageRemoved2 = true
         } else {
-            self.selectedImage = nil
-            self.imageRemoved = true
+            selectedImage = nil
+            imageRemoved = true
         }
     }
 
     private func deleteSecondImage() {
-        if let _ = self.selectedImage3 {
-            self.selectedImage2 = self.selectedImage3
-            self.selectedImage3 = nil
-            self.imageRemoved2 = false
-            self.imageRemoved3 = true
+        if let _ = selectedImage3 {
+            selectedImage2 = selectedImage3
+            selectedImage3 = nil
+            imageRemoved2 = false
+            imageRemoved3 = true
         } else {
-            self.selectedImage2 = nil
-            self.imageRemoved2 = true
+            selectedImage2 = nil
+            imageRemoved2 = true
         }
     }
 
     private func deleteThirdImage() {
-        self.selectedImage3 = nil
-        self.imageRemoved3 = true
+        selectedImage3 = nil
+        imageRemoved3 = true
     }
 
     private func loadExistingImages() async {
         // Load image 1
         if let imageUrlString = comment.imageUrl,
-           let imageUrl = URL(string: imageUrlString) {
+           let imageUrl = URL(string: imageUrlString)
+        {
             do {
                 let (data, _) = try await URLSession.shared.data(from: imageUrl)
                 if let image = UIImage(data: data) {
@@ -400,7 +410,8 @@ struct EditCommentView: View {
 
         // Load image 2
         if let imageUrlString = comment.imageUrl2,
-           let imageUrl = URL(string: imageUrlString) {
+           let imageUrl = URL(string: imageUrlString)
+        {
             do {
                 let (data, _) = try await URLSession.shared.data(from: imageUrl)
                 if let image = UIImage(data: data) {
@@ -416,7 +427,8 @@ struct EditCommentView: View {
 
         // Load image 3
         if let imageUrlString = comment.imageUrl3,
-           let imageUrl = URL(string: imageUrlString) {
+           let imageUrl = URL(string: imageUrlString)
+        {
             do {
                 let (data, _) = try await URLSession.shared.data(from: imageUrl)
                 if let image = UIImage(data: data) {
@@ -432,37 +444,45 @@ struct EditCommentView: View {
     }
 
     private func editRatingAndComment() {
+        errorMessage = nil
         isSubmitting = true
 
         Task {
-            let textToUpdate = !commentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                ? commentText.trimmingCharacters(in: .whitespacesAndNewlines)
-                : nil
+            do {
+                let textToUpdate = !commentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    ? commentText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    : nil
 
-            // If there's a new image, don't mark it as removed
-            let shouldRemoveImage1 = imageRemoved && selectedImage == nil
-            let shouldRemoveImage2 = imageRemoved2 && selectedImage2 == nil
-            let shouldRemoveImage3 = imageRemoved3 && selectedImage3 == nil
+                // If there's a new image, don't mark it as removed
+                let shouldRemoveImage1 = imageRemoved && selectedImage == nil
+                let shouldRemoveImage2 = imageRemoved2 && selectedImage2 == nil
+                let shouldRemoveImage3 = imageRemoved3 && selectedImage3 == nil
 
-            await vm.updateComment(
-                commentId: comment.id,
-                recommendationId: recId,
-                text: textToUpdate,
-                image: selectedImage,
-                image2: selectedImage2,
-                image3: selectedImage3,
-                rating: userRating,
-                removeImage: shouldRemoveImage1,
-                removeImage2: shouldRemoveImage2,
-                removeImage3: shouldRemoveImage3
-            )
+                try await vm.updateComment(
+                    commentId: comment.id,
+                    recommendationId: recId,
+                    text: textToUpdate,
+                    image: selectedImage,
+                    image2: selectedImage2,
+                    image3: selectedImage3,
+                    rating: userRating,
+                    removeImage: shouldRemoveImage1,
+                    removeImage2: shouldRemoveImage2,
+                    removeImage3: shouldRemoveImage3
+                )
 
-            await vm.refreshRecommendationData()
+                await vm.refreshRecommendationData()
 
-            await MainActor.run {
-                isSubmitting = false
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    onDismiss()
+                await MainActor.run {
+                    isSubmitting = false
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        onDismiss()
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isSubmitting = false
+                    errorMessage = error.localizedDescription
                 }
             }
         }

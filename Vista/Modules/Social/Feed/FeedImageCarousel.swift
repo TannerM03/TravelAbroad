@@ -63,7 +63,7 @@ struct FeedImageCarousel: View {
                             .aspectRatio(contentMode: .fill)
                             .frame(width: width, height: height)
                             .clipped()
-                        
+
                         ImageBadge(text: "User Photo")
                             .padding(12)
                     }

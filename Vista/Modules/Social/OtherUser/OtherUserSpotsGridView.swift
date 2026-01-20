@@ -44,6 +44,35 @@ struct OtherUserSpotsGridView: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            // Load More Button
+            if vm.hasMoreSpots {
+                Button(action: {
+                    Task {
+                        await vm.loadMoreSpots()
+                    }
+                }) {
+                    HStack(spacing: 8) {
+                        if vm.isLoadingMore {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .scaleEffect(0.8)
+                        }
+                        if !vm.spots.isEmpty {
+                            Text(vm.isLoadingMore ? "Loading..." : "Load More Spots")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .foregroundColor(.primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(12)
+                }
+                .disabled(vm.isLoadingMore)
+                .padding(.top, 8)
+            }
         }
         .padding(.horizontal, 16)
     }
@@ -52,7 +81,7 @@ struct OtherUserSpotsGridView: View {
         Group {
             if vm.isLoading {
                 ProgressView("Loading Spots...")
-            } else if vm.spots.isEmpty {
+            } else if !vm.isLoading && vm.spots.isEmpty {
                 Text("This user hasn't reviewed any spots yet.")
             }
         }

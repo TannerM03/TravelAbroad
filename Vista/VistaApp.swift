@@ -56,12 +56,47 @@ struct VistaApp: App {
                 }
             }
             .task {
-                // Hide splash screen after 0.75 seconds
-                try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+                // Check actual session state on app launch
+                await checkAuthSession()
+
+                // Listen for auth state changes
+                Task {
+                    for await state in SupabaseManager.shared.supabase.auth.authStateChanges {
+                        switch state.event {
+                        case .signedIn:
+                            isAuthenticated = true
+                        case .signedOut, .userDeleted:
+                            isAuthenticated = false
+                            shouldShowOnboarding = false
+                        case .tokenRefreshed:
+                            // Token refreshed successfully, stay authenticated
+                            break
+                        default:
+                            break
+                        }
+                    }
+                }
+
+                // Hide splash screen after 1 second
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
                 withAnimation(.easeOut(duration: 0.3)) {
                     showSplash = false
                 }
             }
+        }
+    }
+
+    private func checkAuthSession() async {
+        do {
+            // Try to get current session from Supabase
+            _ = try await SupabaseManager.shared.supabase.auth.session
+            // If we got here, session is valid
+            isAuthenticated = true
+        } catch {
+            // No valid session or session expired
+            print("No valid session on launch: \(error.localizedDescription)")
+            isAuthenticated = false
+            shouldShowOnboarding = false
         }
     }
 

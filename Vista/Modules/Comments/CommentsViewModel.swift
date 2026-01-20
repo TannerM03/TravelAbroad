@@ -15,6 +15,10 @@ import UIKit
 class CommentsViewModel {
     var comments: [Comment] = []
     var isLoading = false
+    var isLoadingMore = false
+    var hasMoreComments = true
+    var currentPage = 0
+    let pageSize = 20
     var userRating: Double?
     var recommendation: Recommendation?
     var isGeneratingSummary: Bool = false
@@ -40,21 +44,63 @@ class CommentsViewModel {
 
     func fetchComments(for recommendationId: String) async {
         isLoading = true
+        currentPage = 0
+        hasMoreComments = true
 
         do {
-            comments = try await supabaseManager.fetchCommentsWithVotes(for: recommendationId, sortBy: sortOption)
+            let fetchedComments = try await supabaseManager.fetchCommentsWithVotes(
+                for: recommendationId,
+                sortBy: sortOption,
+                limit: pageSize,
+                offset: 0
+            )
+            comments = fetchedComments
+
+            // If we got less than pageSize, there are no more comments
+            if fetchedComments.count < pageSize {
+                hasMoreComments = false
+            }
         } catch {
             print("Error fetching comments: \(error)")
             // Fallback to original method if one above fails (from before i had voting)
             do {
                 comments = try await supabaseManager.fetchComments(for: recommendationId)
                 applySorting()
+                hasMoreComments = false // Fallback doesn't support pagination
             } catch {
                 print("Error with fallback fetch: \(error)")
             }
         }
 
         isLoading = false
+    }
+
+    func loadMoreComments(for recommendationId: String) async {
+        guard !isLoadingMore, hasMoreComments else { return }
+
+        isLoadingMore = true
+        currentPage += 1
+
+        do {
+            let fetchedComments = try await supabaseManager.fetchCommentsWithVotes(
+                for: recommendationId,
+                sortBy: sortOption,
+                limit: pageSize,
+                offset: currentPage * pageSize
+            )
+
+            comments.append(contentsOf: fetchedComments)
+
+            // If we got less than pageSize, there are no more comments
+            if fetchedComments.count < pageSize {
+                hasMoreComments = false
+            }
+        } catch {
+            print("Error loading more comments: \(error)")
+            currentPage -= 1 // Revert page increment on error
+        }
+
+        isLoadingMore = false
     }
 
     private func applySorting() {
@@ -68,7 +114,7 @@ class CommentsViewModel {
         }
     }
 
-    func submitComment(recommendationId: String, text: String?, image: UIImage?, image2: UIImage?, image3: UIImage?, rating: Double) async {
+    func submitComment(recommendationId: String, text: String?, image: UIImage?, image2: UIImage?, image3: UIImage?, rating: Double) async throws {
         do {
             var imageUrl: String?
             var imageUrl2: String?
@@ -105,10 +151,11 @@ class CommentsViewModel {
             comments.insert(newComment, at: 0)
         } catch {
             print("Error submitting comment: \(error)")
+            throw error
         }
     }
 
-    func updateComment(commentId: String, recommendationId: String, text: String?, image: UIImage?, image2: UIImage?, image3: UIImage?, rating: Double, removeImage: Bool, removeImage2: Bool, removeImage3: Bool) async {
+    func updateComment(commentId: String, recommendationId: String, text: String?, image: UIImage?, image2: UIImage?, image3: UIImage?, rating: Double, removeImage: Bool, removeImage2: Bool, removeImage3: Bool) async throws {
         do {
             var imageUrl: String?
             var imageUrl2: String?
@@ -154,6 +201,7 @@ class CommentsViewModel {
             }
         } catch {
             print("Error updating comment: \(error)")
+            throw error
         }
     }
 

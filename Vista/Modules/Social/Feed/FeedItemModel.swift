@@ -70,7 +70,7 @@ struct FeedItem: Codable, Identifiable {
     }
 
     // Convenience computed properties
-    
+
     var commentImageUrls: [String]? {
         if let one = commentImageUrl, let two = commentImageUrl2, let three = commentImageUrl3 {
             return [one, two, three]
@@ -82,7 +82,7 @@ struct FeedItem: Codable, Identifiable {
             return nil
         }
     }
-    
+
     var displayName: String {
         switch type {
         case .cityRating:

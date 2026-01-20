@@ -14,6 +14,13 @@ class UserSearchViewModel {
     var profiles: [OtherProfile] = []
     var userId: UUID?
     var isLoading: Bool = false
+    var searchQuery: String = ""
+
+    // Pagination state
+    var isLoadingMore = false
+    var hasMoreUsers = true
+    var currentPage = 0
+    let pageSize = 30
 
     func fetchUser() async {
         do {
@@ -24,14 +31,58 @@ class UserSearchViewModel {
         }
     }
 
-    func fetchProfiles(userId: UUID) async {
+    func searchUsers(query: String) async {
+        guard let userId = userId else { return }
+        guard query.count >= 2 else {
+            // Clear results if query is too short
+            profiles = []
+            return
+        }
+
         isLoading = true
+        currentPage = 0
+        hasMoreUsers = true
         let userIdString = userId.uuidString
+
         do {
-            profiles = try await SupabaseManager.shared.fetchUsers(userId: userIdString)
+            profiles = try await SupabaseManager.shared.fetchUsers(
+                userId: userIdString,
+                searchQuery: query,
+                limit: pageSize,
+                offset: 0
+            )
+            if profiles.count < pageSize {
+                hasMoreUsers = false
+            }
         } catch {
-            print("error fetching profiles in vm: \(error.localizedDescription)")
+            print("error searching profiles in vm: \(error.localizedDescription)")
         }
         isLoading = false
+    }
+
+    func loadMoreUsers() async {
+        guard let userId = userId else { return }
+        guard !isLoadingMore, hasMoreUsers, searchQuery.count >= 2 else { return }
+
+        isLoadingMore = true
+        currentPage += 1
+        let userIdString = userId.uuidString
+
+        do {
+            let newProfiles = try await SupabaseManager.shared.fetchUsers(
+                userId: userIdString,
+                searchQuery: searchQuery,
+                limit: pageSize,
+                offset: currentPage * pageSize
+            )
+            profiles.append(contentsOf: newProfiles)
+            if newProfiles.count < pageSize {
+                hasMoreUsers = false
+            }
+        } catch {
+            print("error loading more profiles in vm: \(error.localizedDescription)")
+            currentPage -= 1
+        }
+        isLoadingMore = false
     }
 }
