@@ -601,7 +601,7 @@ class SupabaseManager {
             let id: String
             let user_id: String
             let rec_id: String
-            let rating: Int
+            let rating: Double
             let comment: String?
             let image_url: String?
             let image_url_2: String?
@@ -681,7 +681,7 @@ class SupabaseManager {
                 userId: review.user_id,
                 username: review.profiles.username,
                 userImageUrl: review.profiles.image_url,
-                rating: Double(review.rating),
+                rating: review.rating,
                 createdAt: review.created_at,
                 isUserPopular: review.profiles.is_popular,
                 cityId: review.rec_with_avg_rating.city_id,
@@ -772,7 +772,7 @@ class SupabaseManager {
             let id: String
             let user_id: String
             let rec_id: String
-            let rating: Int
+            let rating: Double
             let comment: String?
             let image_url: String?
             let image_url_2: String?
@@ -852,7 +852,7 @@ class SupabaseManager {
                 userId: review.user_id,
                 username: review.profiles.username,
                 userImageUrl: review.profiles.image_url,
-                rating: Double(review.rating),
+                rating: review.rating,
                 createdAt: review.created_at,
                 isUserPopular: review.profiles.is_popular,
                 cityId: review.rec_with_avg_rating.city_id,
@@ -2041,13 +2041,18 @@ class SupabaseManager {
                 let image_url_3: String?
             }
 
-            let comment: CommentImages = try await supabase
+            let comments: [CommentImages] = try await supabase
                 .from("comments")
                 .select("image_url, image_url_2, image_url_3")
                 .eq("id", value: commentId)
-                .single()
                 .execute()
                 .value
+
+            // If comment doesn't exist (already deleted), just return
+            guard let comment = comments.first else {
+                print("Comment already deleted, skipping")
+                return
+            }
 
             // Delete images from storage if they exist
             let bucket = supabase.storage.from("comment-images")

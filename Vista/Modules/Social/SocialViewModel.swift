@@ -63,7 +63,21 @@ class SocialViewModel {
                 hasMoreFollowing = false
             }
         } catch {
-            print("error fetching activity feed in vm: \(error.localizedDescription)")
+            print("❌ Error fetching following feed: \(error)")
+            if let decodingError = error as? DecodingError {
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    print("❌ Missing key: \(key.stringValue), codingPath: \(context.codingPath)")
+                case .typeMismatch(let type, let context):
+                    print("❌ Type mismatch for type: \(type), codingPath: \(context.codingPath)")
+                case .valueNotFound(let type, let context):
+                    print("❌ Value not found for type: \(type), codingPath: \(context.codingPath)")
+                case .dataCorrupted(let context):
+                    print("❌ Data corrupted: \(context)")
+                @unknown default:
+                    print("❌ Unknown decoding error")
+                }
+            }
             hasError = true
             errorMessage = "Failed to load feed"
         }
@@ -86,7 +100,21 @@ class SocialViewModel {
                 hasMorePopular = false
             }
         } catch {
-            print("error fetch popular activity feed in vm: \(error.localizedDescription)")
+            print("❌ Error fetching popular feed: \(error)")
+            if let decodingError = error as? DecodingError {
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    print("❌ Missing key: \(key.stringValue), codingPath: \(context.codingPath)")
+                case .typeMismatch(let type, let context):
+                    print("❌ Type mismatch for type: \(type), codingPath: \(context.codingPath)")
+                case .valueNotFound(let type, let context):
+                    print("❌ Value not found for type: \(type), codingPath: \(context.codingPath)")
+                case .dataCorrupted(let context):
+                    print("❌ Data corrupted: \(context)")
+                @unknown default:
+                    print("❌ Unknown decoding error")
+                }
+            }
             hasError = true
             errorMessage = "failed to load popular feed"
         }
