@@ -44,6 +44,35 @@ struct OtherUserSpotsGridView: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            // Load More Button
+            if vm.hasMoreSpots {
+                Button(action: {
+                    Task {
+                        await vm.loadMoreSpots()
+                    }
+                }) {
+                    HStack(spacing: 8) {
+                        if vm.isLoadingMore {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .scaleEffect(0.8)
+                        }
+                        if !vm.spots.isEmpty {
+                            Text(vm.isLoadingMore ? "Loading..." : "Load More Spots")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .foregroundColor(.primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(12)
+                }
+                .disabled(vm.isLoadingMore)
+                .padding(.top, 8)
+            }
         }
         .padding(.horizontal, 16)
     }
@@ -52,7 +81,7 @@ struct OtherUserSpotsGridView: View {
         Group {
             if vm.isLoading {
                 ProgressView("Loading Spots...")
-            } else if vm.spots.isEmpty {
+            } else if !vm.isLoading && vm.spots.isEmpty {
                 Text("This user hasn't reviewed any spots yet.")
             }
         }
@@ -67,7 +96,7 @@ struct OtherSpotCard: View {
         switch spot.recommendation.category {
         case .all: return "mappin.and.ellipse.circle"
         case .activities: return "figure.hiking"
-        case .nightlife: return "music.note"
+        case .barsClubs: return "music.note"
         case .restaurants: return "fork.knife"
         case .hostels: return "bed.double"
         case .sights: return "camera"
@@ -136,6 +165,10 @@ struct OtherSpotCard: View {
                                 .foregroundColor(.yellow)
                                 .font(.caption)
                         }
+                        Text(String(format: "%.1f", spot.userRating))
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .padding(.leading, 4)
                         Text("User Rating")
                             .font(.caption2)
                             .foregroundColor(.secondary)

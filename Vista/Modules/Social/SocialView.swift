@@ -12,6 +12,7 @@ struct SocialView: View {
     @State private var vm = SocialViewModel()
     @State private var notificationVM = NotificationAlertViewModel()
     @State private var selectedFeed: FeedType = .popular
+    @State private var hasInitialized = false
 
     enum FeedType: String, CaseIterable {
         case following = "Following"
@@ -33,43 +34,102 @@ struct SocialView: View {
                 )
                 .ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Feed content
-                        if vm.isLoading && currentFeedItems.isEmpty {
-                            // Loading state
-                            VStack(spacing: 16) {
-                                ProgressView()
-                                    .scaleEffect(1.2)
-                                Text("Loading feed...")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                    .fontDesign(.rounded)
-                            }
-                            .padding(.vertical, 60)
-                        } else if currentFeedItems.isEmpty {
-                            // Empty state
-                            emptyStateView
-                        } else {
-                            // Feed items
-                            LazyVStack(spacing: 12) {
-                                ForEach(currentFeedItems) { feedItem in
-                                    FeedItemCard(
-                                        feedItem: feedItem,
-                                        destination: destinationView(for: feedItem)
-                                    )
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 24) {
+                            // Invisible anchor at top for scrolling
+                            Color.clear
+                                .frame(height: 0)
+                                .id("top")
+
+                            // Feed content
+                            if vm.isLoading && currentFeedItems.isEmpty {
+                                // Loading state
+                                VStack(spacing: 16) {
+                                    ProgressView()
+                                        .scaleEffect(1.2)
+                                    Text("Loading feed...")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                        .fontDesign(.rounded)
                                 }
+                                .padding(.vertical, 60)
+                            } else if currentFeedItems.isEmpty {
+                                // Empty state
+                                emptyStateView
+                            } else {
+                                // Feed items
+                                LazyVStack(spacing: 12) {
+                                    ForEach(currentFeedItems) { feedItem in
+                                        FeedItemCard(
+                                            feedItem: feedItem,
+                                            destination: destinationView(for: feedItem)
+                                        )
+                                    }
+
+                                    // Load More button
+                                    if selectedFeed == .following && vm.hasMoreFollowing {
+                                        Button(action: {
+                                            Task {
+                                                await vm.loadMoreFollowingFeed()
+                                            }
+                                        }) {
+                                            HStack(spacing: 8) {
+                                                if vm.isLoadingMoreFollowing {
+                                                    ProgressView()
+                                                        .scaleEffect(0.8)
+                                                }
+                                                Text(vm.isLoadingMoreFollowing ? "Loading..." : "Load More")
+                                                    .font(.subheadline)
+                                                    .fontWeight(.semibold)
+                                            }
+                                            .foregroundColor(.primary)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .background(.ultraThinMaterial)
+                                            .cornerRadius(12)
+                                        }
+                                        .disabled(vm.isLoadingMoreFollowing)
+                                    } else if selectedFeed == .popular && vm.hasMorePopular {
+                                        Button(action: {
+                                            Task {
+                                                await vm.loadMorePopularFeed()
+                                            }
+                                        }) {
+                                            HStack(spacing: 8) {
+                                                if vm.isLoadingMorePopular {
+                                                    ProgressView()
+                                                        .scaleEffect(0.8)
+                                                }
+                                                Text(vm.isLoadingMorePopular ? "Loading..." : "Load More")
+                                                    .font(.subheadline)
+                                                    .fontWeight(.semibold)
+                                            }
+                                            .foregroundColor(.primary)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .background(.ultraThinMaterial)
+                                            .cornerRadius(12)
+                                        }
+                                        .disabled(vm.isLoadingMorePopular)
+                                    }
+                                }
+                                .padding(.horizontal, 20)
                             }
-                            .padding(.horizontal, 20)
+                        }
+                        .padding(.vertical, 24)
+                    }
+                    .refreshable {
+                        if selectedFeed == .following {
+                            await vm.refreshFeed()
+                        } else {
+                            await vm.fetchPopularFeed()
                         }
                     }
-                    .padding(.vertical, 24)
-                }
-                .refreshable {
-                    if selectedFeed == .following {
-                        await vm.refreshFeed()
-                    } else {
-                        await vm.fetchPopularFeed()
+                    .onChange(of: selectedFeed) { _, _ in
+                        withAnimation {
+                            proxy.scrollTo("top", anchor: .top)
+                        }
                     }
                 }
             }
@@ -81,8 +141,10 @@ struct SocialView: View {
                             Button(action: {
                                 selectedFeed = feedType
                                 Task {
-                                    if feedType == .popular, vm.popularFeedItems.isEmpty {
+                                    if feedType == .popular {
                                         await vm.fetchPopularFeed()
+                                    } else {
+                                        await vm.refreshFeed()
                                     }
                                 }
                             }) {
@@ -148,9 +210,12 @@ struct SocialView: View {
             }
         }
         .task {
-            // Set initial feed based on user preference
-            if let feedDefault = profileViewModel?.feedDefault {
-                selectedFeed = feedDefault == "following" ? .following : .popular
+            // Set initial feed based on user preference (only on first launch)
+            if !hasInitialized {
+                if let feedDefault = profileViewModel?.feedDefault {
+                    selectedFeed = feedDefault == "following" ? .following : .popular
+                }
+                hasInitialized = true
             }
 
             await vm.fetchUser()

@@ -41,12 +41,14 @@ struct SettingsView: View {
                 Section("Feed Preferences") {
                     HStack {
                         Image(systemName: "newspaper")
-                            .foregroundColor(.blue)
+                            .foregroundStyle(.blue)
                             .frame(width: 24)
-                        Text("Default Feed")
+                        Text("Default Feed Type")
+                            .font(.footnote)
+
                         Spacer()
                         Picker("", selection: $vm.feedDefault) {
-                            Text("Popular").tag("popular")
+                            Text("Popular Creators").tag("popular")
                             Text("Following").tag("following")
                         }
                         .pickerStyle(.menu)
@@ -57,6 +59,47 @@ struct SettingsView: View {
                                 }
                             }
                         }
+                    }
+                    HStack {
+                        Image(systemName: "person")
+                            .foregroundStyle(.blue)
+                            .frame(width: 24)
+                        Text("Show Own Posts in Following Feed")
+                            .font(.footnote)
+                        Spacer()
+                        Picker("", selection: $vm.showOwnPostsInFollowing) {
+                            Text("Yes").tag(true)
+                            Text("No").tag(false)
+                        }
+                        .pickerStyle(.menu)
+                        .onChange(of: vm.showOwnPostsInFollowing) { _, newValue in
+                            Task {
+                                if let userId = vm.userId {
+                                    try await SupabaseManager.shared.updateFollowingFeedPreference(userId: userId, followingFeedPref: newValue)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Section("More...") {
+                    NavigationLink(destination: HelpAndSupportView()) {
+                        HStack {
+                            Image(systemName: "questionmark.circle")
+                                .foregroundColor(.blue)
+                                .frame(width: 24)
+                            Text("Help & Support")
+                        }
+                    }
+
+                    HStack {
+                        Image(systemName: "info.circle")
+                            .foregroundColor(.blue)
+                            .frame(width: 24)
+                        Text("App Version")
+                        Spacer()
+                        Text(appVersion)
+                            .foregroundColor(.secondary)
                     }
                 }
 
@@ -139,6 +182,12 @@ struct SettingsView: View {
         } message: {
             Text("This action cannot be undone. All your data including reviews, ratings, and profile information will be permanently deleted.")
         }
+    }
+
+    private var appVersion: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
+        return "\(version) (\(build))"
     }
 }
 

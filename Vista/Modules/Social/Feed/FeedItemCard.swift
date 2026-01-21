@@ -17,7 +17,7 @@ struct FeedItemCard<Destination: View>: View {
         switch category {
         case .all: return "mappin.and.ellipse.circle"
         case .activities: return "figure.hiking"
-        case .nightlife: return "music.note"
+        case .barsClubs: return "music.note"
         case .restaurants: return "fork.knife"
         case .hostels: return "bed.double"
         case .sights: return "camera"
@@ -148,7 +148,7 @@ struct FeedItemCard<Destination: View>: View {
                         if feedItem.type == .spotReview {
                             // Use carousel for spot reviews
                             FeedImageCarousel(
-                                commentImageUrl: feedItem.commentImageUrl,
+                                commentImageUrls: feedItem.commentImageUrls,
                                 spotImageUrl: feedItem.spotImageUrl,
                                 categoryIcon: categoryIcon,
                                 categoryColor: feedItem.spotCategory?.pillColor ?? .gray,

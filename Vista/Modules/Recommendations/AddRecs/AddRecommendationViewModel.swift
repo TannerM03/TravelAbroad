@@ -16,9 +16,11 @@ class AddRecommendationViewModel {
     var errorMessage: String?
     var placeName: String = ""
     var selectedImage: UIImage?
+    var selectedImage2: UIImage?
+    var selectedImage3: UIImage?
     var description = ""
     var isSubmitting = false
-    var userRating: Int = 0
+    var userRating: Double = 0.0
     var showNoRatingAlert = false
 
     // Properties from AddRecommendationView
@@ -49,20 +51,27 @@ class AddRecommendationViewModel {
             return
         }
 
-        print("AddRecommendation: Submitting recommendation for place: '\(placeName)'")
-        print("AddRecommendation: City: \(cityName), Category: \(selectedCategory.rawValue)")
-        print("AddRecommendation: Description: '\(description.isEmpty ? "none" : description)'")
-
+        // Clear any previous error
+        errorMessage = nil
         isSubmitting = true
 
         Task {
             do {
                 var imageUrl: String?
+                var imageUrl2: String?
+                var imageUrl3: String?
 
-                // Upload image if user selected one
+                // Upload images if user selected them
                 if let image = selectedImage {
-                    print("📷 AddRecommendation: Uploading user-selected image")
                     imageUrl = try await supabaseManager.uploadRecommendationImage(image)
+                }
+
+                if let image2 = selectedImage2 {
+                    imageUrl2 = try await supabaseManager.uploadCommentImage(image2)
+                }
+
+                if let image3 = selectedImage3 {
+                    imageUrl3 = try await supabaseManager.uploadCommentImage(image3)
                 }
 
                 let recommendation = try await SupabaseManager.shared.createRecommendation(
@@ -79,6 +88,8 @@ class AddRecommendationViewModel {
                     recommendationId: recommendation.id,
                     text: description.isEmpty ? nil : description,
                     imageUrl: imageUrl,
+                    imageUrl2: imageUrl2,
+                    imageUrl3: imageUrl3,
                     rating: userRating
                 )
 
@@ -87,6 +98,7 @@ class AddRecommendationViewModel {
                 dismiss?()
             } catch {
                 isSubmitting = false
+                errorMessage = error.localizedDescription
                 print("AddRecommendation: Error creating recommendation: \(error.localizedDescription)")
             }
         }

@@ -14,6 +14,10 @@ import Supabase
 class RecommendationsViewModel {
     var recommendations: [Recommendation] = []
     var isLoading = false
+    var isLoadingMore = false
+    var hasMoreRecs = true
+    var currentPage = 0
+    let pageSize = 50
     var userId: UUID = .init()
     var user: User?
     var userRating: Double?
@@ -33,31 +37,6 @@ class RecommendationsViewModel {
 
     var onRatingUpdated: ((Double) -> Void)?
 
-    var categorizedRecs: [Recommendation] {
-        if let selected = selectedCategory {
-            if selected == CategoryType.all {
-                return recommendations
-            }
-            return recommendations.filter { $0.category == selected }
-        } else {
-            return recommendations
-        }
-    }
-
-    var searchedRecs: [Recommendation] {
-        if userSearch.isEmpty {
-            return categorizedRecs
-        } else {
-            return categorizedRecs.filter { rec in
-                rec.name.lowercased().contains(userSearch.lowercased())
-            }
-        }
-    }
-
-    var filteredRecs: [Recommendation] {
-        return categorizedRecs.sorted { $0.avgRating > $1.avgRating }
-    }
-
     func initialize(rating: Double) {
         userRating = rating
     }
@@ -74,14 +53,84 @@ class RecommendationsViewModel {
         self.onRatingUpdated = onRatingUpdated
     }
 
+    func reloadAvgRating() async {
+        guard let cityUUID = UUID(uuidString: cityId) else {
+            print("Error: Invalid city ID")
+            return
+        }
+        do {
+            if let newAvgRating = try await SupabaseManager.shared.reloadAvgRating(cityId: cityUUID) {
+                avgRating = newAvgRating
+            }
+        } catch {
+            print("Error updating avg rating: \(error.localizedDescription)")
+        }
+    }
+
     func getRecs(cityId: UUID) async {
         isLoading = true
         defer { isLoading = false }
+
+        currentPage = 0
+        hasMoreRecs = true
+
         do {
-            recommendations = try await SupabaseManager.shared.fetchRecommendations(cityId: cityId)
+            // If searching, fetch all matching results (no pagination)
+            if !userSearch.isEmpty {
+                recommendations = try await SupabaseManager.shared.fetchRecommendations(
+                    cityId: cityId,
+                    category: selectedCategory,
+                    searchQuery: userSearch,
+                    limit: nil,
+                    offset: 0
+                )
+                hasMoreRecs = false
+            } else {
+                // Normal pagination with category filter
+                let fetchedRecs = try await SupabaseManager.shared.fetchRecommendations(
+                    cityId: cityId,
+                    category: selectedCategory,
+                    searchQuery: nil,
+                    limit: pageSize,
+                    offset: 0
+                )
+                recommendations = fetchedRecs
+
+                if fetchedRecs.count < pageSize {
+                    hasMoreRecs = false
+                }
+            }
         } catch {
-            print("Error getting cities in vm: \(error)")
+            print("Error getting recommendations in vm: \(error)")
         }
+    }
+
+    func loadMoreRecs(cityId: UUID) async {
+        guard !isLoadingMore, hasMoreRecs, userSearch.isEmpty else { return }
+
+        isLoadingMore = true
+        currentPage += 1
+
+        do {
+            let fetchedRecs = try await SupabaseManager.shared.fetchRecommendations(
+                cityId: cityId,
+                category: selectedCategory,
+                searchQuery: nil,
+                limit: pageSize,
+                offset: currentPage * pageSize
+            )
+
+            recommendations.append(contentsOf: fetchedRecs)
+
+            if fetchedRecs.count < pageSize {
+                hasMoreRecs = false
+            }
+        } catch {
+            print("Error loading more recommendations: \(error)")
+            currentPage -= 1
+        }
+
+        isLoadingMore = false
     }
 
     func getCoordinates(cityId: UUID) async {

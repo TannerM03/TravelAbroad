@@ -14,6 +14,10 @@ import Supabase
 class OtherUserSpotsViewModel {
     var spots: [ReviewedSpot] = []
     var isLoading = false
+    var isLoadingMore = false
+    var hasMoreSpots = true
+    var currentPage = 0
+    let pageSize = 20
     var userId: UUID?
     var user: User?
 
@@ -26,15 +30,29 @@ class OtherUserSpotsViewModel {
             isLoading = true
         }
 
+        currentPage = 0
+        hasMoreSpots = true
+
         do {
             if let userId = userId {
-                spots = try await SupabaseManager.shared.fetchUserReviewedSpotsWithVotes(userId: userId)
+                let fetchedSpots = try await SupabaseManager.shared.fetchUserReviewedSpotsWithVotes(
+                    userId: userId,
+                    limit: pageSize,
+                    offset: 0
+                )
+                spots = fetchedSpots
+
+                // If we got less than pageSize, there are no more spots
+                if fetchedSpots.count < pageSize {
+                    hasMoreSpots = false
+                }
             }
         } catch {
             print("Failed to fetch reviewed spots with votes: \(error)")
             do {
                 if let userId = userId {
                     spots = try await SupabaseManager.shared.fetchUserReviewedSpots(userId: userId)
+                    hasMoreSpots = false // Fallback doesn't support pagination
                 }
             } catch {
                 print("Failed to fetch reviewed spots: \(error)")
@@ -44,6 +62,33 @@ class OtherUserSpotsViewModel {
         if showLoading {
             isLoading = false
         }
+    }
+
+    func loadMoreSpots() async {
+        guard !isLoadingMore, hasMoreSpots, let userId = userId else { return }
+
+        isLoadingMore = true
+        currentPage += 1
+
+        do {
+            let fetchedSpots = try await SupabaseManager.shared.fetchUserReviewedSpotsWithVotes(
+                userId: userId,
+                limit: pageSize,
+                offset: currentPage * pageSize
+            )
+
+            spots.append(contentsOf: fetchedSpots)
+
+            // If we got less than pageSize, there are no more spots
+            if fetchedSpots.count < pageSize {
+                hasMoreSpots = false
+            }
+        } catch {
+            print("Error loading more spots: \(error)")
+            currentPage -= 1 // Revert page increment on error
+        }
+
+        isLoadingMore = false
     }
 
     func toggleVote(spotId: String, voteType: VoteType) async {

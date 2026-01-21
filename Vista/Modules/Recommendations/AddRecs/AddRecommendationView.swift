@@ -28,6 +28,7 @@ struct AddRecommendationView: View {
 
     @FocusState private var isKeyboardShowing: Bool
     @State private var showingImagePicker = false
+    @State private var activeImageSlot: Int = 1
 
     var body: some View {
         NavigationView {
@@ -73,7 +74,13 @@ struct AddRecommendationView: View {
                 Text("Please select a star rating before submitting your recommendation.")
             }
             .sheet(isPresented: $showingImagePicker) {
-                ImagePicker(image: $viewModel.selectedImage)
+                if activeImageSlot == 1 {
+                    ImagePicker(image: $viewModel.selectedImage)
+                } else if activeImageSlot == 2 {
+                    ImagePicker(image: $viewModel.selectedImage2)
+                } else {
+                    ImagePicker(image: $viewModel.selectedImage3)
+                }
             }
         }
     }
@@ -159,21 +166,64 @@ struct AddRecommendationView: View {
 
     private var imageSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Photo")
-                .font(.headline)
-                .fontWeight(.semibold)
+            HStack {
+                Text("Photo")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                Spacer()
+                // Plus and trash button when first image is set
+                if viewModel.selectedImage != nil {
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            if let _ = viewModel.selectedImage2 {
+                                viewModel.selectedImage = viewModel.selectedImage2
+                                viewModel.selectedImage2 = viewModel.selectedImage3
+                            } else {
+                                viewModel.selectedImage = nil
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .font(.callout.weight(.semibold))
+                    .fontDesign(.rounded)
+                    .foregroundColor(.red)
+                    .padding(8)
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(Circle())
+                    .padding(.horizontal, 6)
+                    if viewModel.selectedImage2 == nil {
+                        Button {
+                            activeImageSlot = 2
+                            showingImagePicker = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.callout.weight(.semibold))
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(Color.green)
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                        }
+                    }
+                }
+            }.zIndex(1)
 
+            // First large image
             Button {
+                activeImageSlot = 1
                 showingImagePicker = true
             } label: {
                 if let image = viewModel.selectedImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(maxWidth: .infinity, maxHeight: 200)
-                        .clipped()
-                        .cornerRadius(16)
-                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    ZStack(alignment: .bottomTrailing) {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(maxWidth: .infinity, maxHeight: 200)
+                            .clipped()
+                            .cornerRadius(16)
+                            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    }
                 } else {
                     Rectangle()
                         .fill(
@@ -198,6 +248,104 @@ struct AddRecommendationView: View {
                 }
             }
             .buttonStyle(PlainButtonStyle())
+
+            // Second image (only show if first image exists)
+            if viewModel.selectedImage != nil && viewModel.selectedImage2 != nil {
+                HStack(spacing: 12) {
+                    Image(uiImage: viewModel.selectedImage2!)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 60, height: 60)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Image 2 attached")
+                            .font(.subheadline.weight(.semibold))
+                            .fontDesign(.rounded)
+                            .foregroundColor(.primary)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            if let _ = viewModel.selectedImage3 {
+                                viewModel.selectedImage2 = viewModel.selectedImage3
+                                viewModel.selectedImage3 = nil
+                            } else {
+                                viewModel.selectedImage2 = nil
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .font(.callout.weight(.semibold))
+                    .fontDesign(.rounded)
+                    .foregroundColor(.red)
+                    .padding(8)
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(Circle())
+
+                    // Show green plus if less than 3 images
+                    if viewModel.selectedImage3 == nil {
+                        Button(action: {
+                            activeImageSlot = 3
+                            showingImagePicker = true
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.callout.weight(.semibold))
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(.green)
+                                .clipShape(Circle())
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color(.systemGray6).opacity(0.5))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
+
+            // Third image (only show if second image exists)
+            if viewModel.selectedImage != nil && viewModel.selectedImage2 != nil && viewModel.selectedImage3 != nil {
+                HStack(spacing: 12) {
+                    Image(uiImage: viewModel.selectedImage3!)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 60, height: 60)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Image 3 attached")
+                            .font(.subheadline.weight(.semibold))
+                            .fontDesign(.rounded)
+                            .foregroundColor(.primary)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            viewModel.selectedImage3 = nil
+                        }
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .font(.callout.weight(.semibold))
+                    .fontDesign(.rounded)
+                    .foregroundColor(.red)
+                    .padding(8)
+                    .background(Color.red.opacity(0.1))
+                    .clipShape(Circle())
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color(.systemGray6).opacity(0.5))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
         }
         .padding(20)
         .background(Color(.systemBackground))
@@ -211,25 +359,33 @@ struct AddRecommendationView: View {
                 .font(.headline)
                 .fontWeight(.semibold)
 
-            HStack(spacing: 12) {
-                Spacer()
-
-                ForEach(1 ... 5, id: \.self) { i in
-                    Button(action: {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                            print("userRating: \(i)")
-                            viewModel.userRating = i
+            VStack(spacing: 16) {
+                HStack(spacing: 12) {
+                    ForEach(1 ... 5, id: \.self) { i in
+                        Button(action: {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                viewModel.userRating = Double(i)
+                            }
+                        }) {
+                            Image(systemName: viewModel.userRating >= Double(i) ? "star.fill" : viewModel.userRating >= Double(i) - 0.5 ? "star.leadinghalf.filled" : "star")
+                                .font(.title)
+                                .fontWeight(.medium)
+                                .foregroundStyle(.yellow)
+                                .scaleEffect(viewModel.userRating >= Double(i) ? 1.1 : 1.0)
                         }
-                    }) {
-                        Image(systemName: viewModel.userRating >= i ? "star.fill" : "star")
-                            .font(.title.weight(.medium))
-                            .foregroundColor(.yellow)
-                            .scaleEffect(viewModel.userRating >= i ? 1.1 : 1.0)
-                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: viewModel.userRating)
+                        .buttonStyle(.plain)
                     }
                 }
 
-                Spacer()
+                Text(String(format: "%.1f", viewModel.userRating))
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .fontDesign(.rounded)
+                    .foregroundStyle(.primary)
+
+                Slider(value: $viewModel.userRating, in: 0 ... 5, step: 0.1)
+                    .accentColor(.yellow)
+                    .padding(.horizontal, 8)
             }
         }
         .padding(20)
@@ -274,17 +430,26 @@ struct AddRecommendationView: View {
 
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Review (Optional)")
+            Text("Review")
                 .font(.headline)
                 .fontWeight(.semibold)
 
             TextField("Share your thoughts!", text: $viewModel.description, axis: .vertical)
+                .focused($isKeyboardShowing)
                 .textFieldStyle(PlainTextFieldStyle())
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background(Color(.systemGray6))
+                .background(Color(.systemGray5))
                 .cornerRadius(12)
                 .lineLimit(3 ... 6)
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            isKeyboardShowing = false
+                        }
+                    }
+                }
         }
         .padding(20)
         .background(Color(.systemBackground))
@@ -293,38 +458,49 @@ struct AddRecommendationView: View {
     }
 
     private var submitSection: some View {
-        Button {
-            viewModel.submitRecommendation()
-        } label: {
-            HStack(spacing: 12) {
-                if viewModel.isSubmitting {
-                    ProgressView()
-                        .scaleEffect(0.9)
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                } else {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 18, weight: .medium))
-                }
-                Text(viewModel.isSubmitting ? "Adding Recommendation..." : "Add Recommendation")
-                    .font(.headline)
-                    .fontWeight(.semibold)
+        VStack(spacing: 12) {
+            // Error message display
+            if let errorMessage = viewModel.errorMessage {
+                Text(errorMessage)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .padding(.horizontal, 24)
+                    .multilineTextAlignment(.center)
             }
-            .frame(maxWidth: .infinity, minHeight: 54)
-            .foregroundColor(.white)
-            .background(
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.purple, Color.blue]),
-                    startPoint: .leading,
-                    endPoint: .trailing
+
+            Button {
+                viewModel.submitRecommendation()
+            } label: {
+                HStack(spacing: 12) {
+                    if viewModel.isSubmitting {
+                        ProgressView()
+                            .scaleEffect(0.9)
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    } else {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 18, weight: .medium))
+                    }
+                    Text(viewModel.isSubmitting ? "Adding Recommendation..." : "Add Recommendation")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity, minHeight: 54)
+                .foregroundColor(.white)
+                .background(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.purple, Color.blue]),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
                 )
-            )
-            .cornerRadius(16)
-            .shadow(color: .purple.opacity(0.3), radius: 8, x: 0, y: 4)
-            .scaleEffect(viewModel.isSubmitting ? 0.98 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: viewModel.isSubmitting)
+                .cornerRadius(16)
+                .shadow(color: .purple.opacity(0.3), radius: 8, x: 0, y: 4)
+                .scaleEffect(viewModel.isSubmitting ? 0.98 : 1.0)
+                .animation(.easeInOut(duration: 0.1), value: viewModel.isSubmitting)
+            }
+            .disabled(viewModel.selectedCategory == CategoryType.all || viewModel.isSubmitting || viewModel.placeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .buttonStyle(PlainButtonStyle())
         }
-        .disabled(viewModel.selectedCategory == CategoryType.all || viewModel.isSubmitting || viewModel.placeName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        .buttonStyle(PlainButtonStyle())
         .padding(.horizontal, 20)
     }
 }
