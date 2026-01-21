@@ -29,6 +29,7 @@ class ProfileViewModel {
     var followerCount: Int = 0
     var isPopular: Bool = false
     var feedDefault: String = "popular"
+    var showOwnPostsInFollowing: Bool = true
     var imageSelection: PhotosPickerItem? {
         didSet {
             if let imageSelection {
@@ -67,6 +68,7 @@ class ProfileViewModel {
                 profileImageURL = try await SupabaseManager.shared.fetchProfilePic(userId: userId)
                 isPopular = try await SupabaseManager.shared.fetchIsPopular(userId: userId)
                 feedDefault = try await SupabaseManager.shared.fetchFeedDefault(userId: userId)
+                showOwnPostsInFollowing = try await SupabaseManager.shared.fetchFollowingFeedPrefDefault(userId: userId)
 
                 if let urlString = profileImageURL, let url = URL(string: urlString) {
                     await loadImageFromURL(url)

@@ -12,6 +12,9 @@ struct ReviewedSpot: Identifiable, Codable {
     let id: String
     let recommendation: Recommendation
     let comment: String?
+    let imageUrl: String?
+    let imageUrl2: String?
+    let imageUrl3: String?
     let userRating: Double
     let cityName: String
     let country: String
@@ -22,10 +25,13 @@ struct ReviewedSpot: Identifiable, Codable {
     var netVotes: Int = 0
     var userVote: VoteType? = nil
 
-    init(commentId: String, recommendation: Recommendation, comment: String?, userRating: Double, cityName: String, country: String, createdAt: Date, upvoteCount: Int = 0, downvoteCount: Int = 0, netVotes: Int = 0, userVote: VoteType? = nil) {
+    init(commentId: String, recommendation: Recommendation, comment: String?, imageUrl: String?, imageUrl2: String? = nil, imageUrl3: String? = nil, userRating: Double, cityName: String, country: String, createdAt: Date, upvoteCount: Int = 0, downvoteCount: Int = 0, netVotes: Int = 0, userVote: VoteType? = nil) {
         id = commentId
         self.recommendation = recommendation
         self.comment = comment
+        self.imageUrl = imageUrl
+        self.imageUrl2 = imageUrl2
+        self.imageUrl3 = imageUrl3
         self.userRating = userRating
         self.cityName = cityName
         self.country = country
@@ -40,6 +46,9 @@ struct ReviewedSpot: Identifiable, Codable {
         case id
         case recommendation
         case comment
+        case imageUrl = "image_url"
+        case imageUrl2 = "image_url_2"
+        case imageUrl3 = "image_url_3"
         case userRating = "rating"
         case cityName
         case country
@@ -55,6 +64,9 @@ struct ReviewedSpot: Identifiable, Codable {
         id = try container.decode(String.self, forKey: .id)
         recommendation = try container.decode(Recommendation.self, forKey: .recommendation)
         comment = try container.decodeIfPresent(String.self, forKey: .comment)
+        imageUrl = try container.decodeIfPresent(String.self, forKey: .imageUrl)
+        imageUrl2 = try container.decodeIfPresent(String.self, forKey: .imageUrl2)
+        imageUrl3 = try container.decodeIfPresent(String.self, forKey: .imageUrl3)
         userRating = try container.decode(Double.self, forKey: .userRating)
         cityName = try container.decode(String.self, forKey: .cityName)
         country = try container.decode(String.self, forKey: .country)
@@ -74,6 +86,7 @@ struct ReviewedSpot: Identifiable, Codable {
         try container.encode(id, forKey: .id)
         try container.encode(recommendation, forKey: .recommendation)
         try container.encodeIfPresent(comment, forKey: .comment)
+        try container.encodeIfPresent(imageUrl, forKey: .imageUrl)
         try container.encode(userRating, forKey: .userRating)
         try container.encode(cityName, forKey: .cityName)
         try container.encode(country, forKey: .country)
@@ -123,15 +136,46 @@ struct SpotsGridView: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            // Load More Button
+            if vm.hasMoreSpots {
+                Button(action: {
+                    if let userId = vm.userId {
+                        Task {
+                            await vm.loadMoreSpots(userId: userId)
+                        }
+                    }
+                }) {
+                    HStack(spacing: 8) {
+                        if vm.isLoadingMore {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .scaleEffect(0.8)
+                        }
+                        if !vm.reviews.isEmpty {
+                            Text(vm.isLoadingMore ? "Loading..." : "Load More Spots")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .foregroundColor(.primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(12)
+                }
+                .disabled(vm.isLoadingMore)
+                .padding(.top, 8)
+            }
         }
         .padding(.horizontal, 16)
     }
 
     private var overlayContentSection: some View {
         Group {
-            if vm.isLoading {
+            if vm.isLoading && vm.reviews.isEmpty {
                 ProgressView("Loading Spots...")
-            } else if vm.reviews.isEmpty {
+            } else if !vm.isLoading && vm.reviews.isEmpty {
                 Text("Review your first spot to see them here!")
             }
         }
@@ -143,17 +187,35 @@ struct ReviewCard: View {
     @Bindable var vm: SpotsViewModel
     @Bindable var profileVm: ProfileViewModel
     @State private var showDeleteCommentDialogue: Bool = false
+    @State private var commentToEdit: Comment? = nil
+    @State private var confirmReviewSubmitted: Bool = false
 
     private var categoryIcon: String {
         switch review.recommendation.category {
         case .all: return "mappin.and.ellipse.circle"
         case .activities: return "figure.hiking"
-        case .nightlife: return "music.note"
+        case .barsClubs: return "music.note"
         case .restaurants: return "fork.knife"
         case .hostels: return "bed.double"
         case .sights: return "camera"
         case .other: return "location"
         }
+    }
+
+    // Helper to convert ReviewedSpot to Comment for editing
+    private func makeComment(from review: ReviewedSpot) -> Comment {
+        return Comment(
+            id: review.id,
+            userId: vm.userId?.uuidString ?? "",
+            recId: review.recommendation.id,
+            rating: review.userRating,
+            comment: review.comment,
+            createdAt: review.createdAt,
+            imageUrl: review.imageUrl,
+            imageUrl2: review.imageUrl2,
+            imageUrl3: review.imageUrl3,
+            username: nil
+        )
     }
 
     var body: some View {
@@ -172,13 +234,22 @@ struct ReviewCard: View {
                     Text(review.cityName)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                    Button {
-                        showDeleteCommentDialogue = true
+                    Menu {
+                        Button {
+                            commentToEdit = makeComment(from: review)
+                        } label: {
+                            Label("Edit Comment", systemImage: "pencil")
+                        }
+                        Button(role: .destructive) {
+                            showDeleteCommentDialogue = true
+                        } label: {
+                            Label("Delete Comment", systemImage: "trash")
+                        }
                     } label: {
-                        Image(systemName: "trash")
+                        Image(systemName: "ellipsis.circle")
+                            .foregroundStyle(.gray)
                             .font(.subheadline)
-                            .foregroundStyle(.red)
-                            .padding(.leading, 4)
+                            .padding(.horizontal, 4)
                     }
                 }
             }
@@ -225,6 +296,10 @@ struct ReviewCard: View {
                                 .foregroundColor(.yellow)
                                 .font(.caption)
                         }
+                        Text(String(format: "%.1f", review.userRating))
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .padding(.leading, 4)
                         Text("Your Rating")
                             .font(.caption2)
                             .foregroundColor(.secondary)
@@ -301,6 +376,27 @@ struct ReviewCard: View {
             }
         } message: {
             Text("Are you sure you want to delete your review for \(review.recommendation.name)?")
+        }
+        .sheet(item: $commentToEdit) { comment in
+            EditCommentView(
+                comment: comment,
+                recName: review.recommendation.name,
+                recId: review.recommendation.id,
+                vm: CommentsViewModel(),
+                onDismiss: {
+                    commentToEdit = nil
+                    // Refresh the spots list after editing
+                    Task {
+                        if let userId = vm.userId {
+                            await vm.getReviewedSpots(userId: userId, showLoading: false)
+                        }
+                    }
+                },
+                confirmReviewSubmitted: $confirmReviewSubmitted
+            )
+        }
+        .alert("Review Updated!", isPresented: $confirmReviewSubmitted) {
+            Button("OK", role: .cancel) {}
         }
     }
 }

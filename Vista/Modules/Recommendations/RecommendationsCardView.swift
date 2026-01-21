@@ -15,7 +15,7 @@ struct RecommendationsCardView: View {
         switch rec.category {
         case .all: return "mappin.and.ellipse.circle"
         case .activities: return "figure.hiking"
-        case .nightlife: return "music.note"
+        case .barsClubs: return "music.note"
         case .restaurants: return "fork.knife"
         case .hostels: return "bed.double"
         case .sights: return "camera"
@@ -74,6 +74,13 @@ struct RecommendationsCardView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 6)
+        .overlay(alignment: .leading) {
+            // Block taps in the left 100px to allow swipe-back gesture
+            Color.clear
+                .frame(width: 60)
+                .contentShape(Rectangle())
+                .allowsHitTesting(true)
+        }
     }
 }
 
