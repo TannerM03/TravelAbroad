@@ -12,6 +12,7 @@ struct LoginView: View {
     @State private var appleSignInVm = AppleSignInViewModel()
     @Binding var isAuthenticated: Bool
     @Binding var shouldShowOnboarding: Bool
+    @Binding var passwordResetSuccess: Bool
 
     var body: some View {
         ZStack {
@@ -24,6 +25,7 @@ struct LoginView: View {
                 VStack(spacing: 24) {
                     titleSection
                     inputFieldsSection
+                    successMessageSection
                     errorMessageSection
                     actionButtonSection
 
@@ -73,15 +75,55 @@ struct LoginView: View {
             .padding(12)
             .background(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.gray.opacity(0.24), lineWidth: 1))
 
-            HStack {
-                Image(systemName: "lock")
-                    .foregroundColor(.accentColor)
-                SecureField("Password", text: $vm.password)
+            VStack(alignment: .trailing, spacing: 8) {
+                HStack {
+                    Image(systemName: "lock")
+                        .foregroundColor(.accentColor)
+                    SecureField("Password", text: $vm.password)
+                }
+                .padding(12)
+                .background(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.gray.opacity(0.24), lineWidth: 1))
+
+                if !vm.isSignUp {
+                    NavigationLink(destination: ForgotPasswordView()) {
+                        Text("Forgot Password?")
+                            .font(.subheadline)
+                            .foregroundColor(.accentColor)
+                    }.onTapGesture {
+                        print("password click")
+                    }
+                    .padding(.trailing, 4)
+                }
             }
-            .padding(12)
-            .background(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.gray.opacity(0.24), lineWidth: 1))
         }
         .padding(.horizontal, 8)
+    }
+
+    private var successMessageSection: some View {
+        Group {
+            if passwordResetSuccess {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("Password reset successful! Please log in with your new password")
+                        .foregroundColor(.green)
+                        .font(.callout.bold())
+                }
+                .multilineTextAlignment(.center)
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 2)
+                .onAppear {
+                    // Auto-dismiss after 5 seconds
+                    Task {
+                        try? await Task.sleep(nanoseconds: 5_000_000_000)
+                        await MainActor.run {
+                            passwordResetSuccess = false
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private var errorMessageSection: some View {
@@ -174,5 +216,5 @@ struct LoginView: View {
 }
 
 // #Preview("Login Mode") {
-//    LoginView(isAuthenticated: .constant(false), shouldShowOnboarding: .constant(false))
+//    LoginView(isAuthenticated: .constant(false), shouldShowOnboarding: .constant(false), passwordResetSuccess: .constant(false))
 // }

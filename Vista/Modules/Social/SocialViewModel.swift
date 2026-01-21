@@ -66,13 +66,13 @@ class SocialViewModel {
             print("❌ Error fetching following feed: \(error)")
             if let decodingError = error as? DecodingError {
                 switch decodingError {
-                case .keyNotFound(let key, let context):
+                case let .keyNotFound(key, context):
                     print("❌ Missing key: \(key.stringValue), codingPath: \(context.codingPath)")
-                case .typeMismatch(let type, let context):
+                case let .typeMismatch(type, context):
                     print("❌ Type mismatch for type: \(type), codingPath: \(context.codingPath)")
-                case .valueNotFound(let type, let context):
+                case let .valueNotFound(type, context):
                     print("❌ Value not found for type: \(type), codingPath: \(context.codingPath)")
-                case .dataCorrupted(let context):
+                case let .dataCorrupted(context):
                     print("❌ Data corrupted: \(context)")
                 @unknown default:
                     print("❌ Unknown decoding error")
@@ -103,13 +103,13 @@ class SocialViewModel {
             print("❌ Error fetching popular feed: \(error)")
             if let decodingError = error as? DecodingError {
                 switch decodingError {
-                case .keyNotFound(let key, let context):
+                case let .keyNotFound(key, context):
                     print("❌ Missing key: \(key.stringValue), codingPath: \(context.codingPath)")
-                case .typeMismatch(let type, let context):
+                case let .typeMismatch(type, context):
                     print("❌ Type mismatch for type: \(type), codingPath: \(context.codingPath)")
-                case .valueNotFound(let type, let context):
+                case let .valueNotFound(type, context):
                     print("❌ Value not found for type: \(type), codingPath: \(context.codingPath)")
-                case .dataCorrupted(let context):
+                case let .dataCorrupted(context):
                     print("❌ Data corrupted: \(context)")
                 @unknown default:
                     print("❌ Unknown decoding error")

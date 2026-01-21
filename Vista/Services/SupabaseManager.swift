@@ -1466,6 +1466,13 @@ class SupabaseManager {
 
     // MARK: - LoginView Functions
 
+    func sendPasswordResetEmail(email: String) async throws {
+        try await supabase.auth.resetPasswordForEmail(
+            email,
+            redirectTo: URL(string: "vista://reset-password")
+        )
+    }
+
     func fetchEmailWithUsername(username: String) async throws -> String? {
         struct Profile: Codable {
             let email: String?
