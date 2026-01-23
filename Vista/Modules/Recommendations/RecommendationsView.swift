@@ -342,7 +342,12 @@ struct RecommendationsView: View {
                         ForEach(1 ... 5, id: \.self) { i in
                             Button(action: {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                                    vm.tempRating = Double(i)
+                                    // Update the correct variable based on editing vs adding
+                                    if vm.userRating != nil {
+                                        vm.userRating = Double(i)
+                                    } else {
+                                        vm.tempRating = Double(i)
+                                    }
                                 }
                             }) {
                                 if vm.userRating != nil {
@@ -402,7 +407,7 @@ struct RecommendationsView: View {
                         }
                         vm.showSubmittedAlert = true
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                            vm.hideRatingOverlay()
+                            vm.hideRatingOverlay(resetValues: false) // Don't reset on submit
                         }
                     }
                     .font(.subheadline)
