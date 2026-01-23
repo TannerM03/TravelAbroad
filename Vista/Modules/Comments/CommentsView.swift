@@ -26,6 +26,7 @@ struct CommentsView: View {
     @State private var commentToEdit: Comment? = nil
     @State private var isSubmitting = false
     @State private var errorMessage: String? = nil
+    @State private var nameCopied = false
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -141,6 +142,27 @@ struct CommentsView: View {
                     Text(recommendation.name)
                         .font(.title2)
                         .fontWeight(.bold)
+
+                    Button(action: {
+                        UIPasteboard.general.string = recommendation.name
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            nameCopied = true
+                        }
+                        // Reset after 2 seconds
+                        Task {
+                            try? await Task.sleep(nanoseconds: 2_000_000_000)
+                            await MainActor.run {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    nameCopied = false
+                                }
+                            }
+                        }
+                    }) {
+                        Image(systemName: nameCopied ? "checkmark" : "doc.on.doc")
+                            .font(.system(size: 14))
+                            .foregroundColor(nameCopied ? .green : .secondary)
+                    }
+                    .buttonStyle(PlainButtonStyle())
 
                     Spacer()
 

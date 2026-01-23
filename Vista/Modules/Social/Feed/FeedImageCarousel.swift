@@ -16,6 +16,23 @@ struct FeedImageCarousel: View {
     let width: CGFloat
     let height: CGFloat
 
+    // Helper function to normalize URLs for comparison
+    private func normalizeURL(_ urlString: String) -> String {
+        guard let url = URL(string: urlString) else { return urlString }
+
+        // Remove query parameters and fragments
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        components?.query = nil
+        components?.fragment = nil
+
+        // Return the path component for comparison (removes domain differences)
+        return components?.path.lowercased() ?? urlString.lowercased()
+    }
+
+    private func areImagesSame(_ url1: String, _ url2: String) -> Bool {
+        return normalizeURL(url1) == normalizeURL(url2)
+    }
+
     var body: some View {
         // Case 1: No images
         if commentImageUrls == nil && spotImageUrl == nil {
@@ -25,13 +42,13 @@ struct FeedImageCarousel: View {
         else if commentImageUrls == nil, let officialUrl = spotImageUrl {
             singleImageView(url: officialUrl, badgeText: "Official Spot Photo")
         }
-        // Case 3: User image and official image but are different, show both
-        else if let userUrls = commentImageUrls, let officialUrl = spotImageUrl, userUrls[0] != officialUrl {
-            carouselView(userUrls: userUrls, officialUrl: officialUrl)
+        // Case 3: First user image and official image are the same, only show user images
+        else if let userUrls = commentImageUrls, let officialUrl = spotImageUrl, !userUrls.isEmpty, areImagesSame(userUrls[0], officialUrl) {
+            carouselView(userUrls: userUrls, officialUrl: nil)
         }
-        // Case 4: User image and spot image are the same, only show user image
-        else if let userUrls = commentImageUrls, userUrls.count == 1, let officialUrl = spotImageUrl, userUrls[0] == officialUrl {
-            singleImageView(url: userUrls[0], badgeText: "User Photo")
+        // Case 4: User image and official image are different, show both
+        else if let userUrls = commentImageUrls, let officialUrl = spotImageUrl, !userUrls.isEmpty, !areImagesSame(userUrls[0], officialUrl) {
+            carouselView(userUrls: userUrls, officialUrl: officialUrl)
         }
         // Edge case: Only user image (shouldn't happen for spots, but handle it)
         else if let userUrls = commentImageUrls {
@@ -52,7 +69,7 @@ struct FeedImageCarousel: View {
         }
     }
 
-    private func carouselView(userUrls: [String], officialUrl: String) -> some View {
+    private func carouselView(userUrls: [String], officialUrl: String?) -> some View {
         TabView {
             // User photo first
             ForEach(userUrls.indices, id: \.self) { index in
@@ -63,25 +80,26 @@ struct FeedImageCarousel: View {
                             .aspectRatio(contentMode: .fill)
                             .frame(width: width, height: height)
                             .clipped()
-
                         ImageBadge(text: "User Photo")
                             .padding(12)
                     }
                     .tag(index)
                 }
             }
-            // Official spot photo second
-            ZStack(alignment: .topTrailing) {
-                KFImage(URL(string: officialUrl))
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: width, height: height)
-                    .clipped()
+            if let officialUrl = officialUrl {
+                // Official spot photo second
+                ZStack(alignment: .topTrailing) {
+                    KFImage(URL(string: officialUrl))
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: width, height: height)
+                        .clipped()
 
-                ImageBadge(text: "Official Spot Photo")
-                    .padding(12)
+                    ImageBadge(text: "Official Spot Photo")
+                        .padding(12)
+                }
+                .tag(userUrls.count + 1)
             }
-            .tag(userUrls.count + 1)
         }
         .tabViewStyle(.page)
         .indexViewStyle(.page(backgroundDisplayMode: .always))
