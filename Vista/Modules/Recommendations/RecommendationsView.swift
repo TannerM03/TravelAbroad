@@ -342,7 +342,7 @@ struct RecommendationsView: View {
                         ForEach(1 ... 5, id: \.self) { i in
                             Button(action: {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                                    vm.tempRating = Double(i * 2)
+                                    vm.tempRating = Double(i)
                                 }
                             }) {
                                 if vm.userRating != nil {
