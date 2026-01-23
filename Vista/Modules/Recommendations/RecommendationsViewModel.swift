@@ -26,6 +26,8 @@ class RecommendationsViewModel {
     var tempRating: Double?
     var userSearch: String = ""
     var isRatingOverlay = false
+    private var originalUserRating: Double? // Store original rating when overlay opens
+    private var originalTempRating: Double? // Store original temp rating when overlay opens
     var cityId: String = ""
     var cityName: String = ""
     var imageUrl: String = ""
@@ -159,10 +161,25 @@ class RecommendationsViewModel {
     }
 
     func showRatingOverlay() {
+        // Save current values before showing overlay
+        originalUserRating = userRating
+        originalTempRating = tempRating
+
+        // If adding a new rating (not editing), initialize tempRating to 5.0 if nil
+        if userRating == nil, tempRating == nil {
+            tempRating = 5.0
+            originalTempRating = 5.0
+        }
+
         isRatingOverlay = true
     }
 
-    func hideRatingOverlay() {
+    func hideRatingOverlay(resetValues: Bool = true) {
+        if resetValues {
+            // Restore original values when dismissing without submitting
+            userRating = originalUserRating
+            tempRating = originalTempRating
+        }
         isRatingOverlay = false
     }
 
