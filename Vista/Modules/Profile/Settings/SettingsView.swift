@@ -82,6 +82,23 @@ struct SettingsView: View {
                     }
                 }
 
+                Section("Creator Program") {
+                    NavigationLink(destination: PopularCreatorView(profileVm: vm)) {
+                        HStack {
+                            Image(systemName: "star.circle")
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [.purple, .blue]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 24)
+                            Text("Become a Popular Creator")
+                        }
+                    }
+                }
+
                 Section("More...") {
                     NavigationLink(destination: HelpAndSupportView()) {
                         HStack {
