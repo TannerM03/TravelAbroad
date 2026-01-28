@@ -125,12 +125,6 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Color.clear
-                        .frame(height: 200)
-                        .listRowBackground(Color.clear)
-                }
-
-                Section {
                     deleteAccountSection
                 } header: {
                     Text("Danger Zone")
