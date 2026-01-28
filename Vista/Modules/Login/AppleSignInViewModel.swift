@@ -40,6 +40,12 @@ class AppleSignInViewModel {
                 throw NSError(domain: "AppleSignIn", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to get ID token"])
             }
 
+            // Debug: Print what Apple provided
+            print("🍎 Apple Sign In - Full Name: \(credential.fullName?.debugDescription ?? "nil")")
+            print("🍎 Apple Sign In - Given Name: \(credential.fullName?.givenName ?? "nil")")
+            print("🍎 Apple Sign In - Family Name: \(credential.fullName?.familyName ?? "nil")")
+            print("🍎 Apple Sign In - Email: \(credential.email ?? "nil")")
+
             // proceed with normal sign-in
             try await completeAppleSignIn(idToken: idToken, fullName: credential.fullName, email: credential.email)
 
@@ -63,8 +69,12 @@ class AppleSignInViewModel {
         )
 
         // Apple only provides name on FIRST sign-in, so save it for later use
-        if let fullName = fullName {
+        if let fullName = fullName,
+           fullName.givenName != nil || fullName.familyName != nil
+        {
             saveAppleUserData(fullName: fullName, email: email)
+        } else {
+            print("⚠️ Apple did not provide name data - user may have signed in before")
         }
 
         // Get current user ID
@@ -98,25 +108,39 @@ class AppleSignInViewModel {
     private func saveAppleUserData(fullName: PersonNameComponents, email: String?) {
         var userData: [String: String] = [:]
 
-        if let givenName = fullName.givenName {
+        if let givenName = fullName.givenName, !givenName.isEmpty {
             userData["givenName"] = givenName
         }
-        if let familyName = fullName.familyName {
+        if let familyName = fullName.familyName, !familyName.isEmpty {
             userData["familyName"] = familyName
         }
-        if let email = email {
+        if let email = email, !email.isEmpty {
             userData["email"] = email
         }
 
+        // Only save if we have at least some data
+        guard !userData.isEmpty else {
+            print("⚠️ No Apple user data to save (all fields empty)")
+            return
+        }
+
+        print("💾 Attempting to save Apple user data: \(userData)")
         UserDefaults.standard.set(userData, forKey: appleUserDataKey)
-        print("Saved Apple user data to UserDefaults: \(userData)")
+        UserDefaults.standard.synchronize() // Force immediate write
+
+        // Verify it was saved
+        let saved = UserDefaults.standard.dictionary(forKey: appleUserDataKey)
+        print("✅ Verified saved data in UserDefaults: \(saved ?? [:])")
     }
 
     func getAppleUserData() -> (givenName: String?, familyName: String?, email: String?) {
+        print("📖 Attempting to load Apple user data from UserDefaults...")
         guard let userData = UserDefaults.standard.dictionary(forKey: appleUserDataKey) as? [String: String] else {
+            print("❌ No Apple user data found in UserDefaults")
             return (nil, nil, nil)
         }
 
+        print("✅ Loaded Apple user data: \(userData)")
         return (
             givenName: userData["givenName"],
             familyName: userData["familyName"],
