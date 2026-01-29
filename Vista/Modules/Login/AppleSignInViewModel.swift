@@ -40,12 +40,6 @@ class AppleSignInViewModel {
                 throw NSError(domain: "AppleSignIn", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to get ID token"])
             }
 
-            // Debug: Print what Apple provided
-            print("🍎 Apple Sign In - Full Name: \(credential.fullName?.debugDescription ?? "nil")")
-            print("🍎 Apple Sign In - Given Name: \(credential.fullName?.givenName ?? "nil")")
-            print("🍎 Apple Sign In - Family Name: \(credential.fullName?.familyName ?? "nil")")
-            print("🍎 Apple Sign In - Email: \(credential.email ?? "nil")")
-
             // proceed with normal sign-in
             try await completeAppleSignIn(idToken: idToken, fullName: credential.fullName, email: credential.email)
 
