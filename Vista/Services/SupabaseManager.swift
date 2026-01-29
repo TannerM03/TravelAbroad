@@ -1593,7 +1593,7 @@ class SupabaseManager {
             .execute()
             .value
 
-        // User has completed onboarding if they have a username
+        // First check: User must have a username
         guard let profile = profileResponse.first,
               let username = profile.username,
               !username.isEmpty
@@ -1601,7 +1601,11 @@ class SupabaseManager {
             return false
         }
 
-        return true
+        // Second check: User must have accepted Terms of Service
+        let hasAcceptedTerms = try await hasUserAgreedToTerms(agreementType: "terms_of_service", version: "1.0")
+
+        // User has completed onboarding if they have BOTH username AND accepted terms
+        return hasAcceptedTerms
     }
 
     // MARK: - ProfileView Functions
@@ -2640,5 +2644,202 @@ class SupabaseManager {
         } catch {
             throw error
         }
+    }
+
+    // MARK: - Safety & Moderation Functions
+
+    // MARK: Terms of Service
+
+    /// Records user agreement to Terms of Service or Privacy Policy
+    /// - Parameters:
+    ///   - agreementType: Type of agreement ("terms_of_service" or "privacy_policy")
+    ///   - version: Version of the agreement (e.g., "1.0")
+    func recordUserAgreement(agreementType: String, version: String) async throws {
+        guard let userId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user"])
+        }
+
+        struct UserAgreement: Codable {
+            let user_id: String
+            let agreement_type: String
+            let version: String
+        }
+
+        let agreement = UserAgreement(
+            user_id: userId.uuidString,
+            agreement_type: agreementType,
+            version: version
+        )
+
+        try await supabase
+            .from("user_agreements")
+            .insert(agreement)
+            .execute()
+
+        print("✅ Recorded user agreement: \(agreementType) v\(version)")
+    }
+
+    /// Checks if user has agreed to a specific version of terms
+    /// - Parameters:
+    ///   - agreementType: Type of agreement to check
+    ///   - version: Version to check for
+    /// - Returns: True if user has agreed to this version
+    func hasUserAgreedToTerms(agreementType: String = "terms_of_service", version: String = "1.0") async throws -> Bool {
+        guard let userId = supabase.auth.currentUser?.id else {
+            return false
+        }
+
+        struct UserAgreement: Codable {
+            let id: String
+        }
+
+        let agreements: [UserAgreement] = try await supabase
+            .from("user_agreements")
+            .select("id")
+            .eq("user_id", value: userId.uuidString)
+            .eq("agreement_type", value: agreementType)
+            .eq("version", value: version)
+            .execute()
+            .value
+
+        return !agreements.isEmpty
+    }
+
+    // MARK: Blocking
+
+    /// Blocks a user, preventing their content from appearing in feeds
+    /// - Parameter blockedUserId: UUID of user to block
+    func blockUser(blockedUserId: UUID) async throws {
+        guard let currentUserId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user"])
+        }
+
+        // Prevent self-blocking
+        guard currentUserId != blockedUserId else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Cannot block yourself"])
+        }
+
+        struct BlockedUser: Codable {
+            let blocker_id: String
+            let blocked_id: String
+        }
+
+        let block = BlockedUser(
+            blocker_id: currentUserId.uuidString,
+            blocked_id: blockedUserId.uuidString
+        )
+
+        try await supabase
+            .from("blocked_users")
+            .insert(block)
+            .execute()
+
+        print("✅ Blocked user: \(blockedUserId.uuidString)")
+
+        // Auto-report when blocking
+        try? await reportContent(
+            reportedUserId: blockedUserId,
+            contentType: "user",
+            contentId: blockedUserId,
+            reason: "User Blocked",
+            details: "Automatically generated report when user was blocked"
+        )
+    }
+
+    /// Unblocks a previously blocked user
+    /// - Parameter blockedUserId: UUID of user to unblock
+    func unblockUser(blockedUserId: UUID) async throws {
+        guard let currentUserId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user"])
+        }
+
+        try await supabase
+            .from("blocked_users")
+            .delete()
+            .eq("blocker_id", value: currentUserId.uuidString)
+            .eq("blocked_id", value: blockedUserId.uuidString)
+            .execute()
+
+        print("✅ Unblocked user: \(blockedUserId.uuidString)")
+    }
+
+    /// Fetches list of blocked user IDs for the current user
+    /// - Returns: Array of blocked user UUIDs
+    func getBlockedUsers() async throws -> [UUID] {
+        guard let currentUserId = supabase.auth.currentUser?.id else {
+            return []
+        }
+
+        struct BlockedUser: Codable {
+            let blocked_id: String
+        }
+
+        let blocks: [BlockedUser] = try await supabase
+            .from("blocked_users")
+            .select("blocked_id")
+            .eq("blocker_id", value: currentUserId.uuidString)
+            .execute()
+            .value
+
+        return blocks.compactMap { UUID(uuidString: $0.blocked_id) }
+    }
+
+    /// Checks if a specific user is blocked by the current user
+    /// - Parameter userId: UUID of user to check
+    /// - Returns: True if user is blocked
+    func isUserBlocked(userId: UUID) async throws -> Bool {
+        let blockedUsers = try await getBlockedUsers()
+        return blockedUsers.contains(userId)
+    }
+
+    // MARK: Reporting
+
+    /// Reports content for moderation review
+    /// - Parameters:
+    ///   - reportedUserId: UUID of user who created the content
+    ///   - contentType: Type of content ("comment", "profile", "recommendation", "user")
+    ///   - contentId: UUID of the content being reported
+    ///   - reason: Reason for report (spam, harassment, etc.)
+    ///   - details: Optional additional details from reporter
+    func reportContent(
+        reportedUserId: UUID,
+        contentType: String,
+        contentId: UUID,
+        reason: String,
+        details: String? = nil
+    ) async throws {
+        guard let currentUserId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user"])
+        }
+
+        // Prevent self-reporting
+        guard currentUserId != reportedUserId else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Cannot report your own content"])
+        }
+
+        struct ContentReport: Codable {
+            let reporter_id: String
+            let reported_user_id: String
+            let content_type: String
+            let content_id: String
+            let reason: String
+            let details: String?
+        }
+
+        let report = ContentReport(
+            reporter_id: currentUserId.uuidString,
+            reported_user_id: reportedUserId.uuidString,
+            content_type: contentType,
+            content_id: contentId.uuidString,
+            reason: reason,
+            details: details
+        )
+
+        try await supabase
+            .from("content_reports")
+            .insert(report)
+            .execute()
+
+        print("✅ Submitted report: \(contentType) - \(reason)")
     }
 }

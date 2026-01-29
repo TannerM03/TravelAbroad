@@ -33,7 +33,7 @@ class UserSearchViewModel {
 
     func searchUsers(query: String) async {
         guard let userId = userId else { return }
-        guard query.count >= 2 else {
+        guard query.count >= 1 else {
             // Clear results if query is too short
             profiles = []
             return

@@ -18,6 +18,12 @@ struct OtherProfileView: View {
     @State private var selectedUIImage: UIImage? = nil
     @State private var fromProfile = true
     @State private var selectedSegment = 0
+    @Environment(\.dismiss) var dismiss
+
+    // Safety & Moderation
+    @State private var showReportSheet = false
+    @State private var showBlockConfirmation = false
+    @State private var isBlocked = false
 
     init(selectedUserId: String) {
         self.selectedUserId = selectedUserId
@@ -53,6 +59,27 @@ struct OtherProfileView: View {
                                 .fontWeight(.bold)
                         }
                     }
+
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        if !vm.isSelf {
+                            Menu {
+                                Button {
+                                    showReportSheet = true
+                                } label: {
+                                    Label("Report Profile", systemImage: "exclamationmark.triangle")
+                                }
+
+                                Button(role: .destructive) {
+                                    showBlockConfirmation = true
+                                } label: {
+                                    Label(isBlocked ? "Unblock User" : "Block User", systemImage: "hand.raised")
+                                }
+                            } label: {
+                                Image(systemName: "ellipsis.circle")
+                                    .foregroundStyle(.gray)
+                            }
+                        }
+                    }
                 }
                 .background(
                     LinearGradient(
@@ -75,7 +102,38 @@ struct OtherProfileView: View {
 
                     try? await vm.fetchFollowers()
                     try? await vm.fetchIsFollowing()
+
+                    // Check if user is blocked
+                    checkIfBlocked()
                 }
+            }
+        }
+        .sheet(isPresented: $showReportSheet) {
+            if let userId = vm.userId {
+                ReportContentView(
+                    reportedUserId: userId,
+                    contentType: "profile",
+                    contentId: userId,
+                    contentPreview: "@\(vm.username) - \(vm.bio)"
+                )
+            }
+        }
+        .confirmationDialog(
+            isBlocked ? "Unblock \(vm.username)?" : "Block \(vm.username)?",
+            isPresented: $showBlockConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(isBlocked ? "Unblock" : "Block", role: isBlocked ? nil : .destructive) {
+                Task {
+                    await toggleBlockUser()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            if isBlocked {
+                Text("You will see their content again.")
+            } else {
+                Text("You will no longer see their content. This will also report this user to moderators.")
             }
         }
     }
@@ -279,6 +337,34 @@ struct OtherProfileView: View {
                             )
                     )
             }
+        }
+    }
+
+    // MARK: - Safety Functions
+
+    private func checkIfBlocked() {
+        guard let userId = vm.userId else { return }
+        isBlocked = BlockListManager.shared.isUserBlocked(userId)
+    }
+
+    private func toggleBlockUser() async {
+        guard let userId = vm.userId else { return }
+
+        do {
+            if isBlocked {
+                try await BlockListManager.shared.unblockUser(userId)
+                isBlocked = false
+            } else {
+                try await BlockListManager.shared.blockUser(userId)
+                isBlocked = true
+
+                // Navigate away after blocking
+                await MainActor.run {
+                    dismiss()
+                }
+            }
+        } catch {
+            print("Error toggling block: \(error)")
         }
     }
 }

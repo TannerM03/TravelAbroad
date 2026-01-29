@@ -14,6 +14,9 @@ struct SettingsView: View {
     @State private var showDeleteAccountDialog = false
     @State private var showDeleteAccountError = false
     @State private var deleteAccountErrorMessage = ""
+    @State private var blockedUsers: [(id: UUID, username: String)] = []
+    @State private var showUnblockConfirmation = false
+    @State private var userToUnblock: (id: UUID, username: String)?
 
     var body: some View {
         NavigationStack {
@@ -99,6 +102,23 @@ struct SettingsView: View {
                     }
                 }
 
+                Section("Safety & Privacy") {
+                    NavigationLink(destination: BlockedUsersListView(blockedUsers: $blockedUsers)) {
+                        HStack {
+                            Image(systemName: "hand.raised")
+                                .foregroundColor(.orange)
+                                .frame(width: 24)
+                            Text("Blocked Users")
+                            Spacer()
+                            if !blockedUsers.isEmpty {
+                                Text("\(blockedUsers.count)")
+                                    .foregroundColor(.secondary)
+                                    .font(.subheadline)
+                            }
+                        }
+                    }
+                }
+
                 Section("More...") {
                     NavigationLink(destination: HelpAndSupportView()) {
                         HStack {
@@ -137,7 +157,45 @@ struct SettingsView: View {
             } message: {
                 Text(deleteAccountErrorMessage)
             }
+            .task {
+                await loadBlockedUsers()
+            }
         }
+    }
+
+    private func loadBlockedUsers() async {
+        do {
+            let blockedIds = try await SupabaseManager.shared.getBlockedUsers()
+
+            // Fetch usernames for blocked users
+            var users: [(id: UUID, username: String)] = []
+            for blockedId in blockedIds {
+                if let username = try? await fetchUsername(for: blockedId) {
+                    users.append((id: blockedId, username: username))
+                }
+            }
+
+            await MainActor.run {
+                blockedUsers = users
+            }
+        } catch {
+            print("Error loading blocked users: \(error)")
+        }
+    }
+
+    private func fetchUsername(for userId: UUID) async throws -> String {
+        struct UserProfile: Codable {
+            let username: String
+        }
+
+        let profiles: [UserProfile] = try await SupabaseManager.shared.supabase
+            .from("profiles")
+            .select("username")
+            .eq("id", value: userId.uuidString)
+            .execute()
+            .value
+
+        return profiles.first?.username ?? "Unknown User"
     }
 
     private var logoutSection: some View {

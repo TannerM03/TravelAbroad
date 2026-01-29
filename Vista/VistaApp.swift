@@ -74,9 +74,13 @@ struct VistaApp: App {
                         switch state.event {
                         case .signedIn:
                             isAuthenticated = true
+                            // Load blocked users when signing in
+                            await BlockListManager.shared.loadBlockedUsers()
                         case .signedOut, .userDeleted:
                             isAuthenticated = false
                             shouldShowOnboarding = false
+                            // Clear blocked users cache on logout
+                            BlockListManager.shared.clearCache()
                         case .tokenRefreshed:
                             // Token refreshed successfully, stay authenticated
                             break
@@ -101,11 +105,17 @@ struct VistaApp: App {
             _ = try await SupabaseManager.shared.supabase.auth.session
             // If we got here, session is valid
             isAuthenticated = true
+
+            // Load blocked users list for safety filtering
+            await BlockListManager.shared.loadBlockedUsers()
         } catch {
             // No valid session or session expired
             print("No valid session on launch: \(error.localizedDescription)")
             isAuthenticated = false
             shouldShowOnboarding = false
+
+            // Clear blocked users cache on logout
+            BlockListManager.shared.clearCache()
         }
     }
 

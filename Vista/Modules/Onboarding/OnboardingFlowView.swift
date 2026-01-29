@@ -10,16 +10,25 @@ import SwiftUI
 struct OnboardingFlowView: View {
     @State private var vm = OnboardingViewModel()
     @Binding var shouldShowOnboarding: Bool
+    @State private var showTerms = true
+    @State private var hasAcceptedTerms = false
 
     // TEMPORARY: Set to true to show only NamesView, false to show full onboarding flow
     private let simplifiedOnboarding = true
 
     var body: some View {
         if simplifiedOnboarding {
-            // Simplified onboarding - just show NamesView
-            NamesView(onCompletion: {
-                shouldShowOnboarding = false
-            })
+            // Simplified onboarding - show Terms first, then Names
+            if showTerms {
+                TermsOfServiceView(onCompletion: {
+                    hasAcceptedTerms = true
+                    showTerms = false
+                })
+            } else if hasAcceptedTerms {
+                NamesView(onCompletion: {
+                    shouldShowOnboarding = false
+                })
+            }
         } else {
             // Full onboarding flow (currently disabled)
             fullOnboardingFlow

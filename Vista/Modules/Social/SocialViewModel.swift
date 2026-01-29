@@ -54,12 +54,16 @@ class SocialViewModel {
         hasMoreFollowing = true
 
         do {
-            feedItems = try await SupabaseManager.shared.fetchFollowingActivityFeed(
+            let fetchedItems = try await SupabaseManager.shared.fetchFollowingActivityFeed(
                 userId: userId,
                 limit: pageSize,
                 offset: 0
             )
-            if feedItems.count < pageSize {
+
+            // Filter out blocked users from feed
+            feedItems = filterBlockedUsers(from: fetchedItems)
+
+            if fetchedItems.count < pageSize {
                 hasMoreFollowing = false
             }
         } catch {
@@ -92,11 +96,15 @@ class SocialViewModel {
         hasMorePopular = true
 
         do {
-            popularFeedItems = try await SupabaseManager.shared.fetchPopularActivityFeed(
+            let fetchedItems = try await SupabaseManager.shared.fetchPopularActivityFeed(
                 limit: pageSize,
                 offset: 0
             )
-            if popularFeedItems.count < pageSize {
+
+            // Filter out blocked users from feed
+            popularFeedItems = filterBlockedUsers(from: fetchedItems)
+
+            if fetchedItems.count < pageSize {
                 hasMorePopular = false
             }
         } catch {
@@ -142,7 +150,11 @@ class SocialViewModel {
                 limit: pageSize,
                 offset: currentFollowingPage * pageSize
             )
-            feedItems.append(contentsOf: newItems)
+
+            // Filter out blocked users before appending
+            let filteredItems = filterBlockedUsers(from: newItems)
+            feedItems.append(contentsOf: filteredItems)
+
             if newItems.count < pageSize {
                 hasMoreFollowing = false
             }
@@ -166,7 +178,11 @@ class SocialViewModel {
                 limit: pageSize,
                 offset: currentPopularPage * pageSize
             )
-            popularFeedItems.append(contentsOf: newItems)
+
+            // Filter out blocked users before appending
+            let filteredItems = filterBlockedUsers(from: newItems)
+            popularFeedItems.append(contentsOf: filteredItems)
+
             if newItems.count < pageSize {
                 hasMorePopular = false
             }
@@ -177,5 +193,14 @@ class SocialViewModel {
         }
 
         isLoadingMorePopular = false
+    }
+
+    // MARK: - Safety & Filtering
+
+    private func filterBlockedUsers(from items: [FeedItem]) -> [FeedItem] {
+        return items.filter { item in
+            // Keep item if user is NOT blocked
+            !BlockListManager.shared.isUserBlocked(item.userId)
+        }
     }
 }
