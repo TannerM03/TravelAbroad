@@ -29,6 +29,12 @@ struct CommentsView: View {
     @State private var nameCopied = false
     @Environment(\.dismiss) var dismiss
 
+    // Safety & Moderation
+    @State private var showReportSheet = false
+    @State private var commentToReport: Comment? = nil
+    @State private var showBlockConfirmation = false
+    @State private var userToBlock: Comment? = nil
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -99,6 +105,39 @@ struct CommentsView: View {
                 }
             } message: {
                 Text("Are you sure you want to delete your review for \(recommendation.name)?")
+            }
+            .sheet(isPresented: $showReportSheet) {
+                if let comment = commentToReport,
+                   let userId = UUID(uuidString: comment.userId),
+                   let commentId = UUID(uuidString: comment.id)
+                {
+                    ReportContentView(
+                        reportedUserId: userId,
+                        contentType: "comment",
+                        contentId: commentId,
+                        contentPreview: comment.comment ?? "Comment with rating: \(Int(comment.rating)) stars"
+                    )
+                }
+            }
+            .confirmationDialog(
+                "Block User?",
+                isPresented: $showBlockConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Block", role: .destructive) {
+                    if let comment = userToBlock,
+                       let userId = UUID(uuidString: comment.userId)
+                    {
+                        Task {
+                            await blockUser(userId: userId)
+                        }
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                if let comment = userToBlock {
+                    Text("You will no longer see content from @\(comment.username ?? "this user"). This will also report this user to moderators.")
+                }
             }
         }
         .task {
@@ -291,7 +330,11 @@ struct CommentsView: View {
                             viewModel: vm,
                             commentToDelete: $commentToDelete,
                             commentToEdit: $commentToEdit,
-                            showDeleteCommentDialogue: $showDeleteCommentDialogue
+                            showDeleteCommentDialogue: $showDeleteCommentDialogue,
+                            commentToReport: $commentToReport,
+                            showReportSheet: $showReportSheet,
+                            userToBlock: $userToBlock,
+                            showBlockConfirmation: $showBlockConfirmation
                         )
 //                        }
                     }
@@ -732,6 +775,25 @@ struct CommentsView: View {
             }
         }
     }
+
+    // MARK: - Safety Functions
+
+    private func blockUser(userId: UUID) async {
+        do {
+            try await BlockListManager.shared.blockUser(userId)
+
+            // Remove comments from blocked user immediately
+            await MainActor.run {
+                vm.comments.removeAll { comment in
+                    comment.userId.uppercased() == userId.uuidString.uppercased()
+                }
+            }
+
+            userToBlock = nil
+        } catch {
+            print("Error blocking user: \(error)")
+        }
+    }
 }
 
 struct CommentCardView: View {
@@ -740,6 +802,10 @@ struct CommentCardView: View {
     @Binding var commentToDelete: Comment?
     @Binding var commentToEdit: Comment?
     @Binding var showDeleteCommentDialogue: Bool
+    @Binding var commentToReport: Comment?
+    @Binding var showReportSheet: Bool
+    @Binding var userToBlock: Comment?
+    @Binding var showBlockConfirmation: Bool
     @State private var selectedImageURL: String?
     @State private var selectedIndex: Int?
 
@@ -813,6 +879,28 @@ struct CommentCardView: View {
                             showDeleteCommentDialogue = true
                         } label: {
                             Label("Delete Comment", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .foregroundStyle(.gray)
+                            .font(.subheadline)
+                            .padding(.horizontal, 4)
+                    }
+                    .zIndex(1)
+                } else {
+                    // Menu for other users' comments
+                    Menu {
+                        Button {
+                            commentToReport = comment
+                            showReportSheet = true
+                        } label: {
+                            Label("Report Comment", systemImage: "exclamationmark.triangle")
+                        }
+                        Button(role: .destructive) {
+                            userToBlock = comment
+                            showBlockConfirmation = true
+                        } label: {
+                            Label("Block User", systemImage: "hand.raised")
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")

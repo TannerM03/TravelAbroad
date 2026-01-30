@@ -247,6 +247,8 @@ struct NamesView: View {
 
         if isPrePopulated {
             print("✅ Pre-populated name fields from Apple Sign In: \(firstName) \(lastName)")
+        } else {
+            print("ℹ️ No Apple Sign In data available for pre-population")
         }
     }
 }

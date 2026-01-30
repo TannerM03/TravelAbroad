@@ -54,7 +54,9 @@ class CommentsViewModel {
                 limit: pageSize,
                 offset: 0
             )
-            comments = fetchedComments
+
+            // Filter out comments from blocked users
+            comments = filterBlockedUsers(from: fetchedComments)
 
             // If we got less than pageSize, there are no more comments
             if fetchedComments.count < pageSize {
@@ -64,7 +66,8 @@ class CommentsViewModel {
             print("Error fetching comments: \(error)")
             // Fallback to original method if one above fails (from before i had voting)
             do {
-                comments = try await supabaseManager.fetchComments(for: recommendationId)
+                let fallbackComments = try await supabaseManager.fetchComments(for: recommendationId)
+                comments = filterBlockedUsers(from: fallbackComments)
                 applySorting()
                 hasMoreComments = false // Fallback doesn't support pagination
             } catch {
@@ -89,7 +92,9 @@ class CommentsViewModel {
                 offset: currentPage * pageSize
             )
 
-            comments.append(contentsOf: fetchedComments)
+            // Filter out comments from blocked users before appending
+            let filteredComments = filterBlockedUsers(from: fetchedComments)
+            comments.append(contentsOf: filteredComments)
 
             // If we got less than pageSize, there are no more comments
             if fetchedComments.count < pageSize {
@@ -334,6 +339,15 @@ class CommentsViewModel {
         } else {
             // Fallback to local sorting if no recommendation ID
             applySorting()
+        }
+    }
+
+    // MARK: - Safety & Filtering
+
+    private func filterBlockedUsers(from comments: [Comment]) -> [Comment] {
+        return comments.filter { comment in
+            // Keep comment if user is NOT blocked
+            !BlockListManager.shared.isUserBlocked(comment.userId)
         }
     }
 }
