@@ -15,28 +15,29 @@ struct TermsOfServiceView: View {
     let onCompletion: () -> Void
 
     var body: some View {
-        VStack(spacing: 24) {
-            headerSection
+        ScrollView {
+            VStack(spacing: 24) {
+                headerSection
 
-            VStack(spacing: 20) {
-                termsScrollView
-                agreementCheckbox
+                VStack(spacing: 20) {
+                    termsScrollView
+                    agreementCheckbox
+                }
+
+                if let errorMessage = errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .font(.caption)
+                        .multilineTextAlignment(.center)
+                }
+
+                continueButton
+                    .padding(.top, 15)
             }
-
-            if let errorMessage = errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
-                    .font(.caption)
-                    .multilineTextAlignment(.center)
-            }
-
-            Spacer()
-
-            continueButton
-                .padding(.top, 15)
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 20)
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 20)
         .background(
             LinearGradient(
                 gradient: Gradient(colors: [Color.purple.opacity(0.05), Color.blue.opacity(0.05), Color.clear]),
