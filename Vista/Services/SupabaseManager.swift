@@ -88,6 +88,26 @@ class SupabaseManager {
         }
     }
 
+    func fetchCountryOrder() async throws -> [String: Int] {
+        struct CountryOrder: Codable {
+            let name: String
+            let displayOrder: Int
+
+            enum CodingKeys: String, CodingKey {
+                case name
+                case displayOrder = "display_order"
+            }
+        }
+
+        let rows: [CountryOrder] = try await supabase
+            .from("countries")
+            .select("name, display_order")
+            .execute()
+            .value
+
+        return Dictionary(uniqueKeysWithValues: rows.map { ($0.name, $0.displayOrder) })
+    }
+
     func fetchCityCoordinates(cityId: UUID) async throws -> (Double, Double) {
         struct CityCoordinates: Codable {
             let latitude: Double
