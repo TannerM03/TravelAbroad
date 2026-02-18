@@ -11,6 +11,7 @@ struct NamesView: View {
     @State private var username: String = ""
     @State private var firstName: String = ""
     @State private var lastName: String = ""
+    @State private var referralCode: String = ""
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
     @State private var isPrePopulated: Bool = false
@@ -29,6 +30,7 @@ struct NamesView: View {
                     usernameField
                     firstNameField
                     lastNameField
+                    referralCodeField
                 }
 
                 if let errorMessage = errorMessage {
@@ -156,6 +158,27 @@ struct NamesView: View {
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 
+    private var referralCodeField: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Referral Code (Optional)")
+                .font(.headline)
+                .fontWeight(.semibold)
+
+            TextField("Enter referral code", text: $referralCode)
+                .textFieldStyle(PlainTextFieldStyle())
+                .textInputAutocapitalization(.characters)
+                .autocorrectionDisabled()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color(.systemGray5))
+                .cornerRadius(12)
+        }
+        .padding(20)
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+    }
+
     private var continueButton: some View {
         Button {
             saveNamesAndContinue()
@@ -206,6 +229,21 @@ struct NamesView: View {
             isLoading = true
 
             do {
+                // Get current user ID
+                let userId = try await SupabaseManager.shared.supabase.auth.user().id
+
+                // Apply referral code if one was entered
+                let trimmedCode = referralCode.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmedCode.isEmpty {
+                    let isValid = try await SupabaseManager.shared.validateReferralCode(trimmedCode)
+                    if isValid {
+                        try await SupabaseManager.shared.applyReferralCode(trimmedCode, for: userId)
+                    } else {
+                        errorMessage = "Invalid referral code. Please check and try again."
+                        isLoading = false
+                        return
+                    }
+                }
                 // Check username availability
                 let isAvailable = try await SupabaseManager.shared.isUsernameAvailable(username: username)
                 if !isAvailable {
@@ -213,9 +251,6 @@ struct NamesView: View {
                     isLoading = false
                     return
                 }
-
-                // Get current user ID
-                let userId = try await SupabaseManager.shared.supabase.auth.user().id
 
                 // Save all names to database
                 try await SupabaseManager.shared.saveUserNames(userId: userId, username: username, firstName: firstName, lastName: lastName)

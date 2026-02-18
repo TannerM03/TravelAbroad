@@ -30,6 +30,9 @@ class ProfileViewModel {
     var isPopular: Bool = false
     var feedDefault: String = "popular"
     var showOwnPostsInFollowing: Bool = true
+    var referralCode: String?
+    var referralCount: Int = 0
+    var isAmbassador: Bool = false
     var imageSelection: PhotosPickerItem? {
         didSet {
             if let imageSelection {
@@ -67,8 +70,15 @@ class ProfileViewModel {
                 bio = try await SupabaseManager.shared.fetchUserBio(userId: userId)
                 profileImageURL = try await SupabaseManager.shared.fetchProfilePic(userId: userId)
                 isPopular = try await SupabaseManager.shared.fetchIsPopular(userId: userId)
+                isAmbassador = try await SupabaseManager.shared.fetchIsAmbassador(userId: userId)
                 feedDefault = try await SupabaseManager.shared.fetchFeedDefault(userId: userId)
                 showOwnPostsInFollowing = try await SupabaseManager.shared.fetchFollowingFeedPrefDefault(userId: userId)
+
+                if isAmbassador {
+                    let stats = try await SupabaseManager.shared.fetchReferralStats(for: userId)
+                    referralCode = stats.code
+                    referralCount = stats.count
+                }
 
                 if let urlString = profileImageURL, let url = URL(string: urlString) {
                     await loadImageFromURL(url)
