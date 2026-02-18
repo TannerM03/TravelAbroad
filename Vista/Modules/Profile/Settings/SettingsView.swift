@@ -85,7 +85,11 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Creator Program") {
+                if vm.isAmbassador {
+                    ambassadorSection
+                }
+
+                Section("Popular Creators") {
                     NavigationLink(destination: PopularCreatorView(profileVm: vm)) {
                         HStack {
                             Image(systemName: "star.circle")
@@ -196,6 +200,56 @@ struct SettingsView: View {
             .value
 
         return profiles.first?.username ?? "Unknown User"
+    }
+
+    private var ambassadorSection: some View {
+        Section("Ambassador Program") {
+            if let code = vm.referralCode {
+                HStack {
+                    Image(systemName: "tag.circle")
+                        .foregroundStyle(
+                            LinearGradient(
+                                gradient: Gradient(colors: [.purple, .blue]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 24)
+                    Text("Your Code")
+                    Spacer()
+                    Text(code)
+                        .font(.system(.body, design: .monospaced))
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                    Button {
+                        UIPasteboard.general.string = code
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else {
+                HStack {
+                    Image(systemName: "tag.circle")
+                        .foregroundColor(.secondary)
+                        .frame(width: 24)
+                    Text("No referral code assigned yet")
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            HStack {
+                Image(systemName: "person.2")
+                    .foregroundColor(.green)
+                    .frame(width: 24)
+                Text("Referrals Completed")
+                Spacer()
+                Text("\(vm.referralCount)")
+                    .foregroundColor(.secondary)
+            }
+        }
     }
 
     private var logoutSection: some View {
