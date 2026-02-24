@@ -7,9 +7,38 @@
 
 import Foundation
 import SwiftUI
+import UserNotifications
+
+// AppDelegate to handle push notification registration
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        return true
+    }
+
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
+        let token = tokenParts.joined()
+        print("📱 Device Token: \(token)")
+
+        // Save token to Supabase
+        Task {
+            do {
+                try await SupabaseManager.shared.saveDeviceToken(token)
+                print("✅ Device token saved to Supabase")
+            } catch {
+                print("❌ Failed to save device token: \(error)")
+            }
+        }
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        print("❌ Failed to register for remote notifications: \(error)")
+    }
+}
 
 @main
 struct VistaApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @AppStorage("isAuthenticated") private var isAuthenticated = false
     @AppStorage("shouldShowOnboarding") private var shouldShowOnboarding = false
     @AppStorage("justSignedUp") private var justSignedUp = false
@@ -76,6 +105,8 @@ struct VistaApp: App {
                             isAuthenticated = true
                             // Load blocked users when signing in
                             await BlockListManager.shared.loadBlockedUsers()
+                            // Request notification permission
+                            await requestNotificationPermission()
                         case .signedOut, .userDeleted:
                             isAuthenticated = false
                             shouldShowOnboarding = false
@@ -108,6 +139,9 @@ struct VistaApp: App {
 
             // Load blocked users list for safety filtering
             await BlockListManager.shared.loadBlockedUsers()
+
+            // Request notification permission
+            await requestNotificationPermission()
         } catch {
             // No valid session or session expired
             print("No valid session on launch: \(error.localizedDescription)")
@@ -172,6 +206,25 @@ struct VistaApp: App {
                     }
                 }
             }
+        }
+    }
+
+    private func requestNotificationPermission() async {
+        let center = UNUserNotificationCenter.current()
+
+        do {
+            let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
+            if granted {
+                print("✅ Notification permission granted")
+                // Register for remote notifications on main thread
+                await MainActor.run {
+                    UIApplication.shared.registerForRemoteNotifications()
+                }
+            } else {
+                print("⚠️ Notification permission denied")
+            }
+        } catch {
+            print("❌ Error requesting notification permission: \(error)")
         }
     }
 }
