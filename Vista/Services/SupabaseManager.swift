@@ -2988,4 +2988,25 @@ class SupabaseManager {
 
         return (rows.first?.referral_code, completed.count)
     }
+
+    // MARK: - Push Notifications
+
+    func saveDeviceToken(_ token: String) async throws {
+        guard let userId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user"])
+        }
+
+        struct DeviceToken: Codable {
+            let user_id: UUID
+            let token: String
+        }
+
+        let deviceToken = DeviceToken(user_id: userId, token: token)
+
+        // Upsert to handle re-installations without creating duplicates
+        try await supabase
+            .from("device_tokens")
+            .upsert(deviceToken)
+            .execute()
+    }
 }
