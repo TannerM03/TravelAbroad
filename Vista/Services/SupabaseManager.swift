@@ -88,6 +88,26 @@ class SupabaseManager {
         }
     }
 
+    func fetchCountryOrder() async throws -> [String: Int] {
+        struct CountryOrder: Codable {
+            let name: String
+            let displayOrder: Int
+
+            enum CodingKeys: String, CodingKey {
+                case name
+                case displayOrder = "display_order"
+            }
+        }
+
+        let rows: [CountryOrder] = try await supabase
+            .from("countries")
+            .select("name, display_order")
+            .execute()
+            .value
+
+        return Dictionary(uniqueKeysWithValues: rows.map { ($0.name, $0.displayOrder) })
+    }
+
     func fetchCityCoordinates(cityId: UUID) async throws -> (Double, Double) {
         struct CityCoordinates: Codable {
             let latitude: Double
@@ -971,6 +991,8 @@ class SupabaseManager {
             try await updateRecommendationImageIfNeeded(recommendationId: recommendationId, imageUrl: commentImageUrl)
         }
 
+        await checkAndCompleteReferral(for: userId)
+
         return newComment
     }
 
@@ -1786,6 +1808,25 @@ class SupabaseManager {
         return response.isPopular ?? false
     }
 
+    func fetchIsAmbassador(userId: UUID) async throws -> Bool {
+        struct IsAmbassador: Codable {
+            let isAmbassador: Bool?
+
+            enum CodingKeys: String, CodingKey {
+                case isAmbassador = "is_ambassador"
+            }
+        }
+        let response: IsAmbassador = try await supabase
+            .from("profiles")
+            .select("is_ambassador")
+            .eq("id", value: userId)
+            .single()
+            .execute()
+            .value
+
+        return response.isAmbassador ?? false
+    }
+
     func fetchFollowerCount(userId: UUID) async throws -> (followers: Int, following: Int) {
         struct FollowStats: Codable {
             let followingCount: Int
@@ -2143,11 +2184,13 @@ class SupabaseManager {
         // Try to insert a new review
         let review = CityReviewModel(cityId: cityId.uuidString, userId: userId.uuidString, rating: rating)
 
+        var isNewReview = false
         do {
             try await supabase
                 .from("city_reviews")
                 .insert(review)
                 .execute()
+            isNewReview = true
         } catch {
             // If insert fails (likely due to duplicate), update only the rating to preserve created_at
             try await supabase
@@ -2156,6 +2199,10 @@ class SupabaseManager {
                 .eq("city_id", value: cityId)
                 .eq("user_id", value: userId)
                 .execute()
+        }
+
+        if isNewReview {
+            await checkAndCompleteReferral(for: userId)
         }
     }
 
@@ -2841,5 +2888,125 @@ class SupabaseManager {
             .execute()
 
         print("✅ Submitted report: \(contentType) - \(reason)")
+    }
+
+    // MARK: - Referral
+
+    func validateReferralCode(_ code: String) async throws -> Bool {
+        struct CodeCheck: Codable { let referral_code: String }
+        let rows: [CodeCheck] = try await supabase
+            .from("profiles")
+            .select("referral_code")
+            .eq("referral_code", value: code.uppercased())
+            .execute()
+            .value
+        return !rows.isEmpty
+    }
+
+    func applyReferralCode(_ code: String, for referredUserId: UUID) async throws {
+        let upperCode = code.uppercased()
+
+        // Find referrer
+        struct ReferrerRow: Codable { let id: UUID }
+        let referrers: [ReferrerRow] = try await supabase
+            .from("profiles")
+            .select("id")
+            .eq("referral_code", value: upperCode)
+            .execute()
+            .value
+
+        guard let referrer = referrers.first else { return }
+
+        // Save referred_by on the new user's profile
+        try await supabase
+            .from("profiles")
+            .update(["referred_by": upperCode])
+            .eq("id", value: referredUserId)
+            .execute()
+
+        // Create pending referral row
+        struct NewReferral: Codable {
+            let referrer_id: UUID
+            let referred_id: UUID
+        }
+        try await supabase
+            .from("referrals")
+            .insert(NewReferral(referrer_id: referrer.id, referred_id: referredUserId))
+            .execute()
+    }
+
+    // Called after a qualifying action (first city rating or rec submitted).
+    // Completes any pending referral for this user
+    func checkAndCompleteReferral(for userId: UUID) async {
+        do {
+            struct PendingReferral: Codable {
+                let id: UUID
+                let referrer_id: UUID
+            }
+            let rows: [PendingReferral] = try await supabase
+                .from("referrals")
+                .select("id, referrer_id")
+                .eq("referred_id", value: userId)
+                .eq("status", value: "pending")
+                .execute()
+                .value
+
+            guard let referral = rows.first else { return }
+
+            // Mark referral completed
+            let now = ISO8601DateFormatter().string(from: Date())
+            try await supabase
+                .from("referrals")
+                .update(["status": "completed", "completed_at": now])
+                .eq("id", value: referral.id)
+                .execute()
+
+        } catch {
+            print("checkAndCompleteReferral error: \(error)")
+        }
+    }
+
+    func fetchReferralStats(for userId: UUID) async throws -> (code: String?, count: Int) {
+        struct ProfileStats: Codable {
+            let referral_code: String?
+        }
+        let rows: [ProfileStats] = try await supabase
+            .from("profiles")
+            .select("referral_code")
+            .eq("id", value: userId)
+            .execute()
+            .value
+
+        struct ReferralCount: Codable { let id: UUID }
+        let completed: [ReferralCount] = try await supabase
+            .from("referrals")
+            .select("id")
+            .eq("referrer_id", value: userId)
+            .eq("status", value: "completed")
+            .execute()
+            .value
+
+        return (rows.first?.referral_code, completed.count)
+    }
+
+    // MARK: - Push Notifications
+
+    func saveDeviceToken(_ token: String) async throws {
+        guard let userId = supabase.auth.currentUser?.id else {
+            throw NSError(domain: "SupabaseError", code: 0, userInfo: [NSLocalizedDescriptionKey: "No authenticated user"])
+        }
+
+        struct DeviceToken: Codable {
+            let user_id: UUID
+            let token: String
+        }
+
+        let deviceToken = DeviceToken(user_id: userId, token: token)
+
+        // Upsert to handle re-installations without creating duplicates
+        try await supabase
+            .from("device_tokens")
+            .upsert(deviceToken)
+            .execute()
     }
 }

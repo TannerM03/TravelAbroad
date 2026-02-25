@@ -4,3 +4,4 @@ Config.plist
 
 # Claude context file
 CLAUDE.md
+supabase/.temp/

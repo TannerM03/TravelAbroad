@@ -13,6 +13,7 @@ import Supabase
 @Observable
 class CityListViewModel {
     var cities: [City] = []
+    var countryOrder: [String: Int] = [:]
     var isLoading = false
     var userSearch = ""
     var filter: CityFilter = .best
@@ -38,11 +39,23 @@ class CityListViewModel {
         }
     }
 
+    func sortedCountryKeys(from groupedCities: [String: [City]]) -> [String] {
+        groupedCities.keys.sorted { a, b in
+            let orderA = countryOrder[a] ?? 999
+            let orderB = countryOrder[b] ?? 999
+            if orderA != orderB { return orderA < orderB }
+            return a < b
+        }
+    }
+
     func getCities() async {
         isLoading = true
         defer { isLoading = false }
         do {
-            cities = try await SupabaseManager.shared.fetchCities()
+            async let citiesResult = SupabaseManager.shared.fetchCities()
+            async let orderResult = SupabaseManager.shared.fetchCountryOrder()
+            cities = try await citiesResult
+            countryOrder = (try? await orderResult) ?? [:]
         } catch {
             print("Error getting cities in vm: \(error)")
         }

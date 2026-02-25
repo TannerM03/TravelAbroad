@@ -11,7 +11,7 @@ struct TabBarView: View {
     @Binding var isAuthenticated: Bool
     @State private var cityListViewModel = CityListViewModel()
     @State private var profileViewModel = ProfileViewModel()
-    @State private var selectedTab = 0
+    @State private var selectedTab = 1
     @State private var selectedUserId: String?
 
     private var tabSelection: Binding<Int> {

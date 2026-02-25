@@ -129,7 +129,7 @@ struct CitiesView: View {
 
     private var citiesGridSection: some View {
         LazyVStack(spacing: 24) {
-            ForEach(groupedCities.keys.sorted(), id: \.self) { country in
+            ForEach(vm.sortedCountryKeys(from: groupedCities), id: \.self) { country in
                 if let cities = groupedCities[country] {
                     countrySection(country: country, cities: cities)
                 }
