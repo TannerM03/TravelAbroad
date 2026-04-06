@@ -16,6 +16,16 @@ struct ProfileCardView: View {
             Group {
                 if let imageUrl = profile.imageUrl, let url = URL(string: imageUrl) {
                     KFImage(url)
+                        .placeholder {
+                            Circle()
+                                .fill(Color.gray.opacity(0.2))
+                                .frame(width: 72, height: 72)
+                                .overlay(ProgressView())
+                        }
+                        .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 216, height: 216)))
+                        .scaleFactor(UIScreen.main.scale)
+                        .cacheOriginalImage()
+                        .fade(duration: 0.2)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 72, height: 72)

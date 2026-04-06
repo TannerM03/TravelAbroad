@@ -1223,11 +1223,11 @@ class SupabaseManager {
     }
 
     func uploadCommentImage(_ image: UIImage) async throws -> String {
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+        guard let imageData = image.resizedForComment() else {
             throw NSError(domain: "ImageError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image to JPEG"])
         }
 
-        // Validate image size (max 10MB)
+        // Validate image size (max 10MB) - should be much smaller now with resizing
         let maxSizeBytes = 10 * 1024 * 1024
         if imageData.count > maxSizeBytes {
             throw NSError(domain: "ImageError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Image too large. Maximum size is 10MB"])
@@ -1243,11 +1243,11 @@ class SupabaseManager {
     }
 
     func uploadRecommendationImage(_ image: UIImage) async throws -> String {
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+        guard let imageData = image.resizedForContent() else {
             throw NSError(domain: "ImageError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image to JPEG"])
         }
 
-        // Validate image size (max 10MB)
+        // Validate image size (max 10MB) - should be much smaller now with resizing
         let maxSizeBytes = 10 * 1024 * 1024
         if imageData.count > maxSizeBytes {
             throw NSError(domain: "ImageError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Image too large. Maximum size is 10MB"])
@@ -1634,12 +1634,12 @@ class SupabaseManager {
 
     // adds profile image to profile-images bucket and profiles table
     func uploadProfileImageToSupabase(image: UIImage) async {
-        guard let imageData = image.jpegData(compressionQuality: 0.8), let user = try? await SupabaseManager.shared.supabase.auth.session.user else {
+        guard let imageData = image.resizedForProfile(), let user = try? await SupabaseManager.shared.supabase.auth.session.user else {
             print("Failed to convert UIImage to jpeg data")
             return
         }
 
-        // Validate image size (max 10MB)
+        // Validate image size (max 10MB) - should be much smaller now with resizing
         let maxSizeBytes = 10 * 1024 * 1024
         guard imageData.count <= maxSizeBytes else {
             print("Image too large. Maximum size is 10MB")

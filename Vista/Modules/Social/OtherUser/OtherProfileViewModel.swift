@@ -7,9 +7,7 @@
 
 import Foundation
 import Observation
-import PhotosUI
 import Supabase
-import SwiftUI
 
 @MainActor
 @Observable
@@ -21,7 +19,6 @@ class OtherProfileViewModel {
     var user: User?
     var profileImageURL: String?
     var userId: UUID?
-    var imageState: ImageState = .empty
     var citiesVisited: Int = 0
     var spotsReviewed: Int = 0
     var countriesVisited: Int = 0
@@ -30,8 +27,6 @@ class OtherProfileViewModel {
     var isFollowing: Bool = false
     var isPopular: Bool = false
     var isSelf: Bool = false
-
-    private var imageCache: [String: Image] = [:]
 
     init(userId: String) {
         self.userId = UUID(uuidString: userId) ?? nil
@@ -44,19 +39,25 @@ class OtherProfileViewModel {
                 let currentUserId = try await SupabaseManager.shared.supabase.auth.user().id
                 isSelf = (userId == currentUserId)
 
-                let names = try await SupabaseManager.shared.fetchUsernameAndNames(userId: userId)
+                // Fetch all user data in parallel
+                async let namesResult = SupabaseManager.shared.fetchUsernameAndNames(userId: userId)
+                async let bioResult = SupabaseManager.shared.fetchUserBio(userId: userId)
+                async let profilePicResult = SupabaseManager.shared.fetchProfilePic(userId: userId)
+                async let isPopularResult = SupabaseManager.shared.fetchIsPopular(userId: userId)
+                async let travelStatsResult = SupabaseManager.shared.fetchTravelStats(userId: userId)
+
+                // Await all results together
+                let (names, fetchedBio, fetchedProfilePicURL, fetchedIsPopular, travelStats) = try await (
+                    namesResult, bioResult, profilePicResult, isPopularResult, travelStatsResult
+                )
+
+                // Update properties
                 username = names[0]
                 firstName = names[1]
                 lastName = names[2]
-                bio = try await SupabaseManager.shared.fetchUserBio(userId: userId)
-                profileImageURL = try await SupabaseManager.shared.fetchProfilePic(userId: userId)
-                isPopular = try await SupabaseManager.shared.fetchIsPopular(userId: userId)
-
-                if let urlString = profileImageURL, let url = URL(string: urlString) {
-                    await loadImageFromURL(url)
-                }
-
-                let travelStats = try await SupabaseManager.shared.fetchTravelStats(userId: userId)
+                bio = fetchedBio
+                profileImageURL = fetchedProfilePicURL
+                isPopular = fetchedIsPopular
                 countriesVisited = travelStats.countriesVisited
                 citiesVisited = travelStats.citiesVisited
                 spotsReviewed = travelStats.spotsVisited
@@ -67,27 +68,6 @@ class OtherProfileViewModel {
 
         } catch {
             print("Failed to fetch user: \(error)")
-        }
-    }
-
-    private func loadImageFromURL(_ url: URL) async {
-        let urlString = url.absoluteString
-
-        // Check cache first
-        if let cachedImage = imageCache[urlString] {
-            imageState = .success(cachedImage)
-            return
-        }
-
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            if let uiImage = UIImage(data: data) {
-                let image = Image(uiImage: uiImage)
-                imageCache[urlString] = image
-                imageState = .success(image)
-            }
-        } catch {
-            print("Failed to load image from URL: \(error)")
         }
     }
 
