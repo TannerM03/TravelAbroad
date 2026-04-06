@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import UserNotifications
+import Kingfisher
 
 // AppDelegate to handle push notification registration
 class AppDelegate: NSObject, UIApplicationDelegate {
@@ -48,7 +49,30 @@ struct VistaApp: App {
 //    @State private var isAuthenticated = false
 
     init() {
-        // App initialization
+        // Configure Kingfisher for optimal performance
+        configureKingfisher()
+    }
+
+    private func configureKingfisher() {
+        // Memory cache configuration
+        let cache = KingfisherManager.shared.cache
+        cache.memoryStorage.config.totalCostLimit = 150 * 1024 * 1024 // 150 MB
+        cache.memoryStorage.config.countLimit = 200 // Keep 200 images
+        cache.memoryStorage.config.expiration = .seconds(600) // 10 minutes
+
+        // Disk cache configuration
+        cache.diskStorage.config.sizeLimit = 500 * 1024 * 1024 // 500 MB
+        cache.diskStorage.config.expiration = .days(7) // Keep for 7 days
+
+        // Download configuration
+        let downloader = KingfisherManager.shared.downloader
+        downloader.downloadTimeout = 30.0
+        downloader.sessionConfiguration.httpMaximumConnectionsPerHost = 12 // More concurrent downloads
+        downloader.sessionConfiguration.timeoutIntervalForRequest = 30.0
+        downloader.sessionConfiguration.urlCache = URLCache(
+            memoryCapacity: 50 * 1024 * 1024, // 50 MB
+            diskCapacity: 200 * 1024 * 1024 // 200 MB
+        )
     }
 
     var body: some Scene {

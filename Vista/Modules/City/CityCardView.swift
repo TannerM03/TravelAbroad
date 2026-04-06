@@ -17,15 +17,9 @@ struct CityCardView: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                if let url = imageUrl, let url = URL(string: url) {
-                    KFImage(url)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 250, height: 180)
-                        .scaledToFill()
-                        .clipped()
-                        .cornerRadius(12)
-                }
+                OptimizedCityImage(imageUrl: imageUrl, width: 250, height: 180)
+                    .clipped()
+                    .cornerRadius(12)
                 // Gradient overlay for better text readability
                 LinearGradient(
                     gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.6)]),
