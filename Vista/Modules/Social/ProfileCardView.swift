@@ -14,7 +14,7 @@ struct ProfileCardView: View {
     var body: some View {
         VStack(spacing: 12) {
             Group {
-                if let imageUrl = profile.imageUrl, let url = URL(string: imageUrl) {
+                if let imageUrl = profile.imageUrl, let url = imageUrl.cdnURL {
                     KFImage(url)
                         .placeholder {
                             Circle()

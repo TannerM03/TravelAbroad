@@ -102,8 +102,13 @@ struct RecommendationsView: View {
 
     private var cityImageSection: some View {
         ZStack(alignment: .topLeading) {
-            if let url = URL(string: vm.imageUrl) {
+            if let url = vm.imageUrl.cdnResizedURL(width: 600, quality: 75) {
                 KFImage(url)
+                    .placeholder {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.2))
+                            .overlay(ProgressView())
+                    }
                     .resizable()
                     .scaledToFill()
                     .frame(width: UIScreen.main.bounds.width, height: 300)

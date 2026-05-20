@@ -16,8 +16,13 @@ struct ProfileCityCard: View {
 
     var body: some View {
         ZStack {
-            if let url = imageUrl, let url = URL(string: url) {
+            if let urlStr = imageUrl, let url = urlStr.cdnResizedURL(width: 150, quality: 65) {
                 KFImage(url)
+                    .placeholder {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.2))
+                            .overlay(ProgressView())
+                    }
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 160, height: 160)

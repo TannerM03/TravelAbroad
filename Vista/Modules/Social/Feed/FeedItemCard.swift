@@ -51,8 +51,11 @@ struct FeedItemCard<Destination: View>: View {
                         HStack(spacing: 8) {
                             // Profile picture with gradient border
                             Group {
-                                if let imageUrl = feedItem.userImageUrl, let url = URL(string: imageUrl) {
+                                if let imageUrl = feedItem.userImageUrl, let url = imageUrl.cdnURL {
                                     KFImage(url)
+                                        .placeholder {
+                                            Circle().fill(Color.gray.opacity(0.2))
+                                        }
                                         .resizable()
                                         .aspectRatio(contentMode: .fill)
                                         .frame(width: 28, height: 28)
@@ -156,8 +159,13 @@ struct FeedItemCard<Destination: View>: View {
                                 height: 300
                             )
                         } else {
-                            if let imageUrl = feedItem.displayImageUrl, let url = URL(string: imageUrl) {
+                            if let imageUrl = feedItem.displayImageUrl, let url = imageUrl.cdnURL {
                                 KFImage(url)
+                                    .placeholder {
+                                        Rectangle()
+                                            .fill(Color.gray.opacity(0.2))
+                                            .overlay(ProgressView())
+                                    }
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: geometry.size.width, height: 300)

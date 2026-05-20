@@ -54,25 +54,28 @@ struct VistaApp: App {
     }
 
     private func configureKingfisher() {
-        // Memory cache configuration
         let cache = KingfisherManager.shared.cache
-        cache.memoryStorage.config.totalCostLimit = 150 * 1024 * 1024 // 150 MB
-        cache.memoryStorage.config.countLimit = 200 // Keep 200 images
-        cache.memoryStorage.config.expiration = .seconds(600) // 10 minutes
+        cache.memoryStorage.config.totalCostLimit = 100 * 1024 * 1024
+        cache.memoryStorage.config.countLimit = 200
+        cache.memoryStorage.config.expiration = .seconds(300)
+        cache.diskStorage.config.sizeLimit = 500 * 1024 * 1024
+        cache.diskStorage.config.expiration = .days(7)
 
-        // Disk cache configuration
-        cache.diskStorage.config.sizeLimit = 500 * 1024 * 1024 // 500 MB
-        cache.diskStorage.config.expiration = .days(7) // Keep for 7 days
-
-        // Download configuration
         let downloader = KingfisherManager.shared.downloader
         downloader.downloadTimeout = 30.0
-        downloader.sessionConfiguration.httpMaximumConnectionsPerHost = 12 // More concurrent downloads
+        downloader.sessionConfiguration.httpMaximumConnectionsPerHost = 12
         downloader.sessionConfiguration.timeoutIntervalForRequest = 30.0
         downloader.sessionConfiguration.urlCache = URLCache(
-            memoryCapacity: 50 * 1024 * 1024, // 50 MB
-            diskCapacity: 200 * 1024 * 1024 // 200 MB
+            memoryCapacity: 50 * 1024 * 1024,
+            diskCapacity: 200 * 1024 * 1024
         )
+
+        // Apply cache and cacheOriginalImage to every KFImage load globally
+        KingfisherManager.shared.defaultOptions = [
+            .diskCacheExpiration(.days(7)),
+            .memoryCacheExpiration(.seconds(300)),
+            .cacheOriginalImage
+        ]
     }
 
     var body: some Scene {
@@ -127,10 +130,9 @@ struct VistaApp: App {
                         switch state.event {
                         case .signedIn:
                             isAuthenticated = true
-                            // Load blocked users when signing in
                             await BlockListManager.shared.loadBlockedUsers()
-                            // Request notification permission
                             await requestNotificationPermission()
+                            Task { await warmCityImageCache() }
                         case .signedOut, .userDeleted:
                             isAuthenticated = false
                             shouldShowOnboarding = false
@@ -161,11 +163,9 @@ struct VistaApp: App {
             // If we got here, session is valid
             isAuthenticated = true
 
-            // Load blocked users list for safety filtering
             await BlockListManager.shared.loadBlockedUsers()
-
-            // Request notification permission
             await requestNotificationPermission()
+            Task { await warmCityImageCache() }
         } catch {
             // No valid session or session expired
             print("No valid session on launch: \(error.localizedDescription)")
@@ -231,6 +231,22 @@ struct VistaApp: App {
                 }
             }
         }
+    }
+
+    private func warmCityImageCache() async {
+        struct CityImageRow: Decodable {
+            let imageUrl: String?
+            enum CodingKeys: String, CodingKey { case imageUrl = "image_url" }
+        }
+        guard let rows = try? await SupabaseManager.shared.supabase
+            .from("city_with_avg_rating")
+            .select("image_url")
+            .execute()
+            .value as [CityImageRow]
+        else { return }
+        let urls = rows.compactMap { $0.imageUrl?.cdnResizedURL(width: 150, quality: 65) }
+        guard !urls.isEmpty else { return }
+        ImagePrefetcher(urls: urls).start()
     }
 
     private func requestNotificationPermission() async {
