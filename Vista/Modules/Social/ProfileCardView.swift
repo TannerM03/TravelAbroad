@@ -14,8 +14,18 @@ struct ProfileCardView: View {
     var body: some View {
         VStack(spacing: 12) {
             Group {
-                if let imageUrl = profile.imageUrl, let url = URL(string: imageUrl) {
+                if let imageUrl = profile.imageUrl, let url = imageUrl.cdnURL {
                     KFImage(url)
+                        .placeholder {
+                            Circle()
+                                .fill(Color.gray.opacity(0.2))
+                                .frame(width: 72, height: 72)
+                                .overlay(ProgressView())
+                        }
+                        .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 216, height: 216)))
+                        .scaleFactor(UIScreen.main.scale)
+                        .cacheOriginalImage()
+                        .fade(duration: 0.2)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 72, height: 72)

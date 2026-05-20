@@ -89,8 +89,11 @@ struct NotificationCard: View {
             HStack(spacing: 12) {
                 // Profile image
                 Group {
-                    if let imageUrl = notification.actorImageUrl, let url = URL(string: imageUrl) {
+                    if let imageUrl = notification.actorImageUrl, let url = imageUrl.cdnURL {
                         KFImage(url)
+                            .placeholder {
+                                Circle().fill(Color.gray.opacity(0.2))
+                            }
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                             .frame(width: 50, height: 50)

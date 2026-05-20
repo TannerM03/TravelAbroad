@@ -92,18 +92,31 @@ struct OtherProfileView: View {
         }
         .task {
             if vm.user == nil {
+                // Fetch user profile data first (contains basic info needed for UI)
                 await vm.fetchUser()
 
-                // Preload travel history data
+                // Then fetch everything else in parallel
                 if let userId = vm.userId {
-                    if travelHistoryViewModel.cities.isEmpty {
-                        await travelHistoryViewModel.getCities(userId: userId, showLoading: true)
+                    await withTaskGroup(of: Void.self) { group in
+                        // Fetch cities in background
+                        if travelHistoryViewModel.cities.isEmpty {
+                            group.addTask {
+                                await travelHistoryViewModel.getCities(userId: userId, showLoading: true)
+                            }
+                        }
+
+                        // Fetch followers count in background
+                        group.addTask {
+                            try? await vm.fetchFollowers()
+                        }
+
+                        // Fetch following status in background
+                        group.addTask {
+                            try? await vm.fetchIsFollowing()
+                        }
                     }
 
-                    try? await vm.fetchFollowers()
-                    try? await vm.fetchIsFollowing()
-
-                    // Check if user is blocked
+                    // Check if user is blocked (local operation, no network)
                     checkIfBlocked()
                 }
             }
@@ -163,7 +176,7 @@ struct OtherProfileView: View {
                             )
                     }
 
-                    CircularProfileImage(imageState: vm.imageState, isPopular: vm.isPopular)
+                    OptimizedProfileImage(imageURL: vm.profileImageURL, isPopular: vm.isPopular)
                         .overlay(alignment: .bottomTrailing) {
                             if !vm.isSelf {
                                 Button {

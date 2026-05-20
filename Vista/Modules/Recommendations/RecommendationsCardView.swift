@@ -26,8 +26,13 @@ struct RecommendationsCardView: View {
     var body: some View {
         NavigationLink(destination: CommentsView(recommendation: rec)) {
             VStack(alignment: .leading, spacing: 0) {
-                if let urlStr = rec.imageUrl, let url = URL(string: urlStr) {
+                if let urlStr = rec.imageUrl, let url = urlStr.cdnURL {
                     KFImage(url)
+                        .placeholder {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.2))
+                                .overlay(ProgressView())
+                        }
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(height: 170)

@@ -127,8 +127,12 @@ struct OtherSpotCard: View {
             // Main content
             HStack(spacing: 12) {
                 // Image
-                if let urlStr = spot.recommendation.imageUrl, let url = URL(string: urlStr) {
+                if let urlStr = spot.recommendation.imageUrl, let url = urlStr.cdnURL {
                     KFImage(url)
+                        .placeholder {
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.gray.opacity(0.2))
+                        }
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 80, height: 80)
