@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Kingfisher
 import Observation
 import Supabase
 import SwiftUI
@@ -62,6 +63,7 @@ class SocialViewModel {
 
             // Filter out blocked users from feed
             feedItems = filterBlockedUsers(from: fetchedItems)
+            prefetchImages(for: feedItems)
 
             if fetchedItems.count < pageSize {
                 hasMoreFollowing = false
@@ -103,6 +105,7 @@ class SocialViewModel {
 
             // Filter out blocked users from feed
             popularFeedItems = filterBlockedUsers(from: fetchedItems)
+            prefetchImages(for: popularFeedItems)
 
             if fetchedItems.count < pageSize {
                 hasMorePopular = false
@@ -199,8 +202,19 @@ class SocialViewModel {
 
     private func filterBlockedUsers(from items: [FeedItem]) -> [FeedItem] {
         return items.filter { item in
-            // Keep item if user is NOT blocked
             !BlockListManager.shared.isUserBlocked(item.userId)
         }
+    }
+
+    // MARK: - Prefetching
+
+    private func prefetchImages(for items: [FeedItem]) {
+        let urls = items.flatMap { item -> [URL] in
+            [item.userImageUrl, item.displayImageUrl, item.commentImageUrl,
+             item.commentImageUrl2, item.commentImageUrl3]
+                .compactMap { $0?.cdnURL }
+        }
+        guard !urls.isEmpty else { return }
+        ImagePrefetcher(urls: urls).start()
     }
 }

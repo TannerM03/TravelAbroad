@@ -14,7 +14,7 @@ struct OptimizedCityImage: View {
     let height: CGFloat
 
     var body: some View {
-        if let urlString = imageUrl, let url = URL(string: urlString) {
+        if let urlString = imageUrl, let url = urlString.cdnResizedURL(width: 150, quality: 65) {
             KFImage(url)
                 .placeholder {
                     Rectangle()

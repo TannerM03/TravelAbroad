@@ -15,7 +15,7 @@ struct OptimizedProfileImage: View {
 
     var body: some View {
         Group {
-            if let urlString = imageURL, let url = URL(string: urlString) {
+            if let urlString = imageURL, let url = urlString.cdnURL {
                 KFImage(url)
                     .placeholder {
                         Circle()

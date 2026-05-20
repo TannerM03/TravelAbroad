@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Kingfisher
 import Observation
 import Supabase
 
@@ -56,9 +57,16 @@ class CityListViewModel {
             async let orderResult = SupabaseManager.shared.fetchCountryOrder()
             cities = try await citiesResult
             countryOrder = (try? await orderResult) ?? [:]
+            prefetchCityImages()
         } catch {
             print("Error getting cities in vm: \(error)")
         }
+    }
+
+    private func prefetchCityImages() {
+        let urls = cities.compactMap { $0.imageUrl?.cdnResizedURL(width: 150, quality: 65) }
+        guard !urls.isEmpty else { return }
+        ImagePrefetcher(urls: urls).start()
     }
 
     func updateCityRating(cityId: String, newRating: Double) {

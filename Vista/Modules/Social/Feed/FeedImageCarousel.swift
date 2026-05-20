@@ -58,7 +58,12 @@ struct FeedImageCarousel: View {
 
     private func singleImageView(url: String, badgeText: String) -> some View {
         ZStack(alignment: .topTrailing) {
-            KFImage(URL(string: url))
+            KFImage(url.cdnURL)
+                .placeholder {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.2))
+                        .overlay(ProgressView())
+                }
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: width, height: height)
@@ -75,7 +80,12 @@ struct FeedImageCarousel: View {
             ForEach(userUrls.indices, id: \.self) { index in
                 if userUrls[index] != "" {
                     ZStack(alignment: .topTrailing) {
-                        KFImage(URL(string: userUrls[index]))
+                        KFImage(userUrls[index].cdnURL)
+                            .placeholder {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.2))
+                                    .overlay(ProgressView())
+                            }
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                             .frame(width: width, height: height)
@@ -89,7 +99,12 @@ struct FeedImageCarousel: View {
             if let officialUrl = officialUrl {
                 // Official spot photo second
                 ZStack(alignment: .topTrailing) {
-                    KFImage(URL(string: officialUrl))
+                    KFImage(officialUrl.cdnURL)
+                        .placeholder {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.2))
+                                .overlay(ProgressView())
+                        }
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: width, height: height)

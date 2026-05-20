@@ -26,12 +26,13 @@ struct FullScreenImageViewer: View {
                 // 1. The Paging View
                 TabView(selection: $currentIndex) {
                     ForEach(0 ..< urls.count, id: \.self) { index in
-                        if let imageURL = URL(string: urls[index]) {
-                            KFImage(imageURL)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .tag(index) // Important for tracking selection
-                        }
+                        KFImage(urls[index].cdnURL)
+                            .placeholder {
+                                ProgressView().tint(.white)
+                            }
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .tag(index)
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: urls.count > 1 ? .always : .never))

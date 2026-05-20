@@ -167,8 +167,13 @@ struct CommentsView: View {
 
     private var recommendationHeader: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if let urlStr = recommendation.imageUrl, let url = URL(string: urlStr) {
+            if let urlStr = recommendation.imageUrl, let url = urlStr.cdnURL {
                 KFImage(url)
+                    .placeholder {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.2))
+                            .overlay(ProgressView())
+                    }
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(height: 200)
@@ -816,8 +821,11 @@ struct CommentCardView: View {
                     HStack(spacing: 8) {
                         // Profile picture with gradient border
                         Group {
-                            if let imageUrl = comment.profileImageUrl, let url = URL(string: imageUrl) {
+                            if let imageUrl = comment.profileImageUrl, let url = imageUrl.cdnURL {
                                 KFImage(url)
+                                    .placeholder {
+                                        Circle().fill(Color.gray.opacity(0.2))
+                                    }
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: 32, height: 32)
@@ -941,8 +949,13 @@ struct CommentCardView: View {
                         ForEach(imageURLs.indices, id: \.self) { index in
                             let imagePath = imageURLs[index]
 
-                            if let url = URL(string: imagePath) {
+                            if let url = imagePath.cdnURL {
                                 KFImage(url)
+                                    .placeholder {
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color.gray.opacity(0.2))
+                                            .overlay(ProgressView())
+                                    }
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: 100, height: 100)
